@@ -1,3 +1,14 @@
+# Docker rootless (comme Constellation) : utilisé d'office s'il existe, quel que soit le contexte actif
+# (Docker Desktop arrêté, etc.). Forcer un autre contexte : make up DOCKER_CONTEXT=default
+ifeq ($(origin DOCKER_CONTEXT),undefined)
+  ifneq ($(shell docker context inspect rootless >/dev/null 2>&1 && echo yes),)
+    DOCKER_CONTEXT := rootless
+  endif
+endif
+ifdef DOCKER_CONTEXT
+  export DOCKER_CONTEXT
+endif
+
 DC := docker compose
 VERSION ?= 1.0.0
 app ?= collector
