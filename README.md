@@ -6,7 +6,7 @@ images Docker. Deux applications web jumelles, reliées par une clé USB :
 - **Rémus**, le collecteur : il franchit la limite et rapporte les paquets d'Internet ;
 - **Romulus**, le miroir : il garde l'enceinte du réseau isolé et ne laisse entrer que ce qui est signé.
 
-(Le nom technique du projet reste `sas` : dossiers, images Docker `sas-collector` / `sas-mirror`.)
+Images Docker : [`iemperor/remus`](https://hub.docker.com/r/iemperor/remus) et [`iemperor/romulus`](https://hub.docker.com/r/iemperor/romulus) (le nom technique du dépôt reste `sas`).
 
 ```
  INTERNET                               CLÉ USB                       RÉSEAU ISOLÉ
@@ -102,15 +102,20 @@ Symfony Messenger pour les tâches longues (résolution, export, import), exécu
 
 ## Production
 
+Deux images publiées sur Docker Hub, livrées dans deux packages séparés :
+
+| Image | Package | Documentation (page Docker Hub) |
+|---|---|---|
+| [`iemperor/remus`](https://hub.docker.com/r/iemperor/remus) | `dist/remus-VERSION.tar` : compose, `.env.example`, `configure.sh` | [deploy/remus/README.md](deploy/remus/README.md) |
+| [`iemperor/romulus`](https://hub.docker.com/r/iemperor/romulus) | `dist/romulus-VERSION.tar` : **image comprise** (installation sans Internet), compose, `.env.example`, `configure.sh`, sommes de contrôle | [deploy/romulus/README.md](deploy/romulus/README.md) |
+
 ```bash
-make images VERSION=1.0.0          # images sas-collector et sas-mirror
-make mirror-kit VERSION=1.0.0      # dist/sas-miroir-1.0.0.tar : image + compose + INSTALL.md, à copier sur la clé
-make collector-kit VERSION=1.0.0   # dist/sas-collecteur-1.0.0 : compose + INSTALL.md
+make images VERSION=1.0.0     # construit iemperor/remus et iemperor/romulus (1.0.0 et latest)
+make push VERSION=1.0.0       # publie sur Docker Hub (après « docker login »)
+make kits VERSION=1.0.0       # dist/remus-1.0.0.tar et dist/romulus-1.0.0.tar
 ```
 
-Le miroir s'installe sur le réseau isolé à partir du kit, sans Internet : voir
-[deploy/mirror/INSTALL.md](deploy/mirror/INSTALL.md). Pour le collecteur, voir
-[deploy/collector/INSTALL.md](deploy/collector/INSTALL.md).
+Le contenu de `deploy/*/README.md` est à recopier dans l'onglet « Overview » de chaque dépôt Docker Hub.
 
 Chaque image contient le front, l'API et le worker (FrankenPHP), tourne sans privilège avec un système
 de fichiers en lecture seule, et garde toutes ses données dans le volume `/data`.

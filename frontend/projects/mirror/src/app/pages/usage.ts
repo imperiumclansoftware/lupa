@@ -99,7 +99,7 @@ export default class Usage {
         return [
           {
             title: 'Configuration globale',
-            code: `composer config -g repositories.sas composer ${base}/composer\ncomposer config -g repositories.packagist false${http ? '\ncomposer config -g secure-http false' : ''}`,
+            code: `composer config -g repositories.romulus composer ${base}/composer\ncomposer config -g repositories.packagist false${http ? '\ncomposer config -g secure-http false' : ''}`,
             hint: 'Packagist est désactivé : sans Internet, Composer attendrait sinon chaque requête jusqu’à expiration.',
           },
           {

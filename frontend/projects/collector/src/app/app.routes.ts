@@ -14,7 +14,7 @@ export const routes: Routes = [
       logo: 'remus',
       variant: 'collector',
       codeCommand:
-        "docker compose logs collector | grep \"Code d'installation\"\n# ou : docker compose exec collector php bin/console app:setup:code\n# développement : make setup-code app=collector",
+        "docker compose logs remus | grep \"Code d'installation\"\n# ou : docker compose exec remus php bin/console app:setup:code\n# développement : make setup-code app=collector",
     },
   },
   {

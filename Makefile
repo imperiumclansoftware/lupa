@@ -14,7 +14,7 @@ VERSION ?= 1.0.0
 app ?= collector
 
 .DEFAULT_GOAL := help
-.PHONY: help init up down restart workers ps logs sh setup-code user console composer npm ng test test-back test-front build-front images mirror-kit collector-kit reset
+.PHONY: help init up down restart workers ps logs sh setup-code user console composer npm ng test test-back test-front build-front images push remus-kit romulus-kit kits reset
 
 help: ## Affiche cette aide
 	@grep -E '^[a-zA-Z_-]+:.*?## ' $(MAKEFILE_LIST) | awk 'BEGIN {FS=":.*?## "}; {printf "  \033[36m%-14s\033[0m %s\n", $$1, $$2}'
@@ -80,26 +80,38 @@ reset: ## Supprime conteneurs, volumes, bases et stockages de développement
 	rm -rf collector/var/data collector/var/storage collector/var/identity mirror/var/data mirror/var/storage mirror/var/uploads usb/*
 
 # ---------- Production ----------
+# Images publiées sur Docker Hub : iemperor/remus (collecteur) et iemperor/romulus (miroir)
+DOCKERHUB_USER ?= iemperor
+REMUS_IMAGE := docker.io/$(DOCKERHUB_USER)/remus
+ROMULUS_IMAGE := docker.io/$(DOCKERHUB_USER)/romulus
 
-images: ## Construit les images de production (make images VERSION=1.0.0)
-	docker build -f docker/prod/Dockerfile --target collector --build-arg APP_VERSION=$(VERSION) -t sas-collector:$(VERSION) -t sas-collector:latest .
-	docker build -f docker/prod/Dockerfile --target mirror --build-arg APP_VERSION=$(VERSION) -t sas-mirror:$(VERSION) -t sas-mirror:latest .
+images: ## Construit les deux images (make images VERSION=1.0.0)
+	docker build -f docker/prod/Dockerfile --target collector --build-arg APP_VERSION=$(VERSION) -t $(REMUS_IMAGE):$(VERSION) -t $(REMUS_IMAGE):latest .
+	docker build -f docker/prod/Dockerfile --target mirror --build-arg APP_VERSION=$(VERSION) -t $(ROMULUS_IMAGE):$(VERSION) -t $(ROMULUS_IMAGE):latest .
 
-mirror-kit: ## Kit d'installation du miroir à copier sur clé USB : dist/sas-miroir-VERSION.tar
-	@test -n "$$(docker images -q sas-mirror:$(VERSION))" || $(MAKE) images VERSION=$(VERSION)
-	rm -rf dist/sas-miroir-$(VERSION) && mkdir -p dist/sas-miroir-$(VERSION)
-	docker save sas-mirror:$(VERSION) sas-mirror:latest | gzip > dist/sas-miroir-$(VERSION)/sas-mirror-$(VERSION).tar.gz
-	cp deploy/mirror/compose.yaml deploy/mirror/.env.example deploy/mirror/INSTALL.md dist/sas-miroir-$(VERSION)/
-	cp scripts/env-sync.sh dist/sas-miroir-$(VERSION)/configure.sh
-	sed -i 's/^SAS_MIRROR_IMAGE=.*/SAS_MIRROR_IMAGE=sas-mirror:$(VERSION)/' dist/sas-miroir-$(VERSION)/.env.example
-	cd dist/sas-miroir-$(VERSION) && sha256sum * > SHA256SUMS
-	tar -C dist -cf dist/sas-miroir-$(VERSION).tar sas-miroir-$(VERSION)
-	@echo "Kit prêt : dist/sas-miroir-$(VERSION).tar ($$(du -h dist/sas-miroir-$(VERSION).tar | cut -f1)). Voir INSTALL.md à l'intérieur."
+push: images ## Publie les deux images sur Docker Hub (après « docker login »)
+	docker push $(REMUS_IMAGE):$(VERSION)
+	docker push $(REMUS_IMAGE):latest
+	docker push $(ROMULUS_IMAGE):$(VERSION)
+	docker push $(ROMULUS_IMAGE):latest
 
-collector-kit: ## Dossier de déploiement du collecteur : dist/sas-collecteur-VERSION
-	@test -n "$$(docker images -q sas-collector:$(VERSION))" || $(MAKE) images VERSION=$(VERSION)
-	rm -rf dist/sas-collecteur-$(VERSION) && mkdir -p dist/sas-collecteur-$(VERSION)/exports
-	cp deploy/collector/compose.yaml deploy/collector/.env.example deploy/collector/INSTALL.md dist/sas-collecteur-$(VERSION)/
-	cp scripts/env-sync.sh dist/sas-collecteur-$(VERSION)/configure.sh
-	sed -i 's/^SAS_COLLECTOR_IMAGE=.*/SAS_COLLECTOR_IMAGE=sas-collector:$(VERSION)/' dist/sas-collecteur-$(VERSION)/.env.example
-	@echo "Prêt : dist/sas-collecteur-$(VERSION) (./configure.sh && docker compose up -d)"
+remus-kit: ## Package de Rémus : dist/remus-VERSION.tar (compose, .env, configure.sh, README)
+	rm -rf dist/remus-$(VERSION) && mkdir -p dist/remus-$(VERSION)/exports
+	cp deploy/remus/compose.yaml deploy/remus/.env.example deploy/remus/README.md dist/remus-$(VERSION)/
+	cp scripts/env-sync.sh dist/remus-$(VERSION)/configure.sh
+	sed -i 's|^REMUS_IMAGE=.*|REMUS_IMAGE=$(REMUS_IMAGE):$(VERSION)|' dist/remus-$(VERSION)/.env.example
+	tar -C dist -cf dist/remus-$(VERSION).tar remus-$(VERSION)
+	@echo "Package prêt : dist/remus-$(VERSION).tar (l'image se télécharge depuis Docker Hub)."
+
+romulus-kit: ## Package de Romulus, image comprise (réseau isolé) : dist/romulus-VERSION.tar
+	@test -n "$$(docker images -q $(ROMULUS_IMAGE):$(VERSION))" || $(MAKE) images VERSION=$(VERSION)
+	rm -rf dist/romulus-$(VERSION) && mkdir -p dist/romulus-$(VERSION)
+	docker save $(ROMULUS_IMAGE):$(VERSION) | gzip > dist/romulus-$(VERSION)/romulus-$(VERSION).tar.gz
+	cp deploy/romulus/compose.yaml deploy/romulus/.env.example deploy/romulus/README.md dist/romulus-$(VERSION)/
+	cp scripts/env-sync.sh dist/romulus-$(VERSION)/configure.sh
+	sed -i 's|^ROMULUS_IMAGE=.*|ROMULUS_IMAGE=$(ROMULUS_IMAGE):$(VERSION)|' dist/romulus-$(VERSION)/.env.example
+	cd dist/romulus-$(VERSION) && sha256sum romulus-$(VERSION).tar.gz compose.yaml configure.sh README.md .env.example > SHA256SUMS
+	tar -C dist -cf dist/romulus-$(VERSION).tar romulus-$(VERSION)
+	@echo "Package prêt : dist/romulus-$(VERSION).tar ($$(du -h dist/romulus-$(VERSION).tar | cut -f1)), à copier sur la clé USB."
+
+kits: remus-kit romulus-kit ## Les deux packages

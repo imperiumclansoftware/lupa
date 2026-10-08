@@ -1,12 +1,10 @@
-# Sas collecteur : à installer sur une machine connectée à Internet.
-#   cp .env.example .env    (puis ajuster)
-#   docker compose up -d
-#   docker compose exec collector php bin/console app:user:create admin
-name: sas-collecteur
+# Rémus, le collecteur Lupa : sur une machine connectée à Internet.
+# Installation et réglages : README.md (même contenu que la page Docker Hub iemperor/remus).
+name: remus
 
 services:
-  collector:
-    image: ${SAS_COLLECTOR_IMAGE:-sas-collector:latest}
+  remus:
+    image: ${REMUS_IMAGE:-iemperor/remus:latest}
     restart: unless-stopped
     ports:
       # Par défaut accessible seulement depuis cette machine
@@ -19,8 +17,10 @@ services:
       REMUS_SIGNING_KEY: ${REMUS_SIGNING_KEY:-}
       REMUS_SIGNING_KEY_FILE: ${REMUS_SIGNING_KEY_FILE:-}
       GITHUB_TOKEN: ${GITHUB_TOKEN:-}
+      GITHUB_TOKEN_FILE: ${GITHUB_TOKEN_FILE:-}
       DOCKERHUB_USERNAME: ${DOCKERHUB_USERNAME:-}
       DOCKERHUB_TOKEN: ${DOCKERHUB_TOKEN:-}
+      DOCKERHUB_TOKEN_FILE: ${DOCKERHUB_TOKEN_FILE:-}
       NPM_REGISTRY: ${NPM_REGISTRY:-https://registry.npmjs.org}
       PYPI_INDEX: ${PYPI_INDEX:-https://pypi.org}
     volumes:

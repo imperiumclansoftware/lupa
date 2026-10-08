@@ -5,7 +5,7 @@
 #   - clé du modèle absente du fichier (nouvelle version) : ajoutée avec sa valeur par défaut ;
 #   - clé marquée __GENERATED__ dans le modèle : secret aléatoire, généré seulement s'il est absent,
 #     vide ou invalide (moins de 32 caractères, espaces, ou encore « __GENERATED__ ») ;
-#   - version de l'image (SAS_*_IMAGE) : alignée sur le modèle du kit, pour que la mise à jour s'applique.
+#   - version de l'image (REMUS_IMAGE, ROMULUS_IMAGE…) : alignée sur le modèle du kit, pour que la mise à jour s'applique.
 # Usage : env-sync.sh [modèle] [fichier]     (par défaut : .env.example .env)
 set -eu
 
@@ -49,7 +49,7 @@ grep -E '^[A-Za-z_][A-Za-z0-9_]*=' "$example" | while IFS= read -r line; do
 		[ "$default" = "__GENERATED__" ] && value=$(random_secret)
 		printf '%s=%s\n' "$key" "$value" >> "$tmp"
 		echo "+$key" >> "$tmp.log"
-	elif printf '%s' "$key" | grep -Eq '^SAS_[A-Z]+_IMAGE$' && [ "${current_line#*=}" != "$default" ]; then
+	elif printf '%s' "$key" | grep -Eq '^[A-Z]+_IMAGE$' && [ "${current_line#*=}" != "$default" ]; then
 		sed -i "s|^$key=.*|$key=$default|" "$tmp"
 		echo "~$key=$default" >> "$tmp.log"
 	elif [ "$default" = "__GENERATED__" ]; then

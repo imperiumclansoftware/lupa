@@ -14,7 +14,7 @@ export const routes: Routes = [
       logo: 'romulus',
       variant: 'mirror',
       codeCommand:
-        "docker compose logs mirror | grep \"Code d'installation\"\n# ou : docker compose exec mirror php bin/console app:setup:code\n# développement : make setup-code app=mirror",
+        "docker compose logs romulus | grep \"Code d'installation\"\n# ou : docker compose exec romulus php bin/console app:setup:code\n# développement : make setup-code app=mirror",
     },
   },
   {

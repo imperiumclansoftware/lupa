@@ -1,13 +1,10 @@
-# Sas miroir : à installer sur un serveur du réseau isolé.
-#   cp .env.example .env    (puis ajuster)
-#   docker load -i sas-mirror-*.tar.gz
-#   docker compose up -d
-#   docker compose exec mirror php bin/console app:user:create admin
-name: sas-miroir
+# Romulus, le miroir hors ligne Lupa : sur un serveur du réseau isolé.
+# Installation et réglages : README.md (même contenu que la page Docker Hub iemperor/romulus).
+name: romulus
 
 services:
-  mirror:
-    image: ${SAS_MIRROR_IMAGE:-sas-mirror:latest}
+  romulus:
+    image: ${ROMULUS_IMAGE:-iemperor/romulus:latest}
     restart: unless-stopped
     ports:
       - "${HTTP_BIND:-0.0.0.0}:${HTTP_PORT:-8080}:8080"

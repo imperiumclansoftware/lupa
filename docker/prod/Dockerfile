@@ -1,8 +1,9 @@
 # syntax=docker/dockerfile:1
 #
 # Images de production de Sas, construites depuis la racine du projet :
-#   docker build -f docker/prod/Dockerfile --target collector -t sas-collector .
-#   docker build -f docker/prod/Dockerfile --target mirror    -t sas-mirror .
+#   docker build -f docker/prod/Dockerfile --target collector -t iemperor/remus .
+#   docker build -f docker/prod/Dockerfile --target mirror    -t iemperor/romulus .
+# (ou : make images VERSION=1.0.0)
 # Chaque image contient le front Angular, l'API Symfony et son worker (FrankenPHP = Caddy + PHP).
 
 ARG PHP_VERSION=8.4
@@ -74,8 +75,9 @@ CMD ["frankenphp", "run", "--config", "/etc/frankenphp/Caddyfile"]
 # ---------- 4a. Collecteur : outils de résolution (npm, pip, composer) ----------
 FROM runtime AS collector
 ARG APP_VERSION=dev
-LABEL org.opencontainers.image.title="Sas collecteur" \
-      org.opencontainers.image.description="Télécharge paquets npm, Python, Composer et images Docker et prépare des bundles signés pour un miroir hors ligne." \
+LABEL org.opencontainers.image.title="Rémus" \
+      org.opencontainers.image.description="Rémus, collecteur Lupa : télécharge paquets npm, Python, Composer et images Docker et prépare des bundles signés pour Romulus, le miroir hors ligne." \
+      org.opencontainers.image.url="https://hub.docker.com/r/iemperor/remus" \
       org.opencontainers.image.version="${APP_VERSION}"
 COPY --from=composer:2 /usr/bin/composer /usr/local/bin/composer
 RUN apk add --no-cache nodejs npm python3 git unzip \
@@ -98,8 +100,9 @@ VOLUME ["/data", "/exports"]
 # ---------- 4b. Miroir : sans aucun outil réseau, il ne fait que servir ----------
 FROM runtime AS mirror
 ARG APP_VERSION=dev
-LABEL org.opencontainers.image.title="Sas miroir" \
-      org.opencontainers.image.description="Miroir hors ligne : importe les bundles signés et sert les dépôts npm, PyPI, Composer et Docker." \
+LABEL org.opencontainers.image.title="Romulus" \
+      org.opencontainers.image.description="Romulus, miroir hors ligne Lupa : importe les bundles signés de Rémus et sert les dépôts npm, PyPI, Composer et Docker sur un réseau isolé." \
+      org.opencontainers.image.url="https://hub.docker.com/r/iemperor/romulus" \
       org.opencontainers.image.version="${APP_VERSION}"
 COPY --from=front /front/dist/mirror/browser /srv/front
 ENV SAS_APP=mirror \
