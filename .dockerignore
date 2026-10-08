@@ -1,0 +1,20 @@
+# Contexte de construction des images de production : ni secrets, ni données, ni dépendances locales
+.env
+.env.*
+**/.git
+**/node_modules
+frontend/dist
+frontend/.angular
+*/vendor
+*/var
+*/.env.local
+*/.env.*.local
+*/.env.local.php
+*/tests
+usb
+dist
+scripts
+compose*.yaml
+Makefile
+*.md
+deploy

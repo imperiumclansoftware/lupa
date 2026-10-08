@@ -1,0 +1,40 @@
+# Sas miroir : à installer sur un serveur du réseau isolé.
+#   cp .env.example .env    (puis ajuster)
+#   docker load -i sas-mirror-*.tar.gz
+#   docker compose up -d
+#   docker compose exec mirror php bin/console app:user:create admin
+name: sas-miroir
+
+services:
+  mirror:
+    image: ${SAS_MIRROR_IMAGE:-sas-mirror:latest}
+    restart: unless-stopped
+    ports:
+      - "${HTTP_BIND:-0.0.0.0}:${HTTP_PORT:-8080}:8080"
+    environment:
+      # Adresse des paquets donnée aux clients ; vide = celle par laquelle ils contactent le miroir
+      PUBLIC_URL: ${PUBLIC_URL:-}
+    volumes:
+      - data:/data
+      # Point de montage des clés USB, en lecture seule. Les bundles sont cherchés jusqu'à deux niveaux
+      # de sous-dossiers (/media/<utilisateur>/<CLÉ>/sas-….tar) ; rslave : une clé branchée après le
+      # démarrage apparaît sans redémarrer le conteneur.
+      - type: bind
+        source: ${USB_DIR:-/media}
+        target: /inbox
+        read_only: true
+        bind:
+          propagation: rslave
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    read_only: true
+    tmpfs:
+      - /tmp
+      - /config:mode=1777
+      # Cache Symfony et journaux, reconstruits au démarrage
+      - /app/var:mode=1777
+
+volumes:
+  data:

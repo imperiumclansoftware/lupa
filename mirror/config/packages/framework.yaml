@@ -10,7 +10,7 @@ framework:
         cookie_httponly: true
         # Sessions conservées dans var/ (survivent au redémarrage des conteneurs)
         handler_id: session.handler.native_file
-        save_path: '%kernel.project_dir%/var/sessions/%kernel.environment%'
+        save_path: '%env(SESSION_DIR)%'
 
 when@test:
     framework:

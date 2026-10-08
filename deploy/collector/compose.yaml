@@ -1,0 +1,36 @@
+# Sas collecteur : à installer sur une machine connectée à Internet.
+#   cp .env.example .env    (puis ajuster)
+#   docker compose up -d
+#   docker compose exec collector php bin/console app:user:create admin
+name: sas-collecteur
+
+services:
+  collector:
+    image: ${SAS_COLLECTOR_IMAGE:-sas-collector:latest}
+    restart: unless-stopped
+    ports:
+      # Par défaut accessible seulement depuis cette machine
+      - "${HTTP_BIND:-127.0.0.1}:${HTTP_PORT:-8080}:8080"
+    environment:
+      GITHUB_TOKEN: ${GITHUB_TOKEN:-}
+      DOCKERHUB_USERNAME: ${DOCKERHUB_USERNAME:-}
+      DOCKERHUB_TOKEN: ${DOCKERHUB_TOKEN:-}
+      NPM_REGISTRY: ${NPM_REGISTRY:-https://registry.npmjs.org}
+      PYPI_INDEX: ${PYPI_INDEX:-https://pypi.org}
+    volumes:
+      - data:/data
+      # Dossier d'export : la clé USB elle-même, ou un dossier copié ensuite sur la clé
+      - ${EXPORT_DIR:-./exports}:/exports
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    read_only: true
+    tmpfs:
+      - /tmp:size=2g
+      - /config:mode=1777
+      # Cache Symfony et journaux, reconstruits au démarrage
+      - /app/var:mode=1777
+
+volumes:
+  data:

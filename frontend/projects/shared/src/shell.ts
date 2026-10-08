@@ -49,7 +49,7 @@ export interface NavItem {
     <sas-toasts />
   `,
   styles: `
-    .layout { display: grid; grid-template-columns: var(--sidebar) 1fr; min-height: 100dvh; }
+    .layout { display: grid; grid-template-columns: var(--sidebar) minmax(0, 1fr); min-height: 100dvh; }
     .sidebar { position: sticky; top: 0; height: 100dvh; display: flex; flex-direction: column; gap: 20px; padding: 20px 14px;
       background: var(--surface); border-right: 1px solid var(--border); }
     .brand { display: flex; align-items: center; gap: 10px; padding: 4px 8px; color: inherit; text-decoration: none; }
@@ -68,7 +68,8 @@ export interface NavItem {
     .main { min-width: 0; }
 
     @media (max-width: 860px) {
-      .layout { grid-template-columns: 1fr; }
+      .layout { grid-template-columns: minmax(0, 1fr); }
+      .sidebar { min-width: 0; }
       .sidebar { position: sticky; z-index: 10; height: auto; flex-direction: row; flex-wrap: wrap; align-items: center; gap: 8px 12px;
         padding: 10px 12px; border-right: none; border-bottom: 1px solid var(--border); }
       ul { display: flex; overflow-x: auto; order: 3; width: 100%; scrollbar-width: none; }

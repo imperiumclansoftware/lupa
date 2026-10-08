@@ -5,7 +5,7 @@ namespace App\Import;
 use Sas\Bundle\BundleFiles;
 
 /**
- * Bundles disponibles à l'import : sur la clé USB montée (INBOX_DIR, lecture seule possible)
+ * Bundles disponibles à l'import : sur la clé USB montée (INBOX_DIR et deux niveaux de sous-dossiers, lecture seule possible)
  * et envoyés depuis le navigateur (UPLOAD_DIR).
  */
 final readonly class Inbox
@@ -32,8 +32,10 @@ final readonly class Inbox
             if (!is_dir($dir) || !is_readable($dir)) {
                 continue;
             }
-            foreach (BundleFiles::discover($dir) as $bundle) {
-                $found[] = ['source' => $source] + $bundle;
+            foreach (self::directories($dir, 'usb' === $source ? 2 : 0) as $folder) {
+                foreach (BundleFiles::discover($folder) as $bundle) {
+                    $found[] = ['source' => $source] + $bundle;
+                }
             }
         }
 
@@ -50,6 +52,26 @@ final readonly class Inbox
         }
 
         return null;
+    }
+
+    /**
+     * Le dossier et ses sous-dossiers jusqu'à $depth niveaux : en montant /media, la clé apparaît
+     * sous /media/<utilisateur>/<nom de la clé> sans avoir à connaître son nom.
+     *
+     * @return list<string>
+     */
+    private static function directories(string $dir, int $depth): array
+    {
+        $dirs = [$dir];
+        if ($depth > 0) {
+            foreach (new \DirectoryIterator($dir) as $entry) {
+                if ($entry->isDir() && !$entry->isDot() && !str_starts_with($entry->getFilename(), '.') && $entry->isReadable()) {
+                    array_push($dirs, ...self::directories($entry->getPathname(), $depth - 1));
+                }
+            }
+        }
+
+        return $dirs;
     }
 
     public function available(string $source): bool

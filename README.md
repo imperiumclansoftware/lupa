@@ -1,0 +1,111 @@
+# Sas
+
+Dépôts de paquets **hors ligne** pour un réseau isolé d'Internet : npm, Python (PyPI), Composer et
+images Docker. Deux applications web, reliées par une clé USB :
+
+```
+ INTERNET                               CLÉ USB                       RÉSEAU ISOLÉ
+┌─────────────────────────┐   export   ┌──────────────────┐  import  ┌──────────────────────────────┐
+│ Collecteur              │ ─────────► │ sas-…-000007.tar │ ───────► │ Miroir                       │
+│ listes, lockfiles       │            │ manifeste signé  │          │ vérifie signature + sha256   │
+│ résolution des dépend.  │            │ + fichiers       │          │ sert npm, PyPI, Composer,    │
+│ téléchargement vérifié  │            │   (sha256)       │          │ Docker aux postes            │
+└─────────────────────────┘            └──────────────────┘          └──────────────────────────────┘
+```
+
+- **Collecteur** (`collector/`) : on décrit des **listes** de paquets (saisie libre ou fichier de
+  verrouillage : `package-lock.json`, `requirements.txt`, `composer.lock`/`composer.json`), il résout
+  toutes les dépendances avec les outils officiels (npm, pip, Composer) ou l'API des registres Docker,
+  télécharge en vérifiant les sommes de contrôle publiées et range tout dans un stockage par
+  empreinte sha256 (un fichier commun à plusieurs paquets ou images n'est stocké qu'une fois).
+- **Export** : un *bundle* tar contenant un manifeste signé (Ed25519) et les fichiers. Les exports
+  sont **incrémentaux** (seulement ce qui n'a jamais été transporté) et peuvent être **découpés** en
+  parties de 4 Go pour une clé FAT32.
+- **Miroir** (`mirror/`) : importe un bundle seulement si sa signature provient d'un collecteur
+  approuvé et que chaque fichier a la bonne empreinte, puis sert des registres compatibles avec les
+  clients standards — aucun outil à installer sur les postes.
+
+| Écosystème | Ce qui est collecté | Côté poste client |
+|---|---|---|
+| npm | arbre complet de `npm install`, y compris les dépendances optionnelles de toutes les plateformes | `npm config set registry http://miroir/npm/` |
+| Python | wheels pour chaque cible choisie (version de Python × Linux/Windows/macOS/musl), sdist en option | `pip … --index-url http://miroir/pypi/simple/` (PEP 503 / 691), uv |
+| Composer | archives des versions résolues (contrainte de version PHP en option) | dépôt `composer` `http://miroir/composer` (format p2) |
+| Docker | index multi-plateformes d'origine + plateformes choisies + attestations | `docker pull miroir/library/nginx:1.27` ou `registry-mirrors` |
+
+## Développement
+
+Prérequis : Docker (rootless conseillé), comme le projet Constellation.
+
+```bash
+make up                        # .env, images, conteneurs, migrations
+make user app=collector        # compte du collecteur (mot de passe saisi masqué)
+make user app=mirror           # compte du miroir
+```
+
+| URL | Service |
+|---|---|
+| http://collecte.localhost:8090 | Collecteur (Angular + API Symfony), avec accès Internet |
+| http://miroir.localhost:8090 | Miroir, sur un réseau Docker **sans accès Internet** |
+| `localhost:8090` | Miroir aussi, pour `docker pull localhost:8090/library/alpine:3.20` sans réglage du démon |
+
+Le dossier `./usb` joue le rôle de la clé : le collecteur y exporte, le miroir y lit.
+Les machines de test placées sur le réseau `sas_isolated` joignent le miroir à l'adresse
+`http://miroir.test` ; elles n'ont pas Internet, ce qui permet de vérifier un vrai fonctionnement hors ligne :
+
+```bash
+docker run --rm --network sas_isolated node:24-alpine sh -c \
+  'cd /tmp && npm init -y && npm install express --registry http://miroir.test/npm/'
+```
+
+Commandes utiles : `make test` (PHPUnit des deux applications + compilation des fronts),
+`make workers` (à lancer après avoir modifié le code exécuté par les tâches de fond),
+`make logs s=collector-worker`, `make console app=mirror c="debug:router"`. `make` seul liste tout.
+
+### Organisation du code
+
+```
+shared/      bibliothèque commune (sas/bundle) : format du bundle, tar découpable, signature, stockage sha256
+collector/   Symfony : listes, résolveurs (src/Resolver), exports (src/Job/ExportRunner.php)
+mirror/      Symfony : import (src/Job/ImportRunner.php), registres (src/Controller/*RegistryController.php)
+frontend/    Angular : projects/collector, projects/mirror, projects/shared (composants communs)
+docker/      images de développement et de production
+deploy/      compose et guides d'installation de production
+```
+
+Les deux applications utilisent SQLite (aucun serveur de base à installer sur le réseau isolé) et
+Symfony Messenger pour les tâches longues (résolution, export, import), exécutées par un worker.
+
+## Production
+
+```bash
+make images VERSION=1.0.0          # images sas-collector et sas-mirror
+make mirror-kit VERSION=1.0.0      # dist/sas-miroir-1.0.0.tar : image + compose + INSTALL.md, à copier sur la clé
+make collector-kit VERSION=1.0.0   # dist/sas-collecteur-1.0.0 : compose + INSTALL.md
+```
+
+Le miroir s'installe sur le réseau isolé à partir du kit, sans Internet : voir
+[deploy/mirror/INSTALL.md](deploy/mirror/INSTALL.md). Pour le collecteur, voir
+[deploy/collector/INSTALL.md](deploy/collector/INSTALL.md).
+
+Chaque image contient le front, l'API et le worker (FrankenPHP), tourne sans privilège avec un système
+de fichiers en lecture seule, et garde toutes ses données dans le volume `/data`.
+
+## Sécurité
+
+- La clé USB est le seul lien avec l'extérieur, donc le point à protéger : le miroir n'accepte que des
+  bundles signés par une clé approuvée (empreinte comparée à l'œil au premier import), vérifie la
+  signature **avant** d'écrire quoi que ce soit, puis l'empreinte sha256 de chaque fichier.
+- Le collecteur vérifie à chaque téléchargement les sommes publiées par le registre (integrity sha512
+  npm, sha256 PyPI, digest des couches Docker, shasum Composer quand il est fourni).
+- Interfaces d'administration protégées par mot de passe (session, cookie `SameSite=Strict`, limitation
+  des tentatives). Les registres sont en lecture seule et accessibles sans authentification sur le
+  réseau isolé, comme un registre interne classique.
+- Hors périmètre : Sas ne contrôle pas le **contenu** des paquets (vulnérabilités, malveillance). Un
+  `npm audit` ou un scanner d'images reste à faire côté collecteur avant l'export si nécessaire.
+
+## Limites connues
+
+- Python : un paquet publié uniquement en sources (sans wheel) ne peut pas être résolu pour une cible
+  autre que celle du collecteur ; l'option « sources (sdist) » ajoute les sources des versions retenues.
+- npm : yarn.lock et pnpm-lock.yaml ne sont pas lus (utiliser les noms de paquets ou un package-lock.json).
+- Docker : les couches « non redistribuables » (images Windows) sont ignorées.
