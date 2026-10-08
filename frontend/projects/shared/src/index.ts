@@ -6,5 +6,6 @@ export * from './format';
 export * from './icon';
 export * from './jobs';
 export * from './login';
+export * from './logo';
 export * from './shell';
 export * from './toast';

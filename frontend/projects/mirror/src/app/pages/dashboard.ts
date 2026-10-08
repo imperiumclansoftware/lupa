@@ -11,7 +11,7 @@ import { MirrorApi, Overview } from '../api';
       <header class="page-header">
         <div>
           <h1>Miroir hors ligne</h1>
-          <p>Sert les dépôts npm, Python, Composer et Docker aux postes du réseau isolé, à partir des bundles apportés par clé USB.</p>
+          <p>Sert les dépôts npm, Python, Composer et Docker aux postes du réseau isolé, à partir des bundles apportés par clé USB depuis Rémus.</p>
         </div>
         <div class="actions">
           <a class="btn" routerLink="/utilisation"><sas-icon name="terminal" />Configurer les postes</a>
@@ -30,7 +30,7 @@ import { MirrorApi, Overview } from '../api';
           <section class="card card-body onboarding">
             <h2>Pour commencer</h2>
             <ol>
-              <li>Sur le collecteur (connecté à Internet), créez des listes et <strong>exportez un bundle</strong> sur une clé USB.</li>
+              <li>Dans Rémus, le collecteur connecté à Internet, créez des listes et <strong>exportez un bundle</strong> sur une clé USB.</li>
               <li>Branchez la clé ici et ouvrez <strong>Import</strong> ; approuvez la clé du collecteur après avoir comparé son empreinte.</li>
               <li>Configurez npm, pip, Composer et Docker sur les postes : voir <strong>Utilisation</strong>.</li>
             </ol>

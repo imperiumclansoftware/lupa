@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component, inject, input } from '@angular/core
 import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { Auth } from './auth';
 import { Icon } from './icon';
+import { Logo, LogoName } from './logo';
 import { ToastHost } from './toast';
 
 export interface NavItem {
@@ -14,14 +15,14 @@ export interface NavItem {
 /** Mise en page des pages connectées : navigation latérale (barre en haut sur mobile). */
 @Component({
   selector: 'sas-shell',
-  imports: [RouterOutlet, RouterLink, RouterLinkActive, Icon, ToastHost],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive, Icon, Logo, ToastHost],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="layout">
       <nav class="sidebar" aria-label="Navigation principale">
-        <a class="brand" routerLink="/">
-          <span class="logo"><sas-icon [name]="icon()" [size]="20" /></span>
-          <span><strong>Sas</strong><small>{{ product() }}</small></span>
+        <a class="brand" routerLink="/" [attr.aria-label]="brand() + ', tableau de bord'">
+          <sas-logo [name]="logo()" [size]="38" />
+          <span><strong class="wordmark">{{ brand() }}</strong><small>{{ product() }}</small></span>
         </a>
         <ul>
           @for (item of nav(); track item.path) {
@@ -38,6 +39,7 @@ export interface NavItem {
           <span class="badge" [class.badge-ok]="online()" [class.badge-warn]="!online()">
             <span class="dot"></span>{{ online() ? 'Connecté à Internet' : 'Réseau isolé' }}
           </span>
+          <span class="family"><sas-logo name="lupa" [size]="16" [bare]="true" />Lupa · Rémus &amp; Romulus</span>
           <div class="user">
             <span class="subtle">{{ auth.user()?.username }}</span>
             <button type="button" class="btn btn-ghost btn-sm" (click)="logout()"><sas-icon name="logout" [size]="16" />Déconnexion</button>
@@ -53,9 +55,9 @@ export interface NavItem {
     .sidebar { position: sticky; top: 0; height: 100dvh; display: flex; flex-direction: column; gap: 20px; padding: 20px 14px;
       background: var(--surface); border-right: 1px solid var(--border); }
     .brand { display: flex; align-items: center; gap: 10px; padding: 4px 8px; color: inherit; text-decoration: none; }
-    .brand strong { display: block; line-height: 1.2; }
+    .brand strong { display: block; font-size: 1.15rem; line-height: 1.15; }
     .brand small { color: var(--text-2); font-size: 0.8rem; }
-    .logo { display: grid; place-items: center; width: 36px; height: 36px; border-radius: 10px; background: var(--accent); color: var(--on-accent, #fff); flex: none; }
+    .family { display: inline-flex; align-items: center; gap: 6px; color: var(--text-3); font-size: 0.76rem; }
     ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; }
     li a { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: var(--radius-s); color: var(--text-2);
       text-decoration: none; font-weight: 600; font-size: 0.92rem; transition: background-color 120ms ease, color 120ms ease; }
@@ -76,13 +78,14 @@ export interface NavItem {
       li a { white-space: nowrap; }
       li a span { font-size: 0.86rem; }
       .footer { margin: 0 0 0 auto; padding: 0; grid-auto-flow: column; align-items: center; }
-      .footer .badge, .footer .subtle { display: none; }
+      .footer .badge, .footer .subtle, .footer .family { display: none; }
     }
   `,
 })
 export class Shell {
+  readonly brand = input.required<string>();
   readonly product = input.required<string>();
-  readonly icon = input('package');
+  readonly logo = input.required<LogoName>();
   readonly nav = input.required<NavItem[]>();
   readonly online = input(true);
   protected readonly auth = inject(Auth);

@@ -1,15 +1,15 @@
-/* Collecteur : accent bleu (côté Internet) */
+/* Rémus, le collecteur (côté Internet) : terre cuite */
 :root {
-  --accent: #2f5bd8;
-  --accent-strong: #2348b4;
-  --accent-soft: #e6ecfc;
+  --accent: #b4532a;
+  --accent-strong: #933f1c;
+  --accent-soft: #f8e9e1;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --accent: #6d8ff0;
-    --accent-strong: #9cb3f6;
-    --accent-soft: #1d2747;
-    --on-accent: #0b1020;
+    --accent: #e58a5c;
+    --accent-strong: #f2b393;
+    --accent-soft: #3a2117;
+    --on-accent: #1d0d06;
   }
 }

@@ -168,7 +168,7 @@ interface Upload {
     <sas-dialog heading="Approuver ce collecteur ?">
       @if (trusting(); as item) {
         <p>Ce bundle est signé par <strong>{{ item.report?.collector?.name }}</strong>, que ce miroir ne connaît pas encore.</p>
-        <p class="muted">Vérifiez que l’empreinte ci-dessous est <strong>identique</strong> à celle affichée dans le collecteur (Réglages › Signature). Sinon, n’importez pas ce bundle.</p>
+        <p class="muted">Vérifiez que l’empreinte ci-dessous est <strong>identique</strong> à celle affichée dans Rémus (Réglages › Signature des bundles). Sinon, n’importez pas ce bundle.</p>
         <div class="fp"><span class="fingerprint">{{ item.report?.collector?.fingerprint }}</span></div>
         <label class="check"><input type="checkbox" #confirm (change)="confirmed.set(confirm.checked)" /> J’ai comparé l’empreinte : elle est identique.</label>
       }

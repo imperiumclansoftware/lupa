@@ -12,7 +12,7 @@ import { inject } from '@angular/core';
       <header class="page-header">
         <div>
           <h1>{{ data()?.identity?.name ?? 'Collecteur' }}</h1>
-          <p>Télécharge les paquets sur Internet et prépare les bundles à transporter sur clé USB vers le miroir hors ligne.</p>
+          <p>Télécharge les paquets sur Internet et prépare les bundles à transporter sur clé USB vers Romulus, le miroir hors ligne.</p>
         </div>
         <div class="actions">
           <a class="btn" routerLink="/listes/nouvelle"><sas-icon name="plus" />Nouvelle liste</a>
@@ -29,7 +29,7 @@ import { inject } from '@angular/core';
             <ol>
               <li><strong>Créez une liste</strong> de paquets (npm, Python, Composer ou Docker), ou importez un fichier de verrouillage.</li>
               <li><strong>Mettez-la à jour</strong> : le collecteur résout les dépendances et télécharge tout.</li>
-              <li><strong>Exportez</strong> un bundle vers la clé USB, puis importez-le dans le miroir.</li>
+              <li><strong>Exportez</strong> un bundle vers la clé USB, puis importez-le dans Romulus.</li>
             </ol>
             <a class="btn btn-primary" routerLink="/listes/nouvelle"><sas-icon name="plus" />Créer une première liste</a>
           </section>
@@ -40,7 +40,7 @@ import { inject } from '@angular/core';
             <span class="stat-label">À transporter</span>
             @if (pendingTotal() > 0) {
               <strong class="stat-value">{{ pendingTotal() | plural: 'paquet' }}</strong>
-              <span class="muted">jamais exportés vers le miroir</span>
+              <span class="muted">jamais exportés vers Romulus</span>
             } @else {
               <strong class="stat-value">Tout est exporté</strong>
               <span class="muted">Mettez à jour vos listes pour récupérer les nouvelles versions.</span>

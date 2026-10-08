@@ -1,4 +1,4 @@
-# Installer le collecteur Sas
+# Installer Rémus, le collecteur
 
 Le collecteur tourne sur une machine **connectée à Internet**. Il télécharge les paquets et écrit
 des bundles signés à transporter sur clé USB vers le miroir.

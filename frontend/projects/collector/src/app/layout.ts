@@ -5,7 +5,7 @@ import { NavItem, Shell } from '@sas/shared';
   selector: 'app-layout',
   imports: [Shell],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  template: `<sas-shell product="Collecteur" icon="globe" [nav]="nav" [online]="true" />`,
+  template: `<sas-shell brand="Rémus" product="Collecteur de paquets" logo="remus" [nav]="nav" [online]="true" />`,
 })
 export class Layout {
   protected readonly nav: NavItem[] = [

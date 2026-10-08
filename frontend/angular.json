@@ -52,6 +52,7 @@
             "styles": [
               "node_modules/@fontsource-variable/manrope/index.css",
               "node_modules/@fontsource-variable/jetbrains-mono/index.css",
+              "node_modules/@fontsource-variable/cinzel/index.css",
               "projects/shared/src/styles.css",
               "projects/collector/src/styles.css"
             ]
@@ -141,6 +142,7 @@
             "styles": [
               "node_modules/@fontsource-variable/manrope/index.css",
               "node_modules/@fontsource-variable/jetbrains-mono/index.css",
+              "node_modules/@fontsource-variable/cinzel/index.css",
               "projects/shared/src/styles.css",
               "projects/mirror/src/styles.css"
             ]

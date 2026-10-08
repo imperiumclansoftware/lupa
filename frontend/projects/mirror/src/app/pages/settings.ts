@@ -41,7 +41,7 @@ import { viewChild } from '@angular/core';
 
       <form class="card card-body stack" (ngSubmit)="add()">
         <h2>Ajouter une clé</h2>
-        <p class="muted">Copiez la clé publique depuis le collecteur (Réglages › Signature des bundles).</p>
+        <p class="muted">Copiez la clé publique depuis Rémus (Réglages › Signature des bundles).</p>
         <div class="field">
           <label for="label">Nom</label>
           <input class="input" id="label" name="label" [(ngModel)]="label" placeholder="ex. Collecteur du bureau" maxlength="120" />

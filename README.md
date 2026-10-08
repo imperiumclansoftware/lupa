@@ -1,19 +1,24 @@
-# Sas
+# Lupa — Rémus & Romulus
 
 Dépôts de paquets **hors ligne** pour un réseau isolé d'Internet : npm, Python (PyPI), Composer et
-images Docker. Deux applications web, reliées par une clé USB :
+images Docker. Deux applications web jumelles, reliées par une clé USB :
+
+- **Rémus**, le collecteur : il franchit la limite et rapporte les paquets d'Internet ;
+- **Romulus**, le miroir : il garde l'enceinte du réseau isolé et ne laisse entrer que ce qui est signé.
+
+(Le nom technique du projet reste `sas` : dossiers, images Docker `sas-collector` / `sas-mirror`.)
 
 ```
  INTERNET                               CLÉ USB                       RÉSEAU ISOLÉ
 ┌─────────────────────────┐   export   ┌──────────────────┐  import  ┌──────────────────────────────┐
-│ Collecteur              │ ─────────► │ sas-…-000007.tar │ ───────► │ Miroir                       │
+│ Rémus (collecteur)      │ ─────────► │ sas-…-000007.tar │ ───────► │ Romulus (miroir)             │
 │ listes, lockfiles       │            │ manifeste signé  │          │ vérifie signature + sha256   │
 │ résolution des dépend.  │            │ + fichiers       │          │ sert npm, PyPI, Composer,    │
 │ téléchargement vérifié  │            │   (sha256)       │          │ Docker aux postes            │
 └─────────────────────────┘            └──────────────────┘          └──────────────────────────────┘
 ```
 
-- **Collecteur** (`collector/`) : on décrit des **listes** de paquets (saisie libre ou fichier de
+- **Rémus, le collecteur** (`collector/`) : on décrit des **listes** de paquets (saisie libre ou fichier de
   verrouillage : `package-lock.json`, `requirements.txt`, `composer.lock`/`composer.json`), il résout
   toutes les dépendances avec les outils officiels (npm, pip, Composer) ou l'API des registres Docker,
   télécharge en vérifiant les sommes de contrôle publiées et range tout dans un stockage par
@@ -21,7 +26,7 @@ images Docker. Deux applications web, reliées par une clé USB :
 - **Export** : un *bundle* tar contenant un manifeste signé (Ed25519) et les fichiers. Les exports
   sont **incrémentaux** (seulement ce qui n'a jamais été transporté) et peuvent être **découpés** en
   parties de 4 Go pour une clé FAT32.
-- **Miroir** (`mirror/`) : importe un bundle seulement si sa signature provient d'un collecteur
+- **Romulus, le miroir** (`mirror/`) : importe un bundle seulement si sa signature provient d'un collecteur
   approuvé et que chaque fichier a la bonne empreinte, puis sert des registres compatibles avec les
   clients standards — aucun outil à installer sur les postes.
 
@@ -44,8 +49,8 @@ make user app=mirror           # compte du miroir
 
 | URL | Service |
 |---|---|
-| http://collecte.localhost:8090 | Collecteur (Angular + API Symfony), avec accès Internet |
-| http://miroir.localhost:8090 | Miroir, sur un réseau Docker **sans accès Internet** |
+| http://collecte.localhost:8090 | Rémus, le collecteur (Angular + API Symfony), avec accès Internet |
+| http://miroir.localhost:8090 | Romulus, le miroir, sur un réseau Docker **sans accès Internet** |
 | `localhost:8090` | Miroir aussi, pour `docker pull localhost:8090/library/alpine:3.20` sans réglage du démon |
 
 Le dossier `./usb` joue le rôle de la clé : le collecteur y exporte, le miroir y lit.

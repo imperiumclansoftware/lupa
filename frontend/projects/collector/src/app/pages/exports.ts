@@ -12,7 +12,7 @@ import { KeyValuePipe } from '@angular/common';
       <header class="page-header">
         <div>
           <h1>Exports</h1>
-          <p>Un export écrit un bundle signé dans le dossier d’export (la clé USB). Copiez-le sur le miroir et importez-le.</p>
+          <p>Un export écrit un bundle signé dans le dossier d’export (la clé USB). Copiez-le vers Romulus et importez-le.</p>
         </div>
       </header>
 
@@ -115,8 +115,8 @@ import { KeyValuePipe } from '@angular/common';
           <h2>Transporter un bundle</h2>
           <ol>
             <li>Copiez tous les fichiers du bundle (<code>sas-….tar</code> ou <code>sas-….tar.001</code>, <code>.002</code>…) sur la clé USB, ou téléchargez-les ci-dessus.</li>
-            <li>Branchez la clé sur le serveur du miroir, ouvrez <strong>Import</strong> dans le miroir et choisissez le bundle.</li>
-            <li>À la première fois, comparez l’empreinte affichée par le miroir avec celle des <strong>Réglages</strong> du collecteur.</li>
+            <li>Branchez la clé sur le serveur du miroir, ouvrez <strong>Import</strong> dans Romulus et choisissez le bundle.</li>
+            <li>À la première fois, comparez l’empreinte affichée par Romulus avec celle des <strong>Réglages</strong> de Rémus.</li>
           </ol>
           <p class="subtle">Importez les bundles dans l’ordre des numéros : un bundle « Nouveautés » s’appuie sur les précédents.</p>
         </section>

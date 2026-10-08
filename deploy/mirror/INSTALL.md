@@ -1,7 +1,7 @@
-# Installer le miroir Sas sur le réseau isolé
+# Installer Romulus, le miroir, sur le réseau isolé
 
 Le miroir sert aux postes du réseau isolé les paquets npm, Python, Composer et les images Docker
-apportés par clé USB depuis le collecteur. Il n'a besoin d'aucun accès à Internet.
+apportés par clé USB depuis Rémus, le collecteur. Il n'a besoin d'aucun accès à Internet.
 
 ## Prérequis
 
@@ -30,7 +30,7 @@ L'interface est alors sur `http://<serveur>:8080`.
    Sur un serveur sans bureau : `sudo mount /dev/sdX1 /media/cle`.
 2. Ouvrez **Import** : les bundles de la clé apparaissent.
 3. Au premier import, le miroir affiche l'**empreinte** de la clé du collecteur. Comparez-la avec
-   celle du collecteur (Réglages › Signature des bundles) ; si elles sont identiques, approuvez.
+   celle affichée dans Rémus (Réglages › Signature des bundles) ; si elles sont identiques, approuvez.
 4. Importez les bundles **dans l'ordre de leurs numéros**.
 
 Sans montage possible sur le serveur, les fichiers du bundle peuvent aussi être déposés depuis un

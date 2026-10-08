@@ -1,15 +1,15 @@
-/* Miroir : accent vert (côté réseau isolé) */
+/* Romulus, le miroir (côté réseau isolé) : vert laurier */
 :root {
-  --accent: #0f7a63;
-  --accent-strong: #0b5f4d;
-  --accent-soft: #e0f2ec;
+  --accent: #2f6b4f;
+  --accent-strong: #22523c;
+  --accent-soft: #e2efe8;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --accent: #3fbf9b;
-    --accent-strong: #7ad8bd;
-    --accent-soft: #123129;
-    --on-accent: #06140f;
+    --accent: #6cbf96;
+    --accent-strong: #9ed8bb;
+    --accent-soft: #15302a;
+    --on-accent: #06140e;
   }
 }

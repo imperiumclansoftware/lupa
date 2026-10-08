@@ -85,7 +85,7 @@ import { Artifact, CollectorApi, PackageList } from '../api';
     </div>
 
     <sas-dialog #confirmDelete heading="Supprimer cette liste ?">
-      <p>Les paquets déjà téléchargés restent dans le collecteur et sur le miroir ; seule la liste est supprimée.</p>
+      <p>Les paquets déjà téléchargés restent dans Rémus et dans Romulus ; seule la liste est supprimée.</p>
       <div dialog-actions>
         <button type="button" class="btn" (click)="confirmDelete.close()">Annuler</button>
         <button type="button" class="btn btn-primary" (click)="remove()">Supprimer</button>

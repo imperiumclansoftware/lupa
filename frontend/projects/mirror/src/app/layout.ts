@@ -5,7 +5,7 @@ import { NavItem, Shell } from '@sas/shared';
   selector: 'app-layout',
   imports: [Shell],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  template: `<sas-shell product="Miroir hors ligne" icon="hdd" [nav]="nav" [online]="false" />`,
+  template: `<sas-shell brand="Romulus" product="Miroir hors ligne" logo="romulus" [nav]="nav" [online]="false" />`,
 })
 export class Layout {
   protected readonly nav: NavItem[] = [

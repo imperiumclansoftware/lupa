@@ -74,7 +74,7 @@ final class CollectorIdentity
         file_put_contents($this->identityDir.'/secret.key', $keys['secretKey']);
         umask($old);
         $id = bin2hex(random_bytes(8));
-        $this->save(['id' => $id, 'name' => 'Collecteur '.strtoupper(substr($id, 0, 4)), 'publicKey' => $keys['publicKey']]);
+        $this->save(['id' => $id, 'name' => 'Rémus '.strtoupper(substr($id, 0, 4)), 'publicKey' => $keys['publicKey']]);
 
         return $this->data;
     }
