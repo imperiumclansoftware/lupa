@@ -90,6 +90,7 @@ mirror-kit: ## Kit d'installation du miroir à copier sur clé USB : dist/sas-mi
 	rm -rf dist/sas-miroir-$(VERSION) && mkdir -p dist/sas-miroir-$(VERSION)
 	docker save sas-mirror:$(VERSION) sas-mirror:latest | gzip > dist/sas-miroir-$(VERSION)/sas-mirror-$(VERSION).tar.gz
 	cp deploy/mirror/compose.yaml deploy/mirror/.env.example deploy/mirror/INSTALL.md dist/sas-miroir-$(VERSION)/
+	cp scripts/env-sync.sh dist/sas-miroir-$(VERSION)/configure.sh
 	sed -i 's/^SAS_MIRROR_IMAGE=.*/SAS_MIRROR_IMAGE=sas-mirror:$(VERSION)/' dist/sas-miroir-$(VERSION)/.env.example
 	cd dist/sas-miroir-$(VERSION) && sha256sum * > SHA256SUMS
 	tar -C dist -cf dist/sas-miroir-$(VERSION).tar sas-miroir-$(VERSION)
@@ -99,5 +100,6 @@ collector-kit: ## Dossier de déploiement du collecteur : dist/sas-collecteur-VE
 	@test -n "$$(docker images -q sas-collector:$(VERSION))" || $(MAKE) images VERSION=$(VERSION)
 	rm -rf dist/sas-collecteur-$(VERSION) && mkdir -p dist/sas-collecteur-$(VERSION)/exports
 	cp deploy/collector/compose.yaml deploy/collector/.env.example deploy/collector/INSTALL.md dist/sas-collecteur-$(VERSION)/
+	cp scripts/env-sync.sh dist/sas-collecteur-$(VERSION)/configure.sh
 	sed -i 's/^SAS_COLLECTOR_IMAGE=.*/SAS_COLLECTOR_IMAGE=sas-collector:$(VERSION)/' dist/sas-collecteur-$(VERSION)/.env.example
-	@echo "Prêt : dist/sas-collecteur-$(VERSION) (cp .env.example .env && docker compose up -d)"
+	@echo "Prêt : dist/sas-collecteur-$(VERSION) (./configure.sh && docker compose up -d)"

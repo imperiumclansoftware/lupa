@@ -14,6 +14,9 @@ services:
     environment:
       # Adresse des paquets donnée aux clients ; vide = celle par laquelle ils contactent le miroir
       PUBLIC_URL: ${PUBLIC_URL:-}
+      # Facultatif : généré au premier démarrage et conservé dans le volume (ou Docker secret via APP_SECRET_FILE)
+      APP_SECRET: ${APP_SECRET:-}
+      APP_SECRET_FILE: ${APP_SECRET_FILE:-}
     volumes:
       - data:/data
       # Point de montage des clés USB, en lecture seule. Les bundles sont cherchés jusqu'à deux niveaux

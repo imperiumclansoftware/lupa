@@ -12,6 +12,12 @@ services:
       # Par défaut accessible seulement depuis cette machine
       - "${HTTP_BIND:-127.0.0.1}:${HTTP_PORT:-8080}:8080"
     environment:
+      # Facultatif : généré au premier démarrage et conservé dans le volume (ou Docker secret via APP_SECRET_FILE)
+      APP_SECRET: ${APP_SECRET:-}
+      APP_SECRET_FILE: ${APP_SECRET_FILE:-}
+      # Réinstallation : clé de signature d'un ancien Rémus (contenu de secret.key), jamais prioritaire sur une clé installée
+      REMUS_SIGNING_KEY: ${REMUS_SIGNING_KEY:-}
+      REMUS_SIGNING_KEY_FILE: ${REMUS_SIGNING_KEY_FILE:-}
       GITHUB_TOKEN: ${GITHUB_TOKEN:-}
       DOCKERHUB_USERNAME: ${DOCKERHUB_USERNAME:-}
       DOCKERHUB_TOKEN: ${DOCKERHUB_TOKEN:-}

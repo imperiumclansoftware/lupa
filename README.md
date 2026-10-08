@@ -115,6 +115,24 @@ Le miroir s'installe sur le réseau isolé à partir du kit, sans Internet : voi
 Chaque image contient le front, l'API et le worker (FrankenPHP), tourne sans privilège avec un système
 de fichiers en lecture seule, et garde toutes ses données dans le volume `/data`.
 
+**Aucune variable obligatoire.** Au premier démarrage, les secrets sont générés et conservés dans le
+volume (`/data/secrets`, clé de signature de Rémus dans `/data/identity`) ; un code d'installation
+s'affiche dans les journaux pour l'assistant web. Lors d'une mise à jour, un secret existant et valide
+n'est jamais modifié :
+
+| Situation | Comportement |
+|---|---|
+| Secret fourni (`APP_SECRET`, `APP_SECRET_FILE` pour les Docker secrets) | utilisé ; s'il est invalide, le démarrage s'arrête avec une explication |
+| Secret conservé dans le volume, valide | inchangé |
+| Secret conservé dans le volume, invalide | régénéré, l'ancienne valeur est gardée à côté |
+| Clé de signature de Rémus perdue, corrompue ou différente de `REMUS_SIGNING_KEY` | démarrage arrêté, jamais remplacée en silence (les miroirs lui font confiance) |
+| `PUBLIC_URL`, `NPM_REGISTRY`, `PYPI_INDEX` mal formées | démarrage arrêté avec la valeur fautive |
+| Dossier d'export ou des clés USB inaccessible | avertissement dans les journaux |
+
+Les kits contiennent `configure.sh`, qui crée le `.env` ou le complète lors d'une mise à jour
+(nouvelles variables, nouvelle version de l'image) sans toucher aux réglages existants. En
+développement, `make up` fait de même avec le `.env` du projet.
+
 ## Sécurité
 
 - La clé USB est le seul lien avec l'extérieur, donc le point à protéger : le miroir n'accepte que des

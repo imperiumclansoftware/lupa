@@ -16,12 +16,14 @@ Copiez le kit `sas-miroir-<version>.tar` sur le serveur, puis :
 tar -xf sas-miroir-1.0.0.tar && cd sas-miroir-1.0.0
 sha256sum -c SHA256SUMS                      # le kit n'a pas été abîmé pendant la copie
 docker load -i sas-mirror-1.0.0.tar.gz
-cp .env.example .env                         # port, dossier de montage des clés…
+./configure.sh                               # crée .env (port, dossier des clés USB…) ; à relire
 docker compose up -d
-docker compose exec mirror php bin/console app:user:create admin
+docker compose logs mirror | grep "Code d'installation"
 ```
 
-L'interface est alors sur `http://<serveur>:8080`.
+Ouvrez ensuite `http://<serveur>:8080` : l'assistant d'installation demande ce code, puis crée le
+compte administrateur. Aucun secret n'est à configurer : ils sont générés au premier démarrage et
+conservés dans le volume `data` (dossier `secrets/`).
 
 ## Importer un bundle
 
@@ -71,8 +73,21 @@ Toutes les données (base, paquets, sessions) sont dans le volume `data`. Pour l
 docker run --rm -v sas-miroir_data:/data -v "$PWD":/backup alpine tar -czf /backup/sas-miroir-data.tar.gz -C /data .
 ```
 
-Mise à jour : copiez le nouveau kit, `docker load -i …`, changez `SAS_MIRROR_IMAGE` dans `.env`,
-puis `docker compose up -d`. Les migrations de la base sont appliquées au démarrage.
+Mise à jour : copiez le nouveau kit **dans le même dossier** que le précédent (votre `.env` est conservé), puis :
+
+```bash
+docker load -i sas-mirror-<version>.tar.gz
+./configure.sh          # ajoute les nouvelles variables et passe à la nouvelle image ; vos réglages ne changent pas
+docker compose up -d    # migrations de la base appliquées au démarrage ; secrets et données conservés
+```
+
+### Secrets
+
+| Secret | Où | Remarque |
+|---|---|---|
+| `APP_SECRET` (sessions) | généré dans `data/secrets/app_secret` | ou fourni par `APP_SECRET` / `APP_SECRET_FILE` (Docker secrets) ; un secret fourni invalide bloque le démarrage avec une explication |
+
+Un secret existant et valide n'est jamais modifié par une mise à jour.
 
 ### Docker rootless
 

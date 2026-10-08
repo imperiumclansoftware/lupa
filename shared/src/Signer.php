@@ -34,6 +34,19 @@ final class Signer
         return sodium_crypto_sign_verify_detached($sig, $data, self::decode($publicKey, \SODIUM_CRYPTO_SIGN_PUBLICKEYBYTES));
     }
 
+    public static function isSecretKey(string $secretKey): bool
+    {
+        $raw = base64_decode(trim($secretKey), true);
+
+        return false !== $raw && \SODIUM_CRYPTO_SIGN_SECRETKEYBYTES === \strlen($raw);
+    }
+
+    /** Clé publique correspondant à une clé secrète (toutes deux en base64). */
+    public static function publicKeyFromSecret(string $secretKey): string
+    {
+        return base64_encode(sodium_crypto_sign_publickey_from_secretkey(self::decode($secretKey, \SODIUM_CRYPTO_SIGN_SECRETKEYBYTES)));
+    }
+
     public static function isPublicKey(string $publicKey): bool
     {
         $raw = base64_decode(trim($publicKey), true);
