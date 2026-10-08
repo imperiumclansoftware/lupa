@@ -1,0 +1,188 @@
+{
+  "$schema": "./node_modules/@angular/cli/lib/config/schema.json",
+  "version": 1,
+  "cli": {
+    "packageManager": "npm"
+  },
+  "newProjectRoot": "projects",
+  "projects": {
+    "collector": {
+      "projectType": "application",
+      "schematics": {
+        "@schematics/angular:class": {
+          "skipTests": true
+        },
+        "@schematics/angular:component": {
+          "skipTests": true
+        },
+        "@schematics/angular:directive": {
+          "skipTests": true
+        },
+        "@schematics/angular:guard": {
+          "skipTests": true
+        },
+        "@schematics/angular:interceptor": {
+          "skipTests": true
+        },
+        "@schematics/angular:pipe": {
+          "skipTests": true
+        },
+        "@schematics/angular:resolver": {
+          "skipTests": true
+        },
+        "@schematics/angular:service": {
+          "skipTests": true
+        }
+      },
+      "root": "projects/collector",
+      "sourceRoot": "projects/collector/src",
+      "prefix": "app",
+      "architect": {
+        "build": {
+          "builder": "@angular/build:application",
+          "options": {
+            "browser": "projects/collector/src/main.ts",
+            "tsConfig": "projects/collector/tsconfig.app.json",
+            "assets": [
+              {
+                "glob": "**/*",
+                "input": "projects/collector/public"
+              }
+            ],
+            "styles": [
+              "node_modules/@fontsource-variable/manrope/index.css",
+              "node_modules/@fontsource-variable/jetbrains-mono/index.css",
+              "projects/shared/src/styles.css",
+              "projects/collector/src/styles.css"
+            ]
+          },
+          "configurations": {
+            "production": {
+              "budgets": [
+                {
+                  "type": "initial",
+                  "maximumWarning": "500kB",
+                  "maximumError": "1MB"
+                },
+                {
+                  "type": "anyComponentStyle",
+                  "maximumWarning": "8kB",
+                  "maximumError": "16kB"
+                }
+              ],
+              "outputHashing": "all"
+            },
+            "development": {
+              "optimization": false,
+              "extractLicenses": false,
+              "sourceMap": true
+            }
+          },
+          "defaultConfiguration": "production"
+        },
+        "serve": {
+          "builder": "@angular/build:dev-server",
+          "configurations": {
+            "production": {
+              "buildTarget": "collector:build:production"
+            },
+            "development": {
+              "buildTarget": "collector:build:development"
+            }
+          },
+          "defaultConfiguration": "development",
+          "options": {}
+        }
+      }
+    },
+    "mirror": {
+      "projectType": "application",
+      "schematics": {
+        "@schematics/angular:class": {
+          "skipTests": true
+        },
+        "@schematics/angular:component": {
+          "skipTests": true
+        },
+        "@schematics/angular:directive": {
+          "skipTests": true
+        },
+        "@schematics/angular:guard": {
+          "skipTests": true
+        },
+        "@schematics/angular:interceptor": {
+          "skipTests": true
+        },
+        "@schematics/angular:pipe": {
+          "skipTests": true
+        },
+        "@schematics/angular:resolver": {
+          "skipTests": true
+        },
+        "@schematics/angular:service": {
+          "skipTests": true
+        }
+      },
+      "root": "projects/mirror",
+      "sourceRoot": "projects/mirror/src",
+      "prefix": "app",
+      "architect": {
+        "build": {
+          "builder": "@angular/build:application",
+          "options": {
+            "browser": "projects/mirror/src/main.ts",
+            "tsConfig": "projects/mirror/tsconfig.app.json",
+            "assets": [
+              {
+                "glob": "**/*",
+                "input": "projects/mirror/public"
+              }
+            ],
+            "styles": [
+              "node_modules/@fontsource-variable/manrope/index.css",
+              "node_modules/@fontsource-variable/jetbrains-mono/index.css",
+              "projects/shared/src/styles.css",
+              "projects/mirror/src/styles.css"
+            ]
+          },
+          "configurations": {
+            "production": {
+              "budgets": [
+                {
+                  "type": "initial",
+                  "maximumWarning": "500kB",
+                  "maximumError": "1MB"
+                },
+                {
+                  "type": "anyComponentStyle",
+                  "maximumWarning": "8kB",
+                  "maximumError": "16kB"
+                }
+              ],
+              "outputHashing": "all"
+            },
+            "development": {
+              "optimization": false,
+              "extractLicenses": false,
+              "sourceMap": true
+            }
+          },
+          "defaultConfiguration": "production"
+        },
+        "serve": {
+          "builder": "@angular/build:dev-server",
+          "configurations": {
+            "production": {
+              "buildTarget": "mirror:build:production"
+            },
+            "development": {
+              "buildTarget": "mirror:build:development"
+            }
+          },
+          "defaultConfiguration": "development",
+          "options": {}
+        }
+      }
+    }
+  }
+}

@@ -61,7 +61,12 @@ final class DockerRegistryController
             return $this->manifest($m[1], $m[2]);
         }
         if (preg_match('#^(.+)/blobs/(sha256:([a-f0-9]{64}))$#', $path, $m)) {
-            if (null === $this->repository($m[1]) || !$this->files->has($m[3])) {
+            $name = $this->repository($m[1]);
+            // Seuls les fichiers d'une image de ce dépôt (pas n'importe quel fichier du stockage)
+            if (null === $name || !$this->files->has($m[3]) || false === $this->db->fetchOne(
+                "SELECT 1 FROM package p, json_each(p.blobs) b WHERE p.ecosystem = 'docker' AND p.name = ? AND b.value = ? LIMIT 1",
+                [$name, $m[3]],
+            )) {
                 return self::error('BLOB_UNKNOWN', 'Blob absent du miroir.', 404);
             }
             $response = $this->files->serve($m[3]);

@@ -67,7 +67,9 @@ final class UploadController
         $written = stream_copy_to_stream($in, $out);
         fclose($out);
         if ($received + $written > $meta['size']) {
-            ftruncate(fopen($this->partial($id), 'r+'), $received);
+            $handle = fopen($this->partial($id), 'r+');
+            ftruncate($handle, $received);
+            fclose($handle);
             throw new BadRequestHttpException('Taille dépassée.');
         }
 

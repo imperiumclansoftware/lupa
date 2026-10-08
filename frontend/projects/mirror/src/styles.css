@@ -1,0 +1,15 @@
+/* Miroir : accent vert (côté réseau isolé) */
+:root {
+  --accent: #0f7a63;
+  --accent-strong: #0b5f4d;
+  --accent-soft: #e0f2ec;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --accent: #3fbf9b;
+    --accent-strong: #7ad8bd;
+    --accent-soft: #123129;
+    --on-accent: #06140f;
+  }
+}

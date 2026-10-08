@@ -1,0 +1,30 @@
+{
+  "compileOnSave": false,
+  "compilerOptions": {
+    "strict": true,
+    "noImplicitOverride": true,
+    "noPropertyAccessFromIndexSignature": true,
+    "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": true,
+    "skipLibCheck": true,
+    "isolatedModules": true,
+    "experimentalDecorators": true,
+    "importHelpers": true,
+    "target": "ES2022",
+    "module": "preserve",
+    "paths": {
+      "@sas/shared": ["./projects/shared/src/index.ts"]
+    }
+  },
+  "angularCompilerOptions": {
+    "enableI18nLegacyMessageIdFormat": false,
+    "strictInjectionParameters": true,
+    "strictInputAccessModifiers": true,
+    "strictTemplates": true
+  },
+  "files": [],
+  "references": [
+    { "path": "./projects/collector/tsconfig.app.json" },
+    { "path": "./projects/mirror/tsconfig.app.json" }
+  ]
+}
