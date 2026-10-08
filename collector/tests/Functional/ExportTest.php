@@ -163,6 +163,14 @@ final class ExportTest extends WebTestCase
         $target = new BlobStore($this->dir.'/check-'.$sequence);
         self::assertEqualsCanonicalizing(array_column($manifest->blobs, 'sha256'), $reader->extractBlobs($target));
 
+        // Téléchargement par le navigateur (Exports › Historique) : fichier identique
+        $this->client->request('GET', sprintf('/api/exports/%d/files/%s.tar', $export->getId(), $base));
+        $downloaded = $this->client->getInternalResponse()->getContent();
+        self::assertResponseIsSuccessful();
+        self::assertResponseHeaderSame('Content-Type', 'application/x-tar');
+        self::assertStringContainsString('attachment', (string) $this->client->getResponse()->headers->get('Content-Disposition'));
+        self::assertSame(file_get_contents($file), $downloaded);
+
         return $manifest;
     }
 

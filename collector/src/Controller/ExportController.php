@@ -72,7 +72,8 @@ final class ExportController
         if (!\in_array($name, $export->getFiles(), true) || !is_file($path = $this->exportDir.'/'.$name)) {
             throw new NotFoundHttpException('Fichier absent du dossier d\'export.');
         }
-        $response = new BinaryFileResponse($path);
+        // Type fixé : sans symfony/mime, BinaryFileResponse ne peut pas le deviner
+        $response = new BinaryFileResponse($path, 200, ['Content-Type' => 'application/x-tar']);
         $response->setContentDisposition(ResponseHeaderBag::DISPOSITION_ATTACHMENT, $name);
 
         return $response;
