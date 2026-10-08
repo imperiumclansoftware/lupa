@@ -65,7 +65,7 @@ docker run -d --name remus --restart unless-stopped \
   -v remus-data:/data \
   -v "$PWD/exports:/exports" \
   iemperor/remus:1.0.0
-docker logs remus | grep "Code d'installation"
+docker logs remus 2>&1 | grep "Code d'installation"
 ```
 
 Ouvrez <http://127.0.0.1:8080> : l'assistant d'installation demande ce code, puis crée le compte
