@@ -27,7 +27,7 @@ security:
                 interval: '15 minutes'
             entry_point: App\Security\JsonLoginHandler
     access_control:
-        - { path: ^/api/(login|session)$, roles: PUBLIC_ACCESS }
+        - { path: ^/api/(login|session|setup)$, roles: PUBLIC_ACCESS }
         - { path: ^/api/, roles: ROLE_USER }
 
 when@test:

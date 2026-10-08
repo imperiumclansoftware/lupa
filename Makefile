@@ -14,7 +14,7 @@ VERSION ?= 1.0.0
 app ?= collector
 
 .DEFAULT_GOAL := help
-.PHONY: help init up down restart workers ps logs sh user console composer npm ng test test-back test-front build-front images mirror-kit collector-kit reset
+.PHONY: help init up down restart workers ps logs sh setup-code user console composer npm ng test test-back test-front build-front images mirror-kit collector-kit reset
 
 help: ## Affiche cette aide
 	@grep -E '^[a-zA-Z_-]+:.*?## ' $(MAKEFILE_LIST) | awk 'BEGIN {FS=":.*?## "}; {printf "  \033[36m%-14s\033[0m %s\n", $$1, $$2}'
@@ -47,6 +47,9 @@ logs: ## Logs en continu (make logs s=mirror-worker)
 
 sh: ## Shell PHP (make sh app=mirror)
 	$(DC) exec $(app) bash
+
+setup-code: ## Code de l'assistant d'installation, tant qu'aucun compte n'existe (make setup-code app=mirror)
+	$(DC) exec $(app) php bin/console app:setup:code
 
 user: ## Crée un compte (make user app=collector name=admin)
 	$(DC) exec $(app) php bin/console app:user:create $(or $(name),admin)

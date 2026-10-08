@@ -18,7 +18,7 @@ final class AdminAuthTest extends MirrorWebTestCase
 
         $this->client->request('GET', '/api/session');
         self::assertResponseIsSuccessful();
-        self::assertSame(['user' => null], $this->json());
+        self::assertSame(['user' => null, 'setupRequired' => true], $this->json());
     }
 
     public function testJsonLoginOpensSession(): void
@@ -30,7 +30,7 @@ final class AdminAuthTest extends MirrorWebTestCase
         self::assertSame(['username' => 'admin'], $this->json());
 
         $this->client->request('GET', '/api/session');
-        self::assertSame(['user' => ['username' => 'admin']], $this->json());
+        self::assertSame(['user' => ['username' => 'admin'], 'setupRequired' => false], $this->json());
 
         $this->client->request('GET', '/api/overview');
         self::assertResponseIsSuccessful();

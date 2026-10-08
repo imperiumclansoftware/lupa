@@ -57,6 +57,7 @@ ENV APP_ENV=prod \
     DATABASE_URL=sqlite:////data/app.db \
     STORAGE_DIR=/data/storage \
     SESSION_DIR=/data/sessions \
+    SETUP_TOKEN_FILE=/data/setup.code \
     TRUSTED_PROXIES=127.0.0.1,REMOTE_ADDR,private_ranges \
     XDG_DATA_HOME=/data/caddy \
     XDG_CONFIG_HOME=/config

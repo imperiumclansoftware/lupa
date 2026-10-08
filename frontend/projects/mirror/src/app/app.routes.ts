@@ -1,11 +1,26 @@
 import { Routes } from '@angular/router';
-import { JobsPage, LoginPage, authGuard } from '@sas/shared';
+import { JobsPage, LoginPage, SetupPage, authGuard, loginGuard, setupGuard } from '@sas/shared';
 import { Layout } from './layout';
 
 export const routes: Routes = [
   {
+    path: 'installation',
+    component: SetupPage,
+    canActivate: [setupGuard],
+    title: 'Installation · Romulus',
+    data: {
+      brand: 'Romulus',
+      product: 'Miroir hors ligne',
+      logo: 'romulus',
+      variant: 'mirror',
+      codeCommand:
+        "docker compose logs mirror | grep \"Code d'installation\"\n# ou : docker compose exec mirror php bin/console app:setup:code\n# développement : make setup-code app=mirror",
+    },
+  },
+  {
     path: 'connexion',
     component: LoginPage,
+    canActivate: [loginGuard],
     title: 'Connexion · Romulus',
     data: { brand: 'Romulus', product: 'Miroir hors ligne', logo: 'romulus', command: 'make user app=mirror' },
   },

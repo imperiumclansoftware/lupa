@@ -22,9 +22,8 @@ php bin/console cache:warmup --no-interaction -q
 info "Migrations de la base…"
 php bin/console doctrine:migrations:migrate --no-interaction --allow-no-migration -q
 
-if ! php -r '$db = new PDO("sqlite:/data/app.db"); exit((int) $db->query("SELECT COUNT(*) FROM \"user\"")->fetchColumn() > 0 ? 0 : 1);'; then
-	info "Aucun compte. Créez-en un : docker compose exec $SAS_APP php bin/console app:user:create admin"
-fi
+# Premier démarrage : code de l'assistant d'installation (ouvrir l'interface web pour créer le compte)
+php bin/console app:setup:code --no-interaction >&2
 
 # Worker des tâches (résolutions, exports, imports) : redémarré s'il s'arrête
 (

@@ -12,14 +12,25 @@ export class Auth {
   private readonly http = inject(HttpClient);
   private loaded = false;
   readonly user = signal<SessionUser | null>(null);
+  /** Aucun compte n'existe encore : l'assistant d'installation doit être utilisé */
+  readonly setupRequired = signal(false);
 
-  async load(): Promise<SessionUser | null> {
-    if (!this.loaded) {
-      const session = await firstValueFrom(this.http.get<{ user: SessionUser | null }>('/api/session'));
+  async load(force = false): Promise<SessionUser | null> {
+    if (!this.loaded || force) {
+      const session = await firstValueFrom(this.http.get<{ user: SessionUser | null; setupRequired?: boolean }>('/api/session'));
       this.user.set(session.user);
+      this.setupRequired.set(!!session.setupRequired);
       this.loaded = true;
     }
     return this.user();
+  }
+
+  /** Crée le premier compte (assistant d'installation) ; la session est ouverte dans la foulée. */
+  async setup(payload: Record<string, string | null>): Promise<void> {
+    const result = await firstValueFrom(this.http.post<{ user: SessionUser }>('/api/setup', payload));
+    this.user.set(result.user);
+    this.setupRequired.set(false);
+    this.loaded = true;
   }
 
   async login(username: string, password: string): Promise<void> {
@@ -48,10 +59,37 @@ export const authGuard: CanActivateFn = async (_route, state) => {
   const router = inject(Router);
   try {
     if (await auth.load()) return true;
+    if (auth.setupRequired()) return router.createUrlTree(['/installation']);
   } catch {
     // Serveur injoignable : l'écran de connexion affichera l'erreur
   }
   return router.createUrlTree(['/connexion'], { queryParams: state.url !== '/' ? { retour: state.url } : {} });
+};
+
+/** Assistant d'installation : seulement tant qu'aucun compte n'existe. */
+export const setupGuard: CanActivateFn = async () => {
+  const auth = inject(Auth);
+  const router = inject(Router);
+  try {
+    await auth.load(true);
+  } catch {
+    return true;
+  }
+  if (auth.user()) return router.createUrlTree(['/']);
+  return auth.setupRequired() ? true : router.createUrlTree(['/connexion']);
+};
+
+/** Écran de connexion : redirige vers l'assistant si aucun compte n'existe. */
+export const loginGuard: CanActivateFn = async () => {
+  const auth = inject(Auth);
+  const router = inject(Router);
+  try {
+    await auth.load(true);
+  } catch {
+    return true;
+  }
+  if (auth.user()) return router.createUrlTree(['/']);
+  return auth.setupRequired() ? router.createUrlTree(['/installation']) : true;
 };
 
 /** Session expirée pendant l'utilisation : retour à l'écran de connexion. */

@@ -1,4 +1,5 @@
 parameters:
+    env(SETUP_TOKEN_FILE): '%kernel.project_dir%/var/setup.code'
     env(SESSION_DIR): '%kernel.project_dir%/var/sessions/%kernel.environment%'
     env(IDENTITY_DIR): '%kernel.project_dir%/var/identity'
     env(STORAGE_DIR): '%kernel.project_dir%/var/storage'
