@@ -1,0 +1,24 @@
+parameters:
+    env(STORAGE_DIR): '%kernel.project_dir%/var/storage'
+    env(EXPORT_DIR): '%kernel.project_dir%/var/exports'
+    env(GITHUB_TOKEN): ''
+    env(DOCKERHUB_USERNAME): ''
+    env(DOCKERHUB_TOKEN): ''
+    env(NPM_REGISTRY): 'https://registry.npmjs.org'
+    env(PYPI_INDEX): 'https://pypi.org'
+    env(PIP_BIN): '/opt/pip/bin/pip'
+
+services:
+    _defaults:
+        autowire: true
+        autoconfigure: true
+        bind:
+            string $storageDir: '%env(STORAGE_DIR)%'
+            string $exportDir: '%env(EXPORT_DIR)%'
+            string $identityDir: '%kernel.project_dir%/var/identity'
+
+    App\:
+        resource: '../src/'
+
+    Sas\Bundle\BlobStore:
+        arguments: ['%env(STORAGE_DIR)%']

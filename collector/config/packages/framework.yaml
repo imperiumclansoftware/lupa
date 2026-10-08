@@ -1,0 +1,19 @@
+framework:
+    secret: '%env(APP_SECRET)%'
+    trusted_proxies: '%env(default::TRUSTED_PROXIES)%'
+    trusted_headers: ['x-forwarded-for', 'x-forwarded-host', 'x-forwarded-proto', 'x-forwarded-port']
+
+    session:
+        name: sas_collector
+        cookie_samesite: strict
+        cookie_secure: auto
+        cookie_httponly: true
+        # Sessions conservées dans var/ (survivent au redémarrage des conteneurs)
+        handler_id: session.handler.native_file
+        save_path: '%kernel.project_dir%/var/sessions/%kernel.environment%'
+
+when@test:
+    framework:
+        test: true
+        session:
+            storage_factory_id: session.storage.factory.mock_file

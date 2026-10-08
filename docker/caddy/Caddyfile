@@ -1,0 +1,57 @@
+{
+	# HTTP simple : l'environnement de développement n'écoute que sur 127.0.0.1
+	auto_https off
+	admin off
+}
+
+(security_headers) {
+	header {
+		X-Content-Type-Options "nosniff"
+		X-Frame-Options "DENY"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		-Server
+		-X-Powered-By
+	}
+}
+
+# Collecteur : télécharge les paquets sur Internet et prépare les bundles pour la clé USB
+http://{$COLLECTOR_DOMAIN} {
+	import security_headers
+	encode zstd gzip
+
+	@backend path /api/* /_wdt/* /_profiler/* /_profiler
+	handle @backend {
+		root * /srv/sas/collector/public
+		php_fastcgi collector:9000
+	}
+
+	handle {
+		reverse_proxy node-collector:4200
+	}
+}
+
+# Miroir : importe les bundles et sert les dépôts npm, PyPI, Composer et Docker sur le réseau isolé
+http://{$MIRROR_DOMAIN}, http://miroir.test, http://localhost {
+	import security_headers
+
+	# Registres : servis par Symfony (paquets déjà compressés, pas de ré-encodage)
+	@registries path /npm /npm/* /pypi/* /composer/* /v2 /v2/*
+	handle @registries {
+		root * /srv/sas/mirror/public
+		php_fastcgi mirror:9000 {
+			try_files index.php
+		}
+	}
+
+	@backend path /api/* /_wdt/* /_profiler/* /_profiler
+	handle @backend {
+		encode zstd gzip
+		root * /srv/sas/mirror/public
+		php_fastcgi mirror:9000
+	}
+
+	handle {
+		encode zstd gzip
+		reverse_proxy node-mirror:4201
+	}
+}

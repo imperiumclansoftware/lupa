@@ -1,0 +1,17 @@
+{
+    "name": "sas/bundle",
+    "description": "Format des bundles Sas (collecteur -> clé USB -> miroir) : manifeste signé, archive tar découpable, stockage par empreinte sha256",
+    "type": "library",
+    "license": "proprietary",
+    "require": {
+        "php": ">=8.4",
+        "ext-sodium": "*",
+        "ext-hash": "*",
+        "ext-intl": "*"
+    },
+    "autoload": {
+        "psr-4": {
+            "Sas\\Bundle\\": "src/"
+        }
+    }
+}

@@ -1,0 +1,22 @@
+parameters:
+    env(STORAGE_DIR): '%kernel.project_dir%/var/storage'
+    env(INBOX_DIR): '%kernel.project_dir%/var/inbox'
+    env(UPLOAD_DIR): '%kernel.project_dir%/var/uploads'
+    # Adresse publique du miroir dans les URL des paquets ; vide = déduite de la requête
+    env(PUBLIC_URL): ''
+
+services:
+    _defaults:
+        autowire: true
+        autoconfigure: true
+        bind:
+            string $storageDir: '%env(STORAGE_DIR)%'
+            string $inboxDir: '%env(INBOX_DIR)%'
+            string $uploadDir: '%env(UPLOAD_DIR)%'
+            string $publicUrl: '%env(PUBLIC_URL)%'
+
+    App\:
+        resource: '../src/'
+
+    Sas\Bundle\BlobStore:
+        arguments: ['%env(STORAGE_DIR)%']

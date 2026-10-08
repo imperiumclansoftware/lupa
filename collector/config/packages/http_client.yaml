@@ -1,0 +1,9 @@
+framework:
+    http_client:
+        default_options:
+            headers:
+                User-Agent: 'Sas-Collecteur/1.0 (+miroir hors ligne)'
+            retry_failed:
+                max_retries: 3
+                delay: 1000
+                multiplier: 3

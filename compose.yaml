@@ -1,0 +1,162 @@
+# Environnement de développement de Sas : collecteur (connecté à Internet) + miroir (réseau isolé)
+#  - un seul point d'entrée HTTP (Caddy) sur 127.0.0.1
+#  - le miroir est sur un réseau interne SANS accès Internet, comme en production
+#  - la « clé USB » est simulée par le dossier ./usb, partagé entre les deux applications
+#  - conteneurs sans capabilities Linux, no-new-privileges
+
+name: ${COMPOSE_PROJECT_NAME:-sas}
+
+x-hardening: &hardening
+  security_opt:
+    - no-new-privileges:true
+  cap_drop:
+    - ALL
+  restart: unless-stopped
+
+x-php: &php
+  <<: *hardening
+  image: sas-php:dev
+  build:
+    context: ./docker/php
+    args:
+      PHP_VERSION: ${PHP_VERSION:-8.4}
+      UID: ${APP_UID:-0}
+      GID: ${APP_GID:-0}
+
+x-collector-env: &collector-env
+  APP_ENV: dev
+  APP_SECRET: ${COLLECTOR_SECRET}
+  EXPORT_DIR: /srv/usb
+  TRUSTED_PROXIES: 127.0.0.1,REMOTE_ADDR
+  GITHUB_TOKEN: ${GITHUB_TOKEN:-}
+  DOCKERHUB_USERNAME: ${DOCKERHUB_USERNAME:-}
+  DOCKERHUB_TOKEN: ${DOCKERHUB_TOKEN:-}
+
+x-mirror-env: &mirror-env
+  APP_ENV: dev
+  APP_SECRET: ${MIRROR_SECRET}
+  INBOX_DIR: /srv/usb
+  TRUSTED_PROXIES: 127.0.0.1,REMOTE_ADDR
+
+services:
+  caddy:
+    <<: *hardening
+    image: caddy:2-alpine
+    cap_add:
+      - NET_BIND_SERVICE
+    environment:
+      COLLECTOR_DOMAIN: ${COLLECTOR_DOMAIN}
+      MIRROR_DOMAIN: ${MIRROR_DOMAIN}
+    ports:
+      - "127.0.0.1:${HTTP_PORT:-8090}:80"
+    volumes:
+      - ./docker/caddy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - ./collector/public:/srv/sas/collector/public:ro
+      - ./mirror/public:/srv/sas/mirror/public:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    networks:
+      edge:
+      isolated:
+        # Nom du miroir pour les machines de test du réseau isolé (make test-clients)
+        aliases:
+          - miroir.test
+
+  collector:
+    <<: *php
+    environment: *collector-env
+    working_dir: /srv/sas/collector
+    volumes:
+      - .:/srv/sas
+      - ./usb:/srv/usb
+      - composer_cache:/home/app/.composer
+      - npm_cache:/home/app/.npm
+    networks:
+      - edge
+
+  collector-worker:
+    <<: *php
+    environment: *collector-env
+    working_dir: /srv/sas/collector
+    command: ["php", "bin/console", "messenger:consume", "async", "--time-limit=3600", "-v"]
+    volumes:
+      - .:/srv/sas
+      - ./usb:/srv/usb
+      - npm_cache:/home/app/.npm
+    networks:
+      - edge
+    depends_on:
+      - collector
+
+  mirror:
+    <<: *php
+    environment: *mirror-env
+    working_dir: /srv/sas/mirror
+    volumes:
+      - .:/srv/sas
+      - ./usb:/srv/usb
+    networks:
+      - isolated
+
+  mirror-worker:
+    <<: *php
+    environment: *mirror-env
+    working_dir: /srv/sas/mirror
+    command: ["php", "bin/console", "messenger:consume", "async", "--time-limit=3600", "-v"]
+    volumes:
+      - .:/srv/sas
+      - ./usb:/srv/usb
+    networks:
+      - isolated
+    depends_on:
+      - mirror
+
+  node-collector:
+    <<: *hardening
+    image: sas-node:dev
+    build:
+      context: ./docker/node
+      args:
+        NODE_VERSION: ${NODE_VERSION:-24}
+        UID: ${APP_UID:-0}
+        GID: ${APP_GID:-0}
+    environment:
+      NG_PROJECT: collector
+      NG_PORT: 4200
+      NG_HOST: ${COLLECTOR_DOMAIN}
+      NG_CLI_ANALYTICS: "false"
+      NG_POLL: ${NG_POLL:-}
+    volumes:
+      - ./frontend:/app
+      - npm_cache:/home/app/.npm
+    networks:
+      - edge
+
+  node-mirror:
+    <<: *hardening
+    image: sas-node:dev
+    environment:
+      NG_PROJECT: mirror
+      NG_PORT: 4201
+      NG_HOST: ${MIRROR_DOMAIN}
+      NG_CLI_ANALYTICS: "false"
+      NG_POLL: ${NG_POLL:-}
+    volumes:
+      - ./frontend:/app
+    networks:
+      - isolated
+    depends_on:
+      - node-collector
+
+networks:
+  # Collecteur : accès Internet (registres npm, PyPI, Packagist, Docker Hub…)
+  edge:
+  # Miroir : réseau interne sans aucun accès Internet
+  isolated:
+    internal: true
+
+volumes:
+  caddy_data:
+  caddy_config:
+  composer_cache:
+  npm_cache:
