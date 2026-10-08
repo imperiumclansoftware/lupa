@@ -1,11 +1,11 @@
 import { ChangeDetectionStrategy, Component, OnInit, inject, input, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
-import { BytesPipe, ECOSYSTEMS, EcosystemPipe, Icon, PluralPipe, errorMessage } from '@sas/shared';
+import { BytesPipe, ECOSYSTEMS, EcosystemPipe, Icon, PluralPipe, errorMessage, Eco } from '@sas/shared';
 import { Artifact, CollectorApi, Page } from '../api';
 
 @Component({
-  imports: [FormsModule, Icon, BytesPipe, EcosystemPipe, PluralPipe],
+  imports: [Eco, FormsModule, Icon, BytesPipe, EcosystemPipe, PluralPipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="page">
@@ -21,7 +21,7 @@ import { Artifact, CollectorApi, Page } from '../api';
           <button type="button" role="tab" [attr.aria-selected]="!ecosystem()" (click)="setEcosystem('')">Tous</button>
           @for (eco of ecosystems; track eco.id) {
             <button type="button" role="tab" [attr.aria-selected]="ecosystem() === eco.id" (click)="setEcosystem(eco.id)">
-              <span class="eco-dot" [style.background]="'var(--eco-' + eco.id + ')'"></span>{{ eco.label }}
+              <sas-eco [ecosystem]="eco.id" [size]="22" />{{ eco.label }}
             </button>
           }
         </div>
@@ -47,7 +47,7 @@ import { Artifact, CollectorApi, Page } from '../api';
                     <tr>
                       <td><strong class="name">{{ a.name }}</strong>@if (a.filename) { <div class="subtle mono">{{ a.filename }}</div> }</td>
                       <td class="mono">{{ a.version }}</td>
-                      <td><span class="row"><span class="eco-dot" [style.background]="'var(--eco-' + a.ecosystem + ')'"></span>{{ a.ecosystem | ecosystem }}</span></td>
+                      <td><span class="row"><sas-eco [ecosystem]="a.ecosystem" [size]="26" />{{ a.ecosystem | ecosystem }}</span></td>
                       <td class="detail">{{ a.detail }}</td>
                       <td class="right num">{{ a.size | bytes }}</td>
                       <td>@if (a.exportSequence) { <span class="badge">n° {{ a.exportSequence }}</span> } @else { <span class="badge badge-accent">À exporter</span> }</td>
@@ -72,10 +72,6 @@ import { Artifact, CollectorApi, Page } from '../api';
   styles: `
     .toolbar { display: flex; flex-wrap: wrap; gap: 12px; justify-content: space-between; align-items: center; }
     .toolbar .input { width: 240px; }
-    .tabs { display: flex; gap: 4px; padding: 4px; background: var(--surface-3); border-radius: var(--radius); flex-wrap: wrap; }
-    .tabs button { display: inline-flex; align-items: center; gap: 6px; border: none; background: transparent; color: var(--text-2);
-      font: inherit; font-size: 0.88rem; font-weight: 600; padding: 6px 12px; border-radius: var(--radius-s); cursor: pointer; }
-    .tabs button[aria-selected='true'] { background: var(--surface); color: var(--text); box-shadow: var(--shadow); }
     .name { overflow-wrap: anywhere; }
     .detail { color: var(--text-2); font-size: 0.86rem; max-width: 360px; overflow-wrap: anywhere; }
     .pager { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 12px 16px; border-top: 1px solid var(--border); flex-wrap: wrap; }

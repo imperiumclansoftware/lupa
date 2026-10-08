@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, OnInit, computed, inject, input, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
-import { ECOSYSTEMS, EcosystemId, Icon, Toasts, errorMessage, formatBytes } from '@sas/shared';
+import { ECOSYSTEMS, EcosystemId, Icon, Toasts, errorMessage, formatBytes, Eco } from '@sas/shared';
 import { CollectorApi, EcosystemChoices, ListInput, PypiTarget } from '../api';
 
 const HELP: Record<EcosystemId, { placeholder: string; hint: string; lockfile: string; accept: string }> = {
@@ -32,7 +32,7 @@ const HELP: Record<EcosystemId, { placeholder: string; hint: string; lockfile: s
 };
 
 @Component({
-  imports: [FormsModule, RouterLink, Icon],
+  imports: [Eco, FormsModule, RouterLink, Icon],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <form class="page" (ngSubmit)="save(false)">
@@ -51,7 +51,7 @@ const HELP: Record<EcosystemId, { placeholder: string; hint: string; lockfile: s
           @for (eco of ecosystems; track eco.id) {
             <label class="eco-choice" [class.selected]="ecosystem() === eco.id">
               <input type="radio" name="ecosystem" [value]="eco.id" [ngModel]="ecosystem()" (ngModelChange)="ecosystem.set($event)" />
-              <span class="eco-dot" [style.background]="'var(--eco-' + eco.id + ')'"></span>
+              <sas-eco [ecosystem]="eco.id" [size]="22" />
               <strong>{{ eco.label }}</strong>
             </label>
           }
@@ -158,14 +158,13 @@ const HELP: Record<EcosystemId, { placeholder: string; hint: string; lockfile: s
   `,
   styles: `
     .back { display: inline-flex; align-items: center; gap: 4px; text-decoration: none; margin-bottom: 6px; }
-    .ecosystems { border: 1px solid var(--border); display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin: 0; }
+    .ecosystems { border: none; display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin: 0; }
     .ecosystems legend { padding: 0 4px; }
-    .eco-choice { display: flex; align-items: center; gap: 10px; padding: 14px 16px; border: 1px solid var(--border-strong);
-      border-radius: var(--radius); cursor: pointer; transition: border-color 120ms ease, background-color 120ms ease; }
-    .eco-choice.selected { border-color: var(--accent); background: var(--accent-soft); }
+    .eco-choice { display: flex; align-items: center; gap: 10px; padding: 14px 16px; border-radius: 14px; background: var(--surface-2); box-shadow: inset 0 0 0 1px var(--border); cursor: pointer; transition-property: background-color, box-shadow; transition-duration: 140ms; }
+    .eco-choice.selected { background: var(--accent-soft); box-shadow: inset 0 0 0 1.5px var(--accent); }
     .eco-choice input { margin: 0; }
-    .drop { display: flex; align-items: center; gap: 10px; padding: 18px; border: 1.5px dashed var(--border-strong); border-radius: var(--radius);
-      color: var(--text-2); cursor: pointer; transition: border-color 120ms ease, background-color 120ms ease; }
+    .drop { display: flex; align-items: center; gap: 10px; padding: 18px; border: 1.5px dashed var(--border-strong); border-radius: 14px; background: var(--surface-2);
+      color: var(--text-2); cursor: pointer; transition-property: background-color, box-shadow; transition-duration: 140ms; }
     .drop:hover, .drop.over { border-color: var(--accent); background: var(--accent-soft); }
     .drop:focus-within { outline: 2px solid var(--accent); outline-offset: 2px; }
     .file { padding: 10px 12px; background: var(--surface-2); border-radius: var(--radius-s); flex-wrap: wrap; }

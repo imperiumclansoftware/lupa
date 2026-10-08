@@ -1,11 +1,11 @@
 import { ChangeDetectionStrategy, Component, OnInit, inject, input, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { BytesPipe, CopyButton, EcosystemPipe, Icon, RelativePipe, errorMessage } from '@sas/shared';
+import { BytesPipe, CopyButton, EcosystemPipe, Icon, RelativePipe, errorMessage, Eco } from '@sas/shared';
 import { MirrorApi, PackageDetail } from '../api';
 import { installCommand } from '../clients';
 
 @Component({
-  imports: [RouterLink, Icon, CopyButton, BytesPipe, RelativePipe, EcosystemPipe],
+  imports: [Eco, RouterLink, Icon, CopyButton, BytesPipe, RelativePipe, EcosystemPipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="page">
@@ -14,7 +14,7 @@ import { installCommand } from '../clients';
           <a class="subtle back" routerLink="/paquets"><sas-icon name="back" [size]="15" />Paquets</a>
           <h1 class="name">{{ name() }}</h1>
           @if (data(); as d) {
-            <p class="row meta"><span class="eco-dot" [style.background]="'var(--eco-' + d.ecosystem + ')'"></span>{{ d.ecosystem | ecosystem }}
+            <p class="row meta"><sas-eco [ecosystem]="d.ecosystem" [size]="26" />{{ d.ecosystem | ecosystem }}
               @if (d.description) { <span>·</span>{{ d.description }} }</p>
           }
         </div>

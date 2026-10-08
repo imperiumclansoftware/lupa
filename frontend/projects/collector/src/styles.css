@@ -2,7 +2,10 @@
 :root {
   --accent: #b4532a;
   --accent-strong: #933f1c;
-  --accent-soft: #f8e9e1;
+  --accent-soft: #f7e7de;
+  --on-accent: #fff;
+  --sidebar-bg: #3a1d12;
+  --sidebar-bg-2: #7a3519;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -11,5 +14,7 @@
     --accent-strong: #f2b393;
     --accent-soft: #3a2117;
     --on-accent: #1d0d06;
+    --sidebar-bg: #1f100a;
+    --sidebar-bg-2: #5a2611;
   }
 }

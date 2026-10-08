@@ -1,11 +1,11 @@
 import { ChangeDetectionStrategy, Component, DestroyRef, OnInit, computed, inject, input, signal, viewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
-import { BytesPipe, Dialog, EcosystemPipe, Icon, JobProgress, PluralPipe, RelativePipe, Toasts, errorMessage, isActive, poll } from '@sas/shared';
+import { BytesPipe, Dialog, EcosystemPipe, Icon, JobProgress, PluralPipe, RelativePipe, Toasts, errorMessage, isActive, poll, Eco } from '@sas/shared';
 import { Artifact, CollectorApi, PackageList } from '../api';
 
 @Component({
-  imports: [FormsModule, RouterLink, Icon, JobProgress, Dialog, BytesPipe, RelativePipe, EcosystemPipe, PluralPipe],
+  imports: [Eco, FormsModule, RouterLink, Icon, JobProgress, Dialog, BytesPipe, RelativePipe, EcosystemPipe, PluralPipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="page">
@@ -15,7 +15,7 @@ import { Artifact, CollectorApi, PackageList } from '../api';
             <a class="subtle back" routerLink="/listes"><sas-icon name="back" [size]="15" />Listes</a>
             <h1>{{ l.name }}</h1>
             <p class="row meta">
-              <span class="eco-dot" [style.background]="'var(--eco-' + l.ecosystem + ')'"></span>{{ l.ecosystem | ecosystem }}
+              <sas-eco [ecosystem]="l.ecosystem" [size]="26" />{{ l.ecosystem | ecosystem }}
               <span>·</span>{{ l.artifactCount | plural: 'paquet' }}, {{ l.size | bytes }}
               <span>·</span>{{ l.resolvedAt ? 'mise à jour ' + (l.resolvedAt | relative) : 'jamais mise à jour' }}
             </p>

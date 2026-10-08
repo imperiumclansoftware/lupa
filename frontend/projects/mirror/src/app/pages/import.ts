@@ -188,8 +188,8 @@ interface Upload {
     .title { flex-wrap: wrap; }
     .title strong { overflow-wrap: anywhere; }
     .bundle-actions { display: flex; gap: 8px; align-items: center; }
-    .drop { display: grid; justify-items: center; gap: 6px; padding: 28px; text-align: center; border: 1.5px dashed var(--border-strong); border-radius: var(--radius);
-      color: var(--text-2); cursor: pointer; transition: border-color 120ms ease, background-color 120ms ease; }
+    .drop { display: grid; justify-items: center; gap: 6px; padding: 28px; text-align: center; border: 1.5px dashed var(--border-strong); border-radius: 14px; background: var(--surface-2);
+      color: var(--text-2); cursor: pointer; transition-property: border-color, background-color; transition-duration: 140ms; }
     .drop:hover, .drop.over { border-color: var(--accent); background: var(--accent-soft); }
     .drop:focus-within { outline: 2px solid var(--accent); outline-offset: 2px; }
     .upload { display: grid; gap: 6px; }

@@ -1,11 +1,11 @@
 import { ChangeDetectionStrategy, Component, OnInit, inject, input, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
-import { BytesPipe, ECOSYSTEMS, EcosystemPipe, Icon, PluralPipe, RelativePipe, errorMessage } from '@sas/shared';
+import { BytesPipe, ECOSYSTEMS, EcosystemPipe, Icon, PluralPipe, RelativePipe, errorMessage, Eco } from '@sas/shared';
 import { MirrorApi, Page, PackageSummary } from '../api';
 
 @Component({
-  imports: [FormsModule, RouterLink, Icon, BytesPipe, EcosystemPipe, RelativePipe, PluralPipe],
+  imports: [Eco, FormsModule, RouterLink, Icon, BytesPipe, EcosystemPipe, RelativePipe, PluralPipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="page">
@@ -21,7 +21,7 @@ import { MirrorApi, Page, PackageSummary } from '../api';
           <button type="button" role="tab" [attr.aria-selected]="!ecosystem()" (click)="setEcosystem('')">Tous</button>
           @for (eco of ecosystems; track eco.id) {
             <button type="button" role="tab" [attr.aria-selected]="ecosystem() === eco.id" (click)="setEcosystem(eco.id)">
-              <span class="eco-dot" [style.background]="'var(--eco-' + eco.id + ')'"></span>{{ eco.label }}
+              <sas-eco [ecosystem]="eco.id" [size]="22" />{{ eco.label }}
             </button>
           }
         </div>
@@ -43,7 +43,7 @@ import { MirrorApi, Page, PackageSummary } from '../api';
                   @for (p of d.items; track p.ecosystem + p.name) {
                     <tr>
                       <td><a class="row-link name" [routerLink]="['/paquets', p.ecosystem, p.name]">{{ p.name }}</a></td>
-                      <td><span class="row"><span class="eco-dot" [style.background]="'var(--eco-' + p.ecosystem + ')'"></span>{{ p.ecosystem | ecosystem }}</span></td>
+                      <td><span class="row"><sas-eco [ecosystem]="p.ecosystem" [size]="26" />{{ p.ecosystem | ecosystem }}</span></td>
                       <td class="right num">{{ p.versions }}@if (p.files !== p.versions) { <span class="subtle"> · {{ p.files }} fichiers</span> }</td>
                       <td class="right num">{{ p.size | bytes }}</td>
                       <td class="subtle">{{ p.updatedAt | relative }}</td>
@@ -68,10 +68,6 @@ import { MirrorApi, Page, PackageSummary } from '../api';
   styles: `
     .toolbar { display: flex; flex-wrap: wrap; gap: 12px; justify-content: space-between; align-items: center; }
     .search { width: 260px; }
-    .tabs { display: flex; gap: 4px; padding: 4px; background: var(--surface-3); border-radius: var(--radius); flex-wrap: wrap; }
-    .tabs button { display: inline-flex; align-items: center; gap: 6px; border: none; background: transparent; color: var(--text-2);
-      font: inherit; font-size: 0.88rem; font-weight: 600; padding: 6px 12px; border-radius: var(--radius-s); cursor: pointer; }
-    .tabs button[aria-selected='true'] { background: var(--surface); color: var(--text); box-shadow: var(--shadow); }
     .name { overflow-wrap: anywhere; }
     .pager { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 12px 16px; border-top: 1px solid var(--border); flex-wrap: wrap; }
   `,

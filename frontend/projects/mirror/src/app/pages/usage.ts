@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, signal } from '@angular/core';
-import { CopyButton, EcosystemId, Icon } from '@sas/shared';
+import { CopyButton, EcosystemId, Icon, Eco } from '@sas/shared';
 import { mirrorBase } from '../clients';
 
 interface Snippet {
@@ -9,7 +9,7 @@ interface Snippet {
 }
 
 @Component({
-  imports: [CopyButton, Icon],
+  imports: [Eco, CopyButton, Icon],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="page">
@@ -27,7 +27,7 @@ interface Snippet {
       <div class="tabs" role="tablist" aria-label="Outil">
         @for (t of tabs; track t.id) {
           <button type="button" role="tab" [attr.aria-selected]="tab() === t.id" (click)="tab.set(t.id)">
-            <span class="eco-dot" [style.background]="'var(--eco-' + t.id + ')'"></span>{{ t.label }}
+            <sas-eco [ecosystem]="t.id" [size]="22" />{{ t.label }}
           </button>
         }
       </div>
@@ -44,10 +44,6 @@ interface Snippet {
     </div>
   `,
   styles: `
-    .tabs { display: flex; gap: 4px; padding: 4px; background: var(--surface-3); border-radius: var(--radius); flex-wrap: wrap; justify-self: start; }
-    .tabs button { display: inline-flex; align-items: center; gap: 6px; border: none; background: transparent; color: var(--text-2);
-      font: inherit; font-size: 0.9rem; font-weight: 600; padding: 7px 14px; border-radius: var(--radius-s); cursor: pointer; }
-    .tabs button[aria-selected='true'] { background: var(--surface); color: var(--text); box-shadow: var(--shadow); }
     .snippet { display: grid; gap: 10px; }
     .head { justify-content: space-between; }
     .kbd-block { padding-right: 16px; }

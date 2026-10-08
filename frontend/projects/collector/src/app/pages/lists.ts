@@ -1,10 +1,10 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { BytesPipe, EcosystemPipe, Icon, JobStatus, RelativePipe, Toasts, errorMessage, isActive, poll } from '@sas/shared';
+import { BytesPipe, EcosystemPipe, Icon, JobStatus, RelativePipe, Toasts, errorMessage, isActive, poll, Eco } from '@sas/shared';
 import { CollectorApi, PackageList } from '../api';
 
 @Component({
-  imports: [RouterLink, Icon, JobStatus, BytesPipe, RelativePipe, EcosystemPipe],
+  imports: [Eco, RouterLink, Icon, JobStatus, BytesPipe, RelativePipe, EcosystemPipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="page">
@@ -44,7 +44,7 @@ import { CollectorApi, PackageList } from '../api';
                       <a class="row-link" [routerLink]="['/listes', list.id]">{{ list.name }}</a>
                       <div class="subtle">{{ list.specCount }} entrée(s)@if (list.lockfileName) { · <span class="mono">{{ list.lockfileName }}</span> }</div>
                     </td>
-                    <td><span class="row"><span class="eco-dot" [style.background]="'var(--eco-' + list.ecosystem + ')'"></span>{{ list.ecosystem | ecosystem }}</span></td>
+                    <td><span class="row"><sas-eco [ecosystem]="list.ecosystem" [size]="26" />{{ list.ecosystem | ecosystem }}</span></td>
                     <td class="right num">{{ list.artifactCount }}</td>
                     <td class="right num">{{ list.size | bytes }}</td>
                     <td>@if (list.pendingCount > 0) { <span class="badge badge-accent">{{ list.pendingCount }}</span> } @else { <span class="subtle">—</span> }</td>

@@ -1,27 +1,35 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { BytesPipe, ECOSYSTEMS, Icon, JobProgress, PluralPipe, RelativePipe, errorMessage, poll } from '@sas/shared';
+import { BytesPipe, ECOSYSTEMS, Eco, Icon, Logo, JobProgress, PluralPipe, RelativePipe, errorMessage, poll } from '@sas/shared';
 import { MirrorApi, Overview } from '../api';
 
 @Component({
-  imports: [RouterLink, Icon, JobProgress, BytesPipe, RelativePipe, PluralPipe],
+  imports: [RouterLink, Icon, Logo, Eco, JobProgress, BytesPipe, RelativePipe, PluralPipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="page">
-      <header class="page-header">
-        <div>
-          <h1>Miroir hors ligne</h1>
-          <p>Sert les dépôts npm, Python, Composer et Docker aux postes du réseau isolé, à partir des bundles apportés par clé USB depuis Rémus.</p>
-        </div>
-        <div class="actions">
-          <a class="btn" routerLink="/utilisation"><sas-icon name="terminal" />Configurer les postes</a>
-          <a class="btn btn-primary" routerLink="/import"><sas-icon name="usb" />Importer un bundle</a>
-        </div>
-      </header>
-
       @if (error()) { <div class="alert alert-danger">{{ error() }}</div> }
 
       @if (data(); as d) {
+        <section class="hero">
+          <sas-logo class="watermark" name="romulus" [size]="280" [bare]="true" />
+          <div>
+            <span class="eyebrow">Romulus · miroir hors ligne</span>
+            <h1>Dépôts du réseau isolé</h1>
+            <p>Sert npm, Python, Composer et Docker aux postes du réseau, à partir des bundles signés apportés par clé USB depuis Rémus.</p>
+          </div>
+          <div class="hero-stats">
+            <div><strong>{{ totalPackages().toLocaleString('fr-FR') }}</strong><span>paquets servis</span></div>
+            <div><strong>{{ d.storage.size | bytes }}</strong><span>stockés</span></div>
+            <div><strong>{{ d.lastImport ? 'n° ' + d.lastImport.sequence : '—' }}</strong><span>dernier bundle</span></div>
+            <div><strong>{{ d.trustedKeys }}</strong><span>collecteur(s) approuvé(s)</span></div>
+          </div>
+          <div class="actions">
+            <a class="btn btn-primary" routerLink="/import"><sas-icon name="usb" />Importer un bundle</a>
+            <a class="btn" routerLink="/utilisation"><sas-icon name="terminal" />Configurer les postes</a>
+          </div>
+        </section>
+
         @for (job of d.activeJobs; track job.id) {
           <section class="card card-body"><sas-job-progress [job]="job" /></section>
         }
@@ -41,8 +49,8 @@ import { MirrorApi, Overview } from '../api';
         <section class="grid">
           @for (eco of ecosystems; track eco.id) {
             @let stats = d.ecosystems[eco.id];
-            <a class="card stat eco" routerLink="/paquets" [queryParams]="{ ecosystem: eco.id }">
-              <span class="stat-label row"><span class="eco-dot" [style.background]="'var(--eco-' + eco.id + ')'"></span>{{ eco.label }}</span>
+            <a class="card stat" routerLink="/paquets" [queryParams]="{ ecosystem: eco.id }">
+              <span class="stat-label row"><sas-eco [ecosystem]="eco.id" />{{ eco.label }}</span>
               <span class="stat-value">{{ (stats?.packages ?? 0).toLocaleString('fr-FR') }}</span>
               <span class="subtle">{{ stats?.files ?? 0 | plural: (eco.id === 'docker' ? 'étiquette' : eco.id === 'pypi' ? 'fichier' : 'version') }} · {{ stats?.size ?? 0 | bytes }}</span>
             </a>
@@ -79,8 +87,8 @@ import { MirrorApi, Overview } from '../api';
   styles: `
     .onboarding { display: grid; gap: 12px; justify-items: start; }
     .onboarding ol { margin: 0; padding-left: 20px; display: grid; gap: 6px; color: var(--text-2); }
-    .eco { text-decoration: none; color: inherit; transition: border-color 120ms ease, transform 120ms ease; }
-    .eco:hover { border-color: var(--border-strong); transform: translateY(-1px); }
+    a.stat { text-decoration: none; color: inherit; }
+    .stat-label { gap: 10px; margin-bottom: 6px; }
     .columns { display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); align-items: start; }
     .kv { display: grid; grid-template-columns: auto 1fr; gap: 8px 16px; font-size: 0.9rem; }
     .kv code { overflow-wrap: anywhere; }
@@ -92,6 +100,9 @@ export default class Dashboard {
   protected readonly ecosystems = ECOSYSTEMS;
   protected readonly data = signal<Overview | null>(null);
   protected readonly error = signal('');
+  protected readonly totalPackages = computed(() =>
+    Object.values(this.data()?.ecosystems ?? {}).reduce((sum, e) => sum + (e?.packages ?? 0), 0),
+  );
   protected readonly empty = computed(() => Object.keys(this.data()?.ecosystems ?? {}).length === 0);
 
   constructor() {

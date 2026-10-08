@@ -125,10 +125,10 @@ import { KeyValuePipe } from '@angular/common';
   `,
   styles: `
     .modes { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px; }
-    .mode { position: relative; display: grid; gap: 4px; padding: 16px 16px 16px 44px; border: 1px solid var(--border-strong); border-radius: var(--radius); cursor: pointer;
-      transition: border-color 120ms ease, background-color 120ms ease; }
+    .mode { position: relative; display: grid; gap: 4px; padding: 16px 16px 16px 44px; border-radius: 14px; background: var(--surface-2); box-shadow: inset 0 0 0 1px var(--border); cursor: pointer;
+      transition-property: background-color, box-shadow; transition-duration: 140ms; }
     .mode input { position: absolute; left: 16px; top: 19px; margin: 0; }
-    .mode.selected { border-color: var(--accent); background: var(--accent-soft); }
+    .mode.selected { background: var(--accent-soft); box-shadow: inset 0 0 0 1.5px var(--accent); }
     .mode-title { font-weight: 700; }
     .mode-stats { font-weight: 600; margin-top: 4px; }
     .split { max-width: 420px; }
