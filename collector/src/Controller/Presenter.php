@@ -48,7 +48,7 @@ final class Presenter
             'version' => $artifact->getVersion(),
             'filename' => $artifact->getFilename(),
             'size' => $artifact->getSize(),
-            'detail' => match ($artifact->getEcosystem()->value) {
+            'detail' => str_starts_with($artifact->getName(), '_flex/') ? sprintf('Recette Symfony Flex (%s)', $artifact->getFilename() ?? 'index') : match ($artifact->getEcosystem()->value) {
                 'docker' => implode(', ', array_diff(array_column($metadata['manifests'] ?? [], 'platform'), ['attestation'])),
                 'pypi' => $metadata['requiresPython'] ?? null,
                 'npm', 'composer' => isset($metadata['description']) ? mb_substr((string) $metadata['description'], 0, 140) : null,

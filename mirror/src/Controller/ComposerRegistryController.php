@@ -30,7 +30,7 @@ final class ComposerRegistryController
     #[Route('/composer/packages.json', methods: ['GET', 'HEAD'])]
     public function root(Request $request): JsonResponse
     {
-        $names = $this->db->fetchFirstColumn("SELECT DISTINCT name FROM package WHERE ecosystem = 'composer' ORDER BY name");
+        $names = $this->db->fetchFirstColumn("SELECT DISTINCT name FROM package WHERE ecosystem = 'composer' AND name NOT LIKE '\\_flex/%' ESCAPE '\\' ORDER BY name");
 
         return new JsonResponse([
             'packages' => new \stdClass(),

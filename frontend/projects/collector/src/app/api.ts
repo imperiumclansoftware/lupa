@@ -15,7 +15,25 @@ export interface PypiTarget {
   platform: string;
 }
 
+export interface ListTemplate {
+  id: string;
+  version: string;
+}
+
+export interface Template {
+  id: string;
+  ecosystem: EcosystemId;
+  kind: 'generator' | 'preset';
+  label: string;
+  description: string;
+  version?: string;
+  versionHint?: string;
+  usage?: string;
+  specs?: string;
+}
+
 export interface ListOptions {
+  template?: ListTemplate | null;
   includeDev?: boolean;
   legacyPeerDeps?: boolean;
   targets?: PypiTarget[];
@@ -131,6 +149,7 @@ export interface EcosystemChoices {
 export class CollectorApi {
   private readonly http = inject(HttpClient);
   private choices?: Promise<EcosystemChoices>;
+  private templateList?: Promise<Template[]>;
 
   overview(): Promise<Overview> {
     return firstValueFrom(this.http.get<Overview>('/api/overview'));
@@ -138,6 +157,10 @@ export class CollectorApi {
 
   ecosystems(): Promise<EcosystemChoices> {
     return (this.choices ??= firstValueFrom(this.http.get<EcosystemChoices>('/api/ecosystems')));
+  }
+
+  templates(): Promise<Template[]> {
+    return (this.templateList ??= firstValueFrom(this.http.get<Template[]>('/api/templates')));
   }
 
   lists(): Promise<PackageList[]> {

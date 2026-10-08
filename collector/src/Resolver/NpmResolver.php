@@ -6,6 +6,8 @@ use App\Entity\Artifact;
 use App\Entity\PackageList;
 use App\Http\Downloader;
 use App\Job\JobContext;
+use App\Template\TemplateCatalog;
+use App\Template\TemplateGenerator;
 use Sas\Bundle\Ecosystem;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
@@ -23,6 +25,7 @@ final readonly class NpmResolver implements Resolver
         private Downloader $downloader,
         private ArtifactCatalog $catalog,
         private HttpClientInterface $http,
+        private TemplateGenerator $templates,
         #[Autowire('%env(NPM_REGISTRY)%')]
         private string $registry,
     ) {
@@ -49,8 +52,10 @@ final readonly class NpmResolver implements Resolver
                 $errors[] = $e->getMessage();
             }
         }
-        if ([] === $list->getSpecLines() && null === $list->getLockfile()) {
-            $errors[] = 'La liste est vide : saisissez des paquets ou importez un package-lock.json.';
+        $template = $list->getOptions()['template'] ?? null;
+        $errors = [...$errors, ...TemplateCatalog::validate(Ecosystem::Npm, $template)];
+        if ([] === $list->getSpecLines() && null === $list->getLockfile() && null === $template) {
+            $errors[] = 'La liste est vide : choisissez un modèle, saisissez des paquets ou importez un package-lock.json.';
         }
 
         return $errors;
@@ -67,9 +72,19 @@ final readonly class NpmResolver implements Resolver
             $context->log(sprintf('%d paquets dans le fichier de verrouillage.', \count($entries)));
         }
 
-        if ([] !== $list->getSpecLines()) {
+        // Modèle de framework : projet généré par le vrai outil (ng new, create-vite…), puis ses dépendances
+        $specs = $list->getSpecLines();
+        if ($generated = $this->templates->generate($list, $context)) {
+            foreach ($generated['lockfiles'] as $lockfile) {
+                $entries += $this->lockEntries($lockfile, true);
+            }
+            $specs = [...$specs, ...$generated['specs']];
+            $context->log(sprintf('Projet généré : %d paquets.', \count($entries)));
+        }
+
+        if ([] !== $specs) {
             $context->report('Résolution des dépendances par npm');
-            $entries += $this->resolveSpecs($list, $context);
+            $entries += $this->resolveSpecs($specs, $list, $context);
         }
 
         ksort($entries);
@@ -112,12 +127,14 @@ final readonly class NpmResolver implements Resolver
     }
 
     /**
+     * @param list<string> $specs
+     *
      * @return array<string, array{name: string, version: string, resolved: string|null, integrity: string|null}>
      */
-    private function resolveSpecs(PackageList $list, JobContext $context): array
+    private function resolveSpecs(array $specs, PackageList $list, JobContext $context): array
     {
         $dependencies = [];
-        foreach ($list->getSpecLines() as $line) {
+        foreach ($specs as $line) {
             [$name, $range] = self::parseSpec($line);
             $dependencies[$name] = $range;
         }

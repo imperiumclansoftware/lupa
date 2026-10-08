@@ -26,7 +26,8 @@ final class PackageController
     #[Route('', methods: ['GET'])]
     public function index(Request $request): JsonResponse
     {
-        $where = ['1 = 1'];
+        // Recettes Symfony Flex (_flex/…) : servies sous /composer/flex, pas des paquets
+        $where = ["name NOT LIKE '\\_flex/%' ESCAPE '\\'"];
         $params = [];
         if ($ecosystem = Ecosystem::tryFrom($request->query->getString('ecosystem'))) {
             $where[] = 'ecosystem = ?';

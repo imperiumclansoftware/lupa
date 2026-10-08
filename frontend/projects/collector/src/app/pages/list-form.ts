@@ -2,7 +2,7 @@ import { ChangeDetectionStrategy, Component, OnInit, computed, inject, input, si
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { ECOSYSTEMS, EcosystemId, Icon, Toasts, errorMessage, formatBytes, Eco } from '@sas/shared';
-import { CollectorApi, EcosystemChoices, ListInput, PypiTarget } from '../api';
+import { CollectorApi, EcosystemChoices, ListInput, ListTemplate, PypiTarget, Template } from '../api';
 
 const HELP: Record<EcosystemId, { placeholder: string; hint: string; lockfile: string; accept: string }> = {
   npm: {
@@ -50,22 +50,64 @@ const HELP: Record<EcosystemId, { placeholder: string; hint: string; lockfile: s
           <legend class="label">Écosystème</legend>
           @for (eco of ecosystems; track eco.id) {
             <label class="eco-choice" [class.selected]="ecosystem() === eco.id">
-              <input type="radio" name="ecosystem" [value]="eco.id" [ngModel]="ecosystem()" (ngModelChange)="ecosystem.set($event)" />
+              <input type="radio" name="ecosystem" [value]="eco.id" [ngModel]="ecosystem()" (ngModelChange)="setEcosystem($event)" />
               <sas-eco [ecosystem]="eco.id" [size]="22" />
               <strong>{{ eco.label }}</strong>
             </label>
           }
         </fieldset>
+
+        @if (ecosystemTemplates().length) {
+          <section class="card card-body stack">
+            <div>
+              <h2>Partir d’un modèle</h2>
+              <p class="subtle">Pour qu’une commande comme « ng new » ou « composer create-project » fonctionne hors ligne, Rémus exécute le générateur et collecte tout ce qu’il installe.</p>
+            </div>
+            <div class="templates">
+              @for (t of ecosystemTemplates(); track t.id) {
+                <button type="button" class="template" [class.selected]="template()?.id === t.id" (click)="applyTemplate(t)">
+                  <span class="row"><sas-eco [ecosystem]="t.ecosystem" [size]="26" /><strong>{{ t.label }}</strong>
+                    @if (t.kind === 'generator') { <span class="badge badge-accent">Générateur</span> }</span>
+                  <span class="subtle">{{ t.description }}</span>
+                </button>
+              }
+            </div>
+          </section>
+        }
       }
 
       <section class="card card-body stack">
+        @if (selectedTemplate(); as t) {
+          <div class="chosen">
+            <div class="row head">
+              <sas-eco [ecosystem]="t.ecosystem" [size]="34" />
+              <div class="grow">
+                <strong>Modèle {{ t.label }}</strong>
+                <div class="subtle">{{ t.description }}</div>
+              </div>
+              <button type="button" class="btn btn-sm btn-ghost" (click)="template.set(null)"><sas-icon name="x" [size]="15" />Retirer</button>
+            </div>
+            <div class="field version">
+              <label for="tpl-version">Version</label>
+              <input class="input" id="tpl-version" name="tplVersion" [ngModel]="template()?.version" (ngModelChange)="setTemplateVersion($event)" />
+              <span class="hint">{{ t.versionHint }}</span>
+            </div>
+            @if (t.usage) {
+              <div class="field">
+                <span class="label">Ensuite, sur le réseau isolé</span>
+                <pre class="kbd-block">{{ usage(t) }}</pre>
+              </div>
+            }
+          </div>
+        }
+
         <div class="field">
           <label for="name">Nom de la liste</label>
           <input class="input" id="name" name="name" required maxlength="120" [(ngModel)]="name" placeholder="ex. Projet web, Outils data…" />
         </div>
 
         <div class="field">
-          <label for="specs">{{ ecosystem() === 'docker' ? 'Images' : 'Paquets' }}</label>
+          <label for="specs">{{ ecosystem() === 'docker' ? 'Images' : selectedTemplate() ? 'Paquets supplémentaires' : 'Paquets' }}@if (selectedTemplate()) { <span class="subtle">(facultatif)</span> }</label>
           <textarea class="textarea" id="specs" name="specs" rows="9" [(ngModel)]="specs" [placeholder]="help().placeholder"
             spellcheck="false" autocapitalize="off"></textarea>
           <span class="hint">{{ help().hint }}</span>
@@ -171,6 +213,17 @@ const HELP: Record<EcosystemId, { placeholder: string; hint: string; lockfile: s
     .targets { display: grid; gap: 8px; }
     .target { display: grid; grid-template-columns: 150px 1fr auto; gap: 8px; }
     .add { justify-self: start; }
+    .templates { display: grid; gap: 10px; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); }
+    .template { display: grid; gap: 6px; padding: 14px 16px; border: none; border-radius: 14px; text-align: left; font: inherit; color: inherit;
+      cursor: pointer; background: var(--surface-2); box-shadow: inset 0 0 0 1px var(--border);
+      transition-property: background-color, box-shadow; transition-duration: 140ms; }
+    .template:hover { box-shadow: inset 0 0 0 1px var(--border-strong); }
+    .template.selected { background: var(--accent-soft); box-shadow: inset 0 0 0 1.5px var(--accent); }
+    .template .subtle { font-size: 0.82rem; }
+    .chosen { display: grid; gap: 14px; padding: 16px; border-radius: 14px; background: var(--accent-soft); }
+    .chosen .head { align-items: flex-start; }
+    .grow { flex: 1; }
+    .version { max-width: 260px; }
     .php { max-width: 340px; }
     fieldset.field { border: none; padding: 0; margin: 0; }
     @media (max-width: 600px) { .target { grid-template-columns: 1fr auto; } .target select:first-child { grid-column: 1 / -1; } }
@@ -198,6 +251,10 @@ export default class ListForm implements OnInit {
   protected php = '';
   protected readonly targets = signal<PypiTarget[]>([{ python: '3.12', platform: 'linux-x86_64' }]);
   protected readonly platforms = signal<string[]>(['linux/amd64']);
+  protected readonly templates = signal<Template[]>([]);
+  protected readonly template = signal<ListTemplate | null>(null);
+  protected readonly ecosystemTemplates = computed(() => this.templates().filter((t) => t.ecosystem === this.ecosystem()));
+  protected readonly selectedTemplate = computed(() => this.templates().find((t) => t.id === this.template()?.id) ?? null);
 
   protected readonly lockfileName = signal<string | null>(null);
   protected readonly lockfileSize = signal('');
@@ -207,6 +264,7 @@ export default class ListForm implements OnInit {
   async ngOnInit(): Promise<void> {
     try {
       this.choices.set(await this.api.ecosystems());
+      this.templates.set(await this.api.templates());
       const id = this.id();
       if (!id) {
         return;
@@ -223,9 +281,35 @@ export default class ListForm implements OnInit {
       this.php = o.php ?? '';
       if (o.targets?.length) this.targets.set(o.targets.map((t) => ({ ...t })));
       if (o.platforms?.length) this.platforms.set([...o.platforms]);
+      this.template.set(o.template ?? null);
     } catch (e) {
       this.error.set(errorMessage(e));
     }
+  }
+
+  protected setEcosystem(id: EcosystemId): void {
+    this.ecosystem.set(id);
+    if (this.selectedTemplate()?.ecosystem !== id) this.template.set(null);
+  }
+
+  /** Générateur : retenu avec sa version ; liste prédéfinie : recopiée dans le champ des paquets. */
+  protected applyTemplate(t: Template): void {
+    if (!this.name.trim()) this.name = t.kind === 'generator' && t.version !== 'latest' ? `${t.label} ${t.version}` : t.label;
+    if (t.kind === 'generator') {
+      this.template.set({ id: t.id, version: t.version ?? 'latest' });
+    } else {
+      this.template.set(null);
+      this.specs = [this.specs.trim(), t.specs ?? ''].filter(Boolean).join('\n');
+    }
+  }
+
+  protected setTemplateVersion(version: string): void {
+    const current = this.template();
+    if (current) this.template.set({ ...current, version: version.trim() });
+  }
+
+  protected usage(t: Template): string {
+    return (t.usage ?? '').replaceAll('{version}', this.template()?.version || 'latest');
   }
 
   protected addTarget(): void {
@@ -287,6 +371,7 @@ export default class ListForm implements OnInit {
         sdist: this.sdist,
         php: this.php.trim() || null,
         platforms: this.platforms(),
+        template: this.template(),
       },
       lockfileName: this.lockfileContent ? this.lockfileName() : null,
       lockfileContent: this.lockfileContent,

@@ -6,6 +6,8 @@ use App\Entity\Artifact;
 use App\Entity\PackageList;
 use App\Http\Downloader;
 use App\Job\JobContext;
+use App\Template\TemplateCatalog;
+use App\Template\TemplateGenerator;
 use Sas\Bundle\Ecosystem;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 
@@ -21,6 +23,8 @@ final readonly class ComposerResolver implements Resolver
     public function __construct(
         private Downloader $downloader,
         private ArtifactCatalog $catalog,
+        private TemplateGenerator $templates,
+        private FlexRecipes $flex,
         #[Autowire('%env(GITHUB_TOKEN)%')]
         private string $githubToken,
     ) {
@@ -59,8 +63,10 @@ final readonly class ComposerResolver implements Resolver
                 $errors[] = $e->getMessage();
             }
         }
-        if ([] === $list->getSpecLines() && null === $list->getLockfile()) {
-            $errors[] = 'La liste est vide : saisissez des paquets ou importez un composer.json / composer.lock.';
+        $template = $list->getOptions()['template'] ?? null;
+        $errors = [...$errors, ...TemplateCatalog::validate(Ecosystem::Composer, $template)];
+        if ([] === $list->getSpecLines() && null === $list->getLockfile() && null === $template) {
+            $errors[] = 'La liste est vide : choisissez un modèle, saisissez des paquets ou importez un composer.json / composer.lock.';
         }
 
         return $errors;
@@ -98,6 +104,21 @@ final readonly class ComposerResolver implements Resolver
             }
         }
 
+        // Modèle de framework : projet créé par composer create-project, dépendances de dev comprises
+        if ($generated = $this->templates->generate($list, $context)) {
+            foreach ($generated['lockfiles'] as $lockfile) {
+                $lock = json_decode($lockfile, true);
+                foreach (array_merge($lock['packages'] ?? [], $lock['packages-dev'] ?? []) as $package) {
+                    $packages[$package['name'].'@'.$package['version']] = $package;
+                }
+            }
+            foreach ($generated['specs'] as $line) {
+                [$name, $constraint] = self::parseSpec($line);
+                $require[$name] = $constraint;
+            }
+            $context->log(sprintf('Projet généré : %d paquets.', \count($packages)));
+        }
+
         if ([] !== $require) {
             $context->report('Résolution des dépendances par Composer');
             foreach ($this->resolveRequirements($require, $stability, $list, $context) as $package) {
@@ -125,6 +146,12 @@ final readonly class ComposerResolver implements Resolver
             }
         }
         $this->catalog->flush();
+
+        // Projet Symfony : les recettes Flex sont nécessaires hors ligne (create-project, require…)
+        $versions = array_column($packages, 'version', 'name');
+        if (isset($versions['symfony/flex'])) {
+            array_push($artifacts, ...$this->flex->collect($versions, $context));
+        }
 
         return $artifacts;
     }

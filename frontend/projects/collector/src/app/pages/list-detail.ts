@@ -1,11 +1,11 @@
 import { ChangeDetectionStrategy, Component, DestroyRef, OnInit, computed, inject, input, signal, viewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
-import { BytesPipe, Dialog, EcosystemPipe, Icon, JobProgress, PluralPipe, RelativePipe, Toasts, errorMessage, isActive, poll, Eco } from '@sas/shared';
-import { Artifact, CollectorApi, PackageList } from '../api';
+import { BytesPipe, CopyButton, Dialog, EcosystemPipe, Icon, JobProgress, PluralPipe, RelativePipe, Toasts, errorMessage, isActive, poll, Eco } from '@sas/shared';
+import { Artifact, CollectorApi, PackageList, Template } from '../api';
 
 @Component({
-  imports: [Eco, FormsModule, RouterLink, Icon, JobProgress, Dialog, BytesPipe, RelativePipe, EcosystemPipe, PluralPipe],
+  imports: [Eco, CopyButton, FormsModule, RouterLink, Icon, JobProgress, Dialog, BytesPipe, RelativePipe, EcosystemPipe, PluralPipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="page">
@@ -37,6 +37,20 @@ import { Artifact, CollectorApi, PackageList } from '../api';
             @if (l.job.status === 'failed') {
               <a routerLink="/activite" class="subtle">Voir le journal complet</a>
             }
+          </section>
+        }
+
+        @if (template(); as t) {
+          <section class="card card-body template">
+            <sas-eco [ecosystem]="t.ecosystem" [size]="40" />
+            <div class="grow">
+              <span class="eyebrow">Modèle {{ t.label }} · {{ l.options.template?.version }}</span>
+              <p class="muted">{{ t.description }} Après import dans Romulus, sur le réseau isolé :</p>
+              <div class="cmd"><pre class="kbd-block">{{ usage() }}</pre><sas-copy [text]="usage()" /></div>
+              @if (t.id === 'symfony') {
+                <p class="subtle">Recettes Symfony Flex comprises : définissez <code>SYMFONY_ENDPOINT</code> sur le poste (voir Utilisation dans Romulus).</p>
+              }
+            </div>
           </section>
         }
 
@@ -99,6 +113,12 @@ import { Artifact, CollectorApi, PackageList } from '../api';
     .filters .input { width: 220px; min-height: 34px; }
     .name { overflow-wrap: anywhere; }
     .detail { color: var(--text-2); font-size: 0.86rem; max-width: 420px; overflow-wrap: anywhere; }
+    .template { display: flex; gap: 16px; align-items: flex-start; }
+    .template .eyebrow { margin-bottom: 4px; }
+    .template p { margin-bottom: 10px; }
+    .grow { flex: 1; min-width: 0; display: grid; }
+    .cmd { display: flex; gap: 8px; align-items: flex-start; }
+    .cmd pre { flex: 1; }
     .more { display: flex; justify-content: center; padding: 14px; border-top: 1px solid var(--border); }
   `,
 })
@@ -116,6 +136,9 @@ export default class ListDetail implements OnInit {
   protected readonly filter = signal('');
   protected readonly pendingOnly = signal(false);
   protected readonly limit = signal(200);
+  protected readonly templates = signal<Template[]>([]);
+  protected readonly template = computed(() => this.templates().find((t) => t.id === this.list()?.options.template?.id) ?? null);
+  protected readonly usage = computed(() => (this.template()?.usage ?? '').replaceAll('{version}', this.list()?.options.template?.version ?? 'latest'));
   protected readonly running = computed(() => isActive(this.list()?.job));
   protected readonly filtered = computed(() => {
     const q = this.filter().trim().toLowerCase();
@@ -136,6 +159,7 @@ export default class ListDetail implements OnInit {
 
   private async load(): Promise<void> {
     try {
+      if (!this.templates().length) this.templates.set(await this.api.templates());
       const list = await this.api.list(+this.id());
       this.list.set(list);
       const running = isActive(list.job);

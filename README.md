@@ -35,7 +35,27 @@ images Docker. Deux applications web jumelles, reliées par une clé USB :
 | npm | arbre complet de `npm install`, y compris les dépendances optionnelles de toutes les plateformes | `npm config set registry http://miroir/npm/` |
 | Python | wheels pour chaque cible choisie (version de Python × Linux/Windows/macOS/musl), sdist en option | `pip … --index-url http://miroir/pypi/simple/` (PEP 503 / 691), uv |
 | Composer | archives des versions résolues (contrainte de version PHP en option) | dépôt `composer` `http://miroir/composer` (format p2) |
+| Symfony Flex | recettes des paquets collectés (officielles et contrib) | `SYMFONY_ENDPOINT=http://miroir/composer/flex` |
 | Docker | index multi-plateformes d'origine + plateformes choisies + attestations | `docker pull miroir/library/nginx:1.27` ou `registry-mirrors` |
+
+## Modèles de framework
+
+Dans « Nouvelle liste », un **modèle** collecte tout ce dont une commande de création de projet a besoin,
+pour qu'elle fonctionne ensuite telle quelle sur le réseau isolé :
+
+| Modèle | Commande hors ligne | Comment Rémus le collecte |
+|---|---|---|
+| Angular | `npx @angular/cli@22 new app` | exécute `ng new` (avec et sans SSR) + la CLI |
+| React, Vue, Svelte, TypeScript (Vite) | `npm create vite@latest app -- --template react-ts` | modèle de create-vite + create-vite |
+| NestJS | `npx @nestjs/cli new app` | exécute `nest new` + la CLI |
+| Symfony | `composer create-project symfony/skeleton:"8.1.*" app` puis `composer require webapp` | skeleton, webapp-pack, dépendances de dev, **recettes Flex** |
+| Laravel | `composer create-project laravel/laravel:^12 app` | squelette et dépendances de dev |
+
+Python et Docker proposent des listes prédéfinies (Django, FastAPI, Flask, data science, images de base…).
+
+Limite connue : avec AssetMapper (`symfony/webapp-pack`), l'étape `importmap:require` télécharge les
+bibliothèques JavaScript (Stimulus, Turbo) depuis le CDN jsDelivr et échoue hors ligne ; le projet est
+néanmoins créé et configuré.
 
 ## Développement
 

@@ -103,6 +103,11 @@ export default class Usage {
             hint: 'Packagist est désactivé : sans Internet, Composer attendrait sinon chaque requête jusqu’à expiration.',
           },
           {
+            title: 'Symfony : recettes Flex',
+            code: `export SYMFONY_ENDPOINT=${base}/composer/flex`,
+            hint: 'À ajouter dans ~/.bashrc ou ~/.profile (sous Windows : variable d’environnement utilisateur). Flex prend alors ses recettes dans Romulus au lieu de GitHub : composer create-project symfony/skeleton et composer require fonctionnent hors ligne.',
+          },
+          {
             title: 'Ou dans le composer.json du projet',
             code: JSON.stringify(
               { repositories: [{ type: 'composer', url: `${base}/composer` }, { 'packagist.org': false }], ...(http ? { config: { 'secure-http': false } } : {}) },

@@ -48,6 +48,7 @@ avec l'adresse du serveur. En résumé :
 | npm | `npm config set registry http://serveur:8080/npm/` |
 | pip | `pip config set global.index-url http://serveur:8080/pypi/simple/` + `trusted-host` |
 | Composer | dépôt `composer` `http://serveur:8080/composer` et `packagist.org: false` |
+| Symfony Flex | `export SYMFONY_ENDPOINT=http://serveur:8080/composer/flex` (recettes servies par Romulus) |
 | Docker | `registry-mirrors` et `insecure-registries` dans `/etc/docker/daemon.json` |
 
 ## HTTPS

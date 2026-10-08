@@ -12,6 +12,7 @@ use App\Repository\PackageListRepository;
 use App\Resolver\DockerResolver;
 use App\Resolver\PypiPlatforms;
 use App\Resolver\Resolver;
+use App\Template\TemplateCatalog;
 use Doctrine\ORM\EntityManagerInterface;
 use Sas\Bundle\Ecosystem;
 use Symfony\Component\DependencyInjection\Attribute\AutowireIterator;
@@ -56,6 +57,13 @@ final class ListController
     private static function choices(array $labels): array
     {
         return array_map(static fn (string $id, string $label) => ['id' => $id, 'label' => $label], array_keys($labels), $labels);
+    }
+
+    /** Modèles de framework (générés par Rémus ou listes prédéfinies). */
+    #[Route('/templates', methods: ['GET'])]
+    public function templates(): JsonResponse
+    {
+        return new JsonResponse(TemplateCatalog::all());
     }
 
     #[Route('/lists', methods: ['GET'])]
@@ -159,6 +167,7 @@ final class ListController
             Ecosystem::Npm => [
                 'includeDev' => (bool) ($options['includeDev'] ?? true),
                 'legacyPeerDeps' => (bool) ($options['legacyPeerDeps'] ?? false),
+                'template' => self::template($options),
             ],
             Ecosystem::Pypi => [
                 'targets' => array_values(array_map(
@@ -170,11 +179,27 @@ final class ListController
             Ecosystem::Composer => [
                 'includeDev' => (bool) ($options['includeDev'] ?? false),
                 'php' => isset($options['php']) && '' !== $options['php'] ? (string) $options['php'] : null,
+                'template' => self::template($options),
             ],
             Ecosystem::Docker => [
                 'platforms' => array_values(array_filter((array) ($options['platforms'] ?? []), 'is_string')),
             ],
         };
+    }
+
+    /**
+     * @param array<string, mixed> $options
+     *
+     * @return array{id: string, version: string}|null
+     */
+    private static function template(array $options): ?array
+    {
+        $template = $options['template'] ?? null;
+        if (!\is_array($template) || !isset($template['id'])) {
+            return null;
+        }
+
+        return ['id' => (string) $template['id'], 'version' => trim((string) ($template['version'] ?? 'latest')) ?: 'latest'];
     }
 
     private function resolver(PackageList $list): Resolver

@@ -38,7 +38,7 @@ final class OverviewController
     {
         $ecosystems = [];
         foreach ($this->db->fetchAllAssociative(
-            'SELECT ecosystem, COUNT(DISTINCT name) AS packages, COUNT(*) AS files, COALESCE(SUM(size), 0) AS size FROM package GROUP BY ecosystem'
+            "SELECT ecosystem, COUNT(DISTINCT name) AS packages, COUNT(*) AS files, COALESCE(SUM(size), 0) AS size FROM package WHERE substr(name, 1, 6) <> '_flex/' GROUP BY ecosystem"
         ) as $row) {
             $ecosystems[$row['ecosystem']] = ['packages' => (int) $row['packages'], 'files' => (int) $row['files'], 'size' => (int) $row['size']];
         }
