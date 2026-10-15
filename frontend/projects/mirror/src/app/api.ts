@@ -62,6 +62,8 @@ export interface InboxItem {
 export interface Inbox {
   sources: { id: string; path: string; available: boolean }[];
   items: InboxItem[];
+  /** Dossiers des clés qui n'ont pas pu être ouverts (une clé qui s'y trouve est invisible) */
+  unreadable: { path: string; hint: string | null }[];
 }
 
 export interface PackageSummary {

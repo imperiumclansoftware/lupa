@@ -38,10 +38,19 @@ if [ "$uid" = 0 ]; then
 	fi
 fi
 
+# Docker rootless : le root du conteneur correspond à un utilisateur non root de l'hôte
+rootless() { awk '$1 == 0 && $2 != 0 { found = 1 } END { exit !found }' /proc/self/uid_map 2>/dev/null; }
+
+if [ "$uid" != 0 ] && rootless; then
+	warn "Docker rootless détecté, mais l'application tourne avec l'UID $uid, sans droit sur les dossiers de votre utilisateur (clés USB, export). Réglez SAS_UID=0 dans .env (./configure.sh le détecte), puis docker compose up -d."
+fi
+
 # Explique un dossier monté inaccessible : UID propriétaire et réglage à faire
 mount_hint() {
 	owner=$(stat -c %u "$1" 2>/dev/null || echo '?')
-	if [ "$owner" != "$uid" ] && [ "$owner" != '?' ]; then
+	if [ "$uid" != 0 ] && rootless; then
+		echo "Docker rootless : réglez SAS_UID=0 dans .env, puis docker compose up -d."
+	elif [ "$owner" != "$uid" ] && [ "$owner" != '?' ] && [ "$owner" != 65534 ]; then
 		echo "$1 appartient à l'UID $owner alors que l'application tourne avec l'UID $uid : réglez SAS_UID=$owner dans .env (Docker rootless : 0 ; ./configure.sh le détecte), puis docker compose up -d."
 	else
 		echo "vérifiez les droits de $1 sur l'hôte."

@@ -48,6 +48,20 @@ interface Upload {
           }
         </header>
 
+        @if (unreadableWithHint().length) {
+          <div class="card-body">
+            <div class="alert alert-warn" role="alert">
+              <sas-icon name="alert" />
+              <div>
+                <strong>Dossier(s) de clés USB illisible(s) : une clé qui s’y trouve n’apparaît pas.</strong>
+                @for (u of unreadableWithHint(); track u.path) { <div><code>{{ u.path }}</code> — {{ u.hint }}</div> }
+              </div>
+            </div>
+          </div>
+        } @else if (inbox()?.unreadable?.length) {
+          <p class="card-body subtle unreadable">Non parcourus (droits) : @for (u of inbox()?.unreadable ?? []; track u.path; let last = $last) { <code>{{ u.path }}</code>{{ last ? '' : ', ' }} }</p>
+        }
+
         @if (inbox()?.items?.length === 0) {
           <div class="empty">
             <sas-icon name="usb" [size]="28" />
@@ -181,6 +195,7 @@ interface Upload {
   styles: `
     .sources { display: flex; gap: 6px; flex-wrap: wrap; }
     .sources code { font-size: 0.75rem; }
+    .unreadable { padding-top: 0; }
     .bundles { list-style: none; margin: 0; padding: 0; }
     .bundle { display: flex; gap: 16px; justify-content: space-between; align-items: flex-start; padding: 16px 20px; border-bottom: 1px solid var(--border); flex-wrap: wrap; }
     .bundle:last-child { border-bottom: none; }
@@ -214,6 +229,7 @@ export default class ImportPage {
   protected readonly trusting = signal<InboxItem | null>(null);
   protected readonly confirmed = signal(false);
   protected readonly activeJobs = computed(() => this.jobs().filter(isActive));
+  protected readonly unreadableWithHint = computed(() => (this.inbox()?.unreadable ?? []).filter((u) => !!u.hint));
   /** Dernier import en échec, s'il est plus récent que le dernier succès */
   protected readonly lastFailed = computed(() => {
     const last = this.jobs().find((j) => !isActive(j));

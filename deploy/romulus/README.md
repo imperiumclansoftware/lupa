@@ -287,7 +287,10 @@ existante.
 - **Mise à jour depuis la 1.0.0 en rootless :** au premier démarrage en UID 0, Romulus reprend la
   propriété du volume créé sous l'UID 1000. Les capacités `CHOWN`, `DAC_OVERRIDE` et `FOWNER` du compose
   servent à cela, et ne sont effectives qu'en rootless.
-- Si la clé USB reste illisible, le journal indique son UID propriétaire et la valeur de `SAS_UID` à mettre.
+- Le bureau monte les clés sous `/media/<utilisateur>/`, un dossier réservé à votre utilisateur par une
+  ACL. En rootless, seul l'UID 0 du conteneur y a accès.
+- Si un dossier de clés reste illisible, le démarrage et la page **Import** le signalent, avec la valeur
+  de `SAS_UID` à mettre. Romulus détecte Docker rootless de lui-même.
 
 ## Variables d'environnement
 
@@ -385,7 +388,7 @@ docker compose exec romulus php bin/console app:setup:code       # code d'instal
 
 | Symptôme | Cause et solution |
 |---|---|
-| Aucun bundle dans **Import** | Clé hors de `USB_DIR`, ou montée après le démarrage sans `propagation: rslave` : vérifiez `docker compose exec romulus ls /inbox`, sinon redémarrez le conteneur |
+| Aucun bundle dans **Import** | Si **Import** signale un dossier illisible (ex. `/inbox/<utilisateur>`, que le bureau réserve à votre utilisateur), appliquez le réglage indiqué, en général `SAS_UID=0` en Docker rootless. Sinon : clé hors de `USB_DIR`, ou montée après le démarrage ; vérifiez `docker compose exec romulus ls /inbox`, puis redémarrez le conteneur |
 | « Collecteur inconnu » | Premier import : comparez l'empreinte avec celle de Rémus et approuvez-le |
 | « Signature invalide » | Le bundle a été modifié ou abîmé pendant la copie : réexportez-le depuis Rémus |
 | « Partie(s) manquante(s) » | Copiez **toutes** les parties `sas-….tar.001`, `.002`… |

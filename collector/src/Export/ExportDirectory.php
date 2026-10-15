@@ -2,6 +2,8 @@
 
 namespace App\Export;
 
+use Sas\Bundle\ContainerUser;
+
 /**
  * Vérifie que le dossier d'export (clé USB ou dossier monté) est utilisable, et explique sinon pourquoi.
  * Cas fréquent en Docker rootless : le dossier appartient à l'UID 0 du conteneur (votre utilisateur sur
@@ -22,14 +24,8 @@ final class ExportDirectory
             return null;
         }
 
-        $uid = \function_exists('posix_geteuid') ? posix_geteuid() : null;
-        $owner = @fileowner($dir);
-        if (null !== $uid && false !== $owner && $owner !== $uid) {
-            return sprintf(
-                'Impossible d\'écrire dans %s : le dossier appartient à l\'UID %d alors que Rémus tourne avec l\'UID %d. '
-                .'Réglez SAS_UID=%d dans le fichier .env (en Docker rootless : 0 ; ./configure.sh le détecte), puis « docker compose up -d ».',
-                $dir, $owner, $uid, $owner,
-            );
+        if (null !== $hint = ContainerUser::hint($dir, 'Rémus')) {
+            return sprintf('Impossible d\'écrire dans %s. %s', $dir, $hint);
         }
 
         return sprintf('Impossible d\'écrire dans %s : vérifiez ses droits sur l\'hôte (clé USB en lecture seule ?).', $dir);

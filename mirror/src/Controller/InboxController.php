@@ -59,7 +59,7 @@ final class InboxController
             $sources[] = ['id' => $source, 'path' => $dir, 'available' => $this->inbox->available($source)];
         }
 
-        return new JsonResponse(['sources' => $sources, 'items' => $items]);
+        return new JsonResponse(['sources' => $sources, 'items' => $items, 'unreadable' => $this->inbox->unreadable()]);
     }
 
     /**
