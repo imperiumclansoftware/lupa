@@ -48,7 +48,7 @@ final readonly class ComposerResolver implements Resolver
         $errors = [];
         foreach ($list->getSpecLines() as $line) {
             [$name] = self::parseSpec($line);
-            if (!preg_match(self::NAME, $name)) {
+            if (!preg_match(self::NAME, $name) && !preg_match('#^[a-z0-9*?][a-z0-9_.*?-]*/[a-z0-9*?][a-z0-9_.*?-]*$#', $name)) {
                 $errors[] = sprintf('« %s » : nom de paquet invalide (attendu : vendeur/paquet:contrainte, ex. monolog/monolog:^3.0).', $line);
             }
         }

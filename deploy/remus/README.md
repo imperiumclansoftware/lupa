@@ -34,6 +34,17 @@ les fichiers sont dans le volume `/data`.
   - `composer create-project laravel/laravel`.
   
   Des listes prêtes à l'emploi existent aussi pour Python (Django, FastAPI, Flask, data science) et Docker.
+- **Recherche dans les registres :** depuis le formulaire de liste, on cherche un paquet ou une image
+  (npm, PyPI, Packagist, Docker Hub et autres registres OCI), on choisit une version et sa contrainte
+  (exacte, compatible, correctifs, toujours la dernière).
+- **Motifs de noms :** `*` et `?` pour collecter une famille de paquets, avec aperçu avant d'enregistrer :
+  `@syncfusion/ej2-*angular*@^29`, `symfony/*-bundle:^7.3`, `django-rest-*>=3`, `node:24-alpine*`,
+  `bitnami/*-exporter`. Les paquets sans version respectant la contrainte sont écartés et signalés. Un motif
+  enregistré est redéveloppé à chaque mise à jour : les nouveaux paquets de la famille sont ajoutés.
+- **Alertes de sécurité :** chaque paquet npm, Python et Composer est vérifié dans la base **OSV.dev** (avis
+  GitHub, PyPA, npm, Packagist) après chaque mise à jour, ou à la demande. Gravité « critique » ou
+  « avertissement », versions corrigées, page **Sécurité** dédiée. Les alertes voyagent dans les bundles :
+  Romulus les affiche sur le réseau isolé.
 - **Python multi-plateformes :** des wheels pour chaque cible voulue. Versions de Python de 3.9 à 3.14 ;
   plateformes Linux glibc ou musl (x86_64, ARM64), Windows et macOS. Les sources (sdist) sont disponibles en option.
 - **Docker :** les plateformes à collecter sont au choix (amd64, arm64…). L'index multi-plateformes d'origine
@@ -49,7 +60,8 @@ les fichiers sont dans le volume `/data`.
 
 | Tag | Contenu |
 |---|---|
-| `1.0.1`, `latest` | Docker rootless : le conteneur tourne sous l'UID de l'hôte (`SAS_UID`, détecté par `configure.sh`), les exports vers un dossier de l'hôte fonctionnent sans changer ses droits ; messages d'aide sur les droits |
+| `1.1.0`, `latest` | Recherche dans les registres, motifs de noms (`*`, `?`), alertes de sécurité OSV.dev transportées jusqu'à Romulus, listes prédéfinies cumulables sans doublon, tâches interrompues par un redémarrage débloquées automatiquement |
+| `1.0.1` | Docker rootless : le conteneur tourne sous l'UID de l'hôte (`SAS_UID`, détecté par `configure.sh`), les exports vers un dossier de l'hôte fonctionnent sans changer ses droits ; messages d'aide sur les droits |
 | `1.0.0` | Première version : npm, PyPI, Composer, Docker, modèles de framework, recettes Symfony Flex, bundles signés et découpables |
 
 Plateforme : `linux/amd64`. Image associée : [`iemperor/romulus`](https://hub.docker.com/r/iemperor/romulus)
@@ -66,7 +78,7 @@ docker run -d --name remus --restart unless-stopped \
   -p 127.0.0.1:8080:8080 \
   -v remus-data:/data \
   -v "$PWD/exports:/exports" \
-  iemperor/remus:1.0.1
+  iemperor/remus:1.1.0
 docker logs remus 2>&1 | grep "Code d'installation"
 ```
 
@@ -148,7 +160,7 @@ Toutes les valeurs ont un défaut : ce fichier ne sert qu'à les changer.
 
 ```bash
 # Version de l'image
-REMUS_IMAGE=iemperor/remus:1.0.1
+REMUS_IMAGE=iemperor/remus:1.1.0
 
 # UID des conteneurs : 0 en Docker rootless, votre UID (id -u) sinon ; ./configure.sh le détecte
 SAS_UID=0
@@ -354,6 +366,28 @@ de session sont alors marqués `Secure` automatiquement.
   `no-new-privileges`, système de fichiers en lecture seule.
 - **Hors périmètre :** Rémus ne contrôle pas le **contenu** des paquets (vulnérabilités, code malveillant).
   Faites l'audit voulu, par exemple `npm audit` ou un scanner d'images, avant d'exporter.
+
+## Sécurité des paquets
+
+Après chaque mise à jour d'une liste, Rémus interroge **OSV.dev** pour chaque paquet npm, Python et
+Composer collecté. Le bouton **Analyser maintenant** de la page **Sécurité** relance l'analyse, car de
+nouvelles failles sont publiées chaque jour.
+
+| Niveau | Gravité (avis GitHub, ou score CVSS v3) | Affichage |
+|---|---|---|
+| Critique | critique (CVSS ≥ 9) | rouge |
+| Avertissement | élevée, moyenne, ou non évaluée | orange |
+| Faible | faible | gris, pour information |
+
+Pour chaque faille : identifiant (GHSA, CVE), résumé, lien vers la fiche, et **versions corrigées**, utiles pour
+choisir la version à collecter. Une même faille publiée par plusieurs bases n'est comptée qu'une fois.
+
+Les alertes sont copiées dans les bundles. Un paquet déjà exporté garde les alertes connues au moment de son
+export ; un **export complet** transporte l'état le plus récent.
+
+Rémus a besoin d'accéder à `api.osv.dev`. Si OSV.dev est injoignable, la mise à jour de la liste réussit
+quand même et le journal le signale. Les images Docker ne sont pas analysées : leurs failles sont dans les
+paquets du système et demandent un scanner d'images dédié.
 
 ## Limites
 

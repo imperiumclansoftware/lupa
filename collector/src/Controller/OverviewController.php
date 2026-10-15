@@ -48,6 +48,10 @@ final class OverviewController
                 'free' => is_dir($this->storageDir) ? @disk_free_space($this->storageDir) ?: null : null,
             ],
             'lastExport' => $last ? Presenter::export($last, $this->exportDir) : null,
+            'security' => SecurityController::counts(array_map(
+                static fn (string $s) => ['severity' => $s],
+                $this->db->fetchFirstColumn('SELECT severity FROM artifact WHERE severity IS NOT NULL'),
+            )),
             'activeJobs' => array_map(Presenter::job(...), $this->jobs->findBy(['status' => [Job::QUEUED, Job::RUNNING]], ['id' => 'ASC'])),
             'recentJobs' => array_map(Presenter::job(...), $this->jobs->findBy([], ['id' => 'DESC'], 8)),
         ]);

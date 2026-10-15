@@ -47,6 +47,9 @@ class PackageList
     #[ORM\Column(nullable: true)]
     private ?\DateTimeImmutable $resolvedAt = null;
 
+    /** @var list<string>|null lignes après développement des motifs (le temps d'une résolution, non enregistré) */
+    private ?array $expandedSpecs = null;
+
     /** @var Collection<int, Artifact> */
     #[ORM\ManyToMany(targetEntity: Artifact::class, inversedBy: 'lists')]
     #[ORM\JoinTable(name: 'package_list_artifact')]
@@ -86,9 +89,19 @@ class PackageList
         return $this->specs;
     }
 
-    /** @return list<string> lignes non vides, sans les commentaires */
+    /** @param list<string> $lines */
+    public function useExpandedSpecs(array $lines): void
+    {
+        $this->expandedSpecs = $lines;
+    }
+
+    /** @return list<string> lignes non vides, sans les commentaires (motifs développés pendant une résolution) */
     public function getSpecLines(): array
     {
+        if (null !== $this->expandedSpecs) {
+            return $this->expandedSpecs;
+        }
+
         $lines = [];
         foreach (preg_split('/\R/', $this->specs) ?: [] as $line) {
             $line = trim((string) preg_replace('/(^|\s)#.*$/', '', $line));

@@ -16,6 +16,10 @@ final class PackageController
 {
     private const int PAGE_SIZE = 50;
 
+    private const string SEVERITY_SQL = "MAX(CASE json_extract(metadata, '$.security.severity') WHEN 'critical' THEN 5 WHEN 'high' THEN 4 WHEN 'moderate' THEN 3 WHEN 'unknown' THEN 2 WHEN 'low' THEN 1 ELSE 0 END)";
+
+    private const array SEVERITIES = [5 => 'critical', 4 => 'high', 3 => 'moderate', 2 => 'unknown', 1 => 'low'];
+
     public function __construct(
         private readonly Connection $db,
         private readonly PackageRepository $packages,
@@ -41,7 +45,9 @@ final class PackageController
         $total = (int) $this->db->fetchOne('SELECT COUNT(*) FROM (SELECT 1 '.$sql.' GROUP BY ecosystem, name)', $params);
         $page = max(1, $request->query->getInt('page', 1));
         $rows = $this->db->fetchAllAssociative(
-            'SELECT ecosystem, name, COUNT(DISTINCT version) AS versions, COUNT(*) AS files, SUM(size) AS size, MAX(updated_at) AS updated_at '
+            'SELECT ecosystem, name, COUNT(DISTINCT version) AS versions, COUNT(*) AS files, SUM(size) AS size, MAX(updated_at) AS updated_at, '
+            // Gravité la plus élevée parmi les versions (alertes transportées par les bundles)
+            .self::SEVERITY_SQL.' AS severity '
             .$sql.' GROUP BY ecosystem, name ORDER BY name LIMIT '.self::PAGE_SIZE.' OFFSET '.(($page - 1) * self::PAGE_SIZE),
             $params,
         );
@@ -54,6 +60,7 @@ final class PackageController
                 'files' => (int) $r['files'],
                 'size' => (int) $r['size'],
                 'updatedAt' => (new \DateTimeImmutable($r['updated_at']))->format(\DATE_ATOM),
+                'severity' => self::SEVERITIES[(int) $r['severity']] ?? null,
             ], $rows),
             'total' => $total,
             'page' => $page,

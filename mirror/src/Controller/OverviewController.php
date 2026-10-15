@@ -53,6 +53,7 @@ final class OverviewController
             'baseUrl' => '' !== $this->publicUrl ? rtrim($this->publicUrl, '/') : $request->getSchemeAndHttpHost(),
             'lastImport' => $last ? Presenter::bundle($last) : null,
             'trustedKeys' => \count($this->keys->findAll()),
+            'security' => $this->securityCounts(),
             'activeJobs' => array_map(Presenter::job(...), $this->jobs->findBy(['status' => [Job::QUEUED, Job::RUNNING]], ['id' => 'ASC'])),
             'recentJobs' => array_map(Presenter::job(...), $this->jobs->findBy([], ['id' => 'DESC'], 8)),
         ]);
@@ -97,6 +98,30 @@ final class OverviewController
         $this->em->flush();
 
         return new Response(null, Response::HTTP_NO_CONTENT);
+    }
+
+    /**
+     * Versions de paquets signalées par Rémus lors de l'export.
+     *
+     * @return array{critical: int, warning: int, low: int}
+     */
+    private function securityCounts(): array
+    {
+        $counts = ['critical' => 0, 'warning' => 0, 'low' => 0];
+        $rows = $this->db->fetchAllKeyValue(
+            "SELECT json_extract(metadata, '$.security.severity') AS s, COUNT(DISTINCT ecosystem || name || version) "
+            ."FROM package WHERE json_extract(metadata, '$.security.severity') IS NOT NULL GROUP BY s"
+        );
+        foreach ($rows as $severity => $n) {
+            $level = match ($severity) {
+                'critical' => 'critical',
+                'low' => 'low',
+                default => 'warning',
+            };
+            $counts[$level] += (int) $n;
+        }
+
+        return $counts;
     }
 
     /** Taille réelle du stockage (fichiers partagés comptés une fois), recalculée au plus toutes les minutes. */

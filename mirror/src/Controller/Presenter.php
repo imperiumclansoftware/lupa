@@ -81,6 +81,10 @@ final class Presenter
                 default => null,
             },
             'digest' => $metadata['digest'] ?? null,
+            // Analyse de sécurité faite par Rémus avant l'export
+            'severity' => $metadata['security']['severity'] ?? null,
+            'vulnerabilities' => $metadata['security']['vulnerabilities'] ?? [],
+            'auditedAt' => $metadata['security']['auditedAt'] ?? null,
             'bundleSequence' => $package->getBundle()?->getSequence(),
             'createdAt' => $package->getCreatedAt()->format(\DATE_ATOM),
             'updatedAt' => $package->getUpdatedAt()->format(\DATE_ATOM),

@@ -1,11 +1,11 @@
 import { ChangeDetectionStrategy, Component, computed, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { BytesPipe, ECOSYSTEMS, Eco, Icon, Logo, JobProgress, JobStatus, PluralPipe, RelativePipe, errorMessage, isActive, poll } from '@sas/shared';
+import { BytesPipe, ECOSYSTEMS, Eco, SecuritySummary, Icon, Logo, JobProgress, JobStatus, PluralPipe, RelativePipe, errorMessage, isActive, poll } from '@sas/shared';
 import { CollectorApi, Overview } from '../api';
 import { inject } from '@angular/core';
 
 @Component({
-  imports: [RouterLink, Icon, Logo, Eco, JobProgress, JobStatus, BytesPipe, RelativePipe, PluralPipe],
+  imports: [RouterLink, Icon, Logo, Eco, SecuritySummary, JobProgress, JobStatus, BytesPipe, RelativePipe, PluralPipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="page">
@@ -54,6 +54,16 @@ import { inject } from '@angular/core';
           }
         </section>
 
+        @if (d.security.critical || d.security.warning) {
+          <a class="card security" routerLink="/securite" [class.critical]="d.security.critical">
+            <sas-icon name="alert" [size]="22" />
+            <span class="grow"><strong>Alertes de sécurité</strong>
+              <span class="muted">Des paquets collectés ont des vulnérabilités connues : vérifiez-les avant d’exporter.</span></span>
+            <sas-security-summary [counts]="d.security" />
+            <sas-icon name="chevron" [size]="16" />
+          </a>
+        }
+
         <div class="columns">
           <section class="card">
             <header class="card-header"><h2>Activité</h2><a routerLink="/activite" class="subtle">Tout voir</a></header>
@@ -99,6 +109,10 @@ import { inject } from '@angular/core';
     .onboarding ol { margin: 0; padding-left: 20px; display: grid; gap: 6px; color: var(--text-2); }
     a.stat { text-decoration: none; color: inherit; }
     .stat-label { gap: 10px; margin-bottom: 6px; }
+    .security { display: flex; align-items: center; gap: 14px; padding: 16px 22px; color: inherit; text-decoration: none; }
+    .security > sas-icon:first-child { color: var(--warn); }
+    .security.critical > sas-icon:first-child { color: var(--danger); }
+    .security .grow { flex: 1; display: grid; gap: 2px; }
     .columns { display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); align-items: start; }
     .recent { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
     .recent li { display: flex; align-items: center; gap: 10px; font-size: 0.9rem; }

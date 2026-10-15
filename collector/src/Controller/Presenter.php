@@ -23,6 +23,7 @@ final class Presenter
             'artifactCount' => $list->getArtifacts()->count(),
             'size' => array_sum($list->getArtifacts()->map(static fn (Artifact $a) => $a->getSize())->toArray()),
             'pendingCount' => $list->getArtifacts()->filter(static fn (Artifact $a) => null === $a->getExport())->count(),
+            'security' => SecurityController::counts(array_map(static fn (Artifact $a) => ['severity' => $a->getSeverity()], $list->getArtifacts()->toArray())),
             'createdAt' => $list->getCreatedAt()->format(\DATE_ATOM),
             'updatedAt' => $list->getUpdatedAt()->format(\DATE_ATOM),
             'resolvedAt' => $list->getResolvedAt()?->format(\DATE_ATOM),
@@ -37,11 +38,11 @@ final class Presenter
     }
 
     /** @return array<string, mixed> */
-    public static function artifact(Artifact $artifact): array
+    public static function artifact(Artifact $artifact, bool $withVulnerabilities = false): array
     {
         $metadata = $artifact->getMetadata();
 
-        return [
+        return ($withVulnerabilities ? ['vulnerabilities' => $artifact->getVulnerabilities()] : []) + [
             'id' => $artifact->getId(),
             'ecosystem' => $artifact->getEcosystem()->value,
             'name' => $artifact->getName(),
@@ -55,6 +56,9 @@ final class Presenter
                 default => null,
             },
             'exportSequence' => $artifact->getExport()?->getSequence(),
+            'severity' => $artifact->getSeverity(),
+            'vulnerabilityCount' => \count($artifact->getVulnerabilities()),
+            'auditedAt' => $artifact->getAuditedAt()?->format(\DATE_ATOM),
             'updatedAt' => $artifact->getUpdatedAt()->format(\DATE_ATOM),
         ];
     }

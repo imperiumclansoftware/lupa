@@ -1,10 +1,10 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { BytesPipe, ECOSYSTEMS, Eco, Icon, Logo, JobProgress, PluralPipe, RelativePipe, errorMessage, poll } from '@sas/shared';
+import { BytesPipe, ECOSYSTEMS, Eco, SecuritySummary, Icon, Logo, JobProgress, PluralPipe, RelativePipe, errorMessage, poll } from '@sas/shared';
 import { MirrorApi, Overview } from '../api';
 
 @Component({
-  imports: [RouterLink, Icon, Logo, Eco, JobProgress, BytesPipe, RelativePipe, PluralPipe],
+  imports: [RouterLink, Icon, Logo, Eco, SecuritySummary, JobProgress, BytesPipe, RelativePipe, PluralPipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="page">
@@ -57,6 +57,15 @@ import { MirrorApi, Overview } from '../api';
           }
         </section>
 
+        @if (d.security.critical || d.security.warning) {
+          <a class="card security" routerLink="/paquets" [class.critical]="d.security.critical">
+            <sas-icon name="alert" [size]="22" />
+            <span class="grow"><strong>Alertes de sécurité</strong>
+              <span class="muted">Rémus a signalé des vulnérabilités connues sur des versions servies : informez les équipes et importez des versions corrigées.</span></span>
+            <sas-security-summary [counts]="d.security" />
+          </a>
+        }
+
         <div class="columns">
           <section class="card">
             <header class="card-header"><h2>Dernier import</h2><a routerLink="/import" class="subtle">Import</a></header>
@@ -89,6 +98,10 @@ import { MirrorApi, Overview } from '../api';
     .onboarding ol { margin: 0; padding-left: 20px; display: grid; gap: 6px; color: var(--text-2); }
     a.stat { text-decoration: none; color: inherit; }
     .stat-label { gap: 10px; margin-bottom: 6px; }
+    .security { display: flex; align-items: center; gap: 14px; padding: 16px 22px; color: inherit; text-decoration: none; flex-wrap: wrap; }
+    .security > sas-icon:first-child { color: var(--warn); }
+    .security.critical > sas-icon:first-child { color: var(--danger); }
+    .security .grow { flex: 1; display: grid; gap: 2px; min-width: 220px; }
     .columns { display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); align-items: start; }
     .kv { display: grid; grid-template-columns: auto 1fr; gap: 8px 16px; font-size: 0.9rem; }
     .kv code { overflow-wrap: anywhere; }

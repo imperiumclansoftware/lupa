@@ -38,6 +38,17 @@ Images Docker : [`iemperor/remus`](https://hub.docker.com/r/iemperor/remus) et [
 | Symfony Flex | recettes des paquets collectés (officielles et contrib) | `SYMFONY_ENDPOINT=http://miroir/composer/flex` |
 | Docker | index multi-plateformes d'origine + plateformes choisies + attestations | `docker pull miroir/library/nginx:1.27` ou `registry-mirrors` |
 
+## Recherche, motifs et sécurité
+
+- **Recherche** (formulaire de liste) : paquets et images des registres publics, versions disponibles,
+  choix de la contrainte (`collector/src/Search/PackageSearch.php`).
+- **Motifs** `*` et `?` (`@syncfusion/ej2-*angular*@^29`, `symfony/*-bundle:^7.3`, `node:24-alpine*`) :
+  développés au moment de la mise à jour (`PatternExpander`). Les paquets sans version compatible sont
+  écartés avec les règles exactes de chaque écosystème (`VersionFilter` : semver de npm, composer/semver,
+  packaging de pip).
+- **Sécurité** : analyse OSV.dev après chaque mise à jour et à la demande (`collector/src/Audit/`), page
+  Sécurité dans Rémus, alertes copiées dans les bundles et affichées par Romulus.
+
 ## Modèles de framework
 
 Dans « Nouvelle liste », un **modèle** collecte tout ce dont une commande de création de projet a besoin,

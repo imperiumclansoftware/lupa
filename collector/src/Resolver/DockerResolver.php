@@ -6,6 +6,7 @@ use App\Entity\Artifact;
 use App\Entity\PackageList;
 use App\Job\JobContext;
 use App\Resolver\Docker\ImageReference;
+use App\Search\Glob;
 use App\Resolver\Docker\RegistryClient;
 use Sas\Bundle\BlobStore;
 use Sas\Bundle\Ecosystem;
@@ -59,6 +60,13 @@ final readonly class DockerResolver implements Resolver
     {
         $errors = [];
         foreach ($list->getSpecLines() as $line) {
+            if (Glob::isPattern($line)) {
+                // Motif (node:24-*alpine, bitnami/*-exporter) : développé au moment de la mise à jour
+                if (!preg_match('#^[a-z0-9*?][a-z0-9._/*?-]*(:[\w.*?-]+)?$#i', $line)) {
+                    $errors[] = sprintf('« %s » : motif d\'image invalide (ex. node:24-*alpine, bitnami/*-exporter).', $line);
+                }
+                continue;
+            }
             try {
                 ImageReference::parse($line);
             } catch (\InvalidArgumentException $e) {

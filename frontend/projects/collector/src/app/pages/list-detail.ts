@@ -1,11 +1,11 @@
 import { ChangeDetectionStrategy, Component, DestroyRef, OnInit, computed, inject, input, signal, viewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
-import { BytesPipe, CopyButton, Dialog, EcosystemPipe, Icon, JobProgress, PluralPipe, RelativePipe, Toasts, errorMessage, isActive, poll, Eco } from '@sas/shared';
+import { BytesPipe, CopyButton, SecuritySummary, SeverityBadge, Dialog, EcosystemPipe, Icon, JobProgress, PluralPipe, RelativePipe, Toasts, errorMessage, isActive, poll, Eco } from '@sas/shared';
 import { Artifact, CollectorApi, PackageList, Template } from '../api';
 
 @Component({
-  imports: [Eco, CopyButton, FormsModule, RouterLink, Icon, JobProgress, Dialog, BytesPipe, RelativePipe, EcosystemPipe, PluralPipe],
+  imports: [Eco, CopyButton, SecuritySummary, SeverityBadge, FormsModule, RouterLink, Icon, JobProgress, Dialog, BytesPipe, RelativePipe, EcosystemPipe, PluralPipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="page">
@@ -40,6 +40,19 @@ import { Artifact, CollectorApi, PackageList, Template } from '../api';
           </section>
         }
 
+        @if (l.ecosystem !== 'docker' && l.resolvedAt) {
+          @let sec = l.security;
+          <section class="card card-body security" [class.critical]="sec.critical" [class.warning]="!sec.critical && sec.warning">
+            <sas-icon [name]="sec.critical || sec.warning ? 'alert' : 'shield'" [size]="22" />
+            <div class="grow">
+              <strong>{{ sec.critical || sec.warning ? 'Alertes de sécurité' : 'Aucune vulnérabilité connue' }}</strong>
+              <span class="muted">{{ sec.critical || sec.warning ? 'Cliquez sur la gravité d’un paquet pour le détail et la version corrigée.' : 'D’après OSV.dev à la dernière analyse.' }}</span>
+            </div>
+            <sas-security-summary [counts]="sec" />
+            <button type="button" class="btn btn-sm" (click)="audit()" [disabled]="running()"><sas-icon name="refresh" [size]="15" />Analyser</button>
+          </section>
+        }
+
         @if (template(); as t) {
           <section class="card card-body template">
             <sas-eco [ecosystem]="t.ecosystem" [size]="40" />
@@ -61,6 +74,9 @@ import { Artifact, CollectorApi, PackageList, Template } from '../api';
               <label class="visually-hidden" for="filter">Filtrer</label>
               <input class="input" id="filter" type="search" placeholder="Filtrer…" [ngModel]="filter()" (ngModelChange)="filter.set($event)" />
               <label class="check"><input type="checkbox" [ngModel]="pendingOnly()" (ngModelChange)="pendingOnly.set($event)" /> À exporter</label>
+              @if (l.ecosystem !== 'docker') {
+                <label class="check"><input type="checkbox" [ngModel]="vulnerableOnly()" (ngModelChange)="vulnerableOnly.set($event)" /> Vulnérables</label>
+              }
             </div>
           </header>
           @if (artifacts().length === 0) {
@@ -73,7 +89,7 @@ import { Artifact, CollectorApi, PackageList, Template } from '../api';
             <div class="table-wrap">
               <table class="table">
                 <thead>
-                  <tr><th>Nom</th><th>Version</th><th>{{ l.ecosystem === 'docker' ? 'Plateformes' : l.ecosystem === 'pypi' ? 'Fichier' : 'Description' }}</th><th class="right">Taille</th><th>Export</th></tr>
+                  <tr><th>Nom</th><th>Version</th><th>{{ l.ecosystem === 'docker' ? 'Plateformes' : l.ecosystem === 'pypi' ? 'Fichier' : 'Description' }}</th><th class="right">Taille</th>@if (l.ecosystem !== 'docker') { <th>Sécurité</th> }<th>Export</th></tr>
                 </thead>
                 <tbody>
                   @for (a of visible(); track a.id) {
@@ -82,6 +98,15 @@ import { Artifact, CollectorApi, PackageList, Template } from '../api';
                       <td class="mono">{{ a.version }}</td>
                       <td class="detail">{{ l.ecosystem === 'pypi' ? a.filename : a.detail }}</td>
                       <td class="right num">{{ a.size | bytes }}</td>
+                      @if (l.ecosystem !== 'docker') {
+                        <td>
+                          @if (a.severity) {
+                            <button type="button" class="sev-button" (click)="showVulnerabilities(a)" [attr.aria-label]="'Vulnérabilités de ' + a.name">
+                              <sas-severity [severity]="a.severity" [count]="a.vulnerabilityCount" />
+                            </button>
+                          }
+                        </td>
+                      }
                       <td>@if (a.exportSequence) { <span class="badge">n° {{ a.exportSequence }}</span> } @else { <span class="badge badge-accent">À exporter</span> }</td>
                     </tr>
                   }
@@ -98,6 +123,21 @@ import { Artifact, CollectorApi, PackageList, Template } from '../api';
       }
     </div>
 
+    <sas-dialog #vulnDialog [heading]="inspected() ? inspected()!.name + ' ' + inspected()!.version : 'Vulnérabilités'">
+      @if (inspected(); as a) {
+        <ul class="vulns">
+          @for (v of a.vulnerabilities ?? []; track v.id) {
+            <li>
+              <div class="row"><sas-severity [severity]="v.severity" /><a [href]="v.url" target="_blank" rel="noopener noreferrer" class="mono">{{ v.id }}</a>
+                @if (v.aliases.length) { <span class="subtle mono">{{ v.aliases.join(', ') }}</span> }</div>
+              <p>{{ v.summary }}</p>
+              <p class="subtle">Corrigée en : <span class="mono">{{ v.fixed.length ? v.fixed.join(', ') : 'aucune version corrigée publiée' }}</span></p>
+            </li>
+          }
+        </ul>
+      }
+    </sas-dialog>
+
     <sas-dialog #confirmDelete heading="Supprimer cette liste ?">
       <p>Les paquets déjà téléchargés restent dans Rémus et dans Romulus ; seule la liste est supprimée.</p>
       <div dialog-actions>
@@ -110,6 +150,16 @@ import { Artifact, CollectorApi, PackageList, Template } from '../api';
     .back { display: inline-flex; align-items: center; gap: 4px; text-decoration: none; margin-bottom: 6px; }
     .meta { flex-wrap: wrap; color: var(--text-2); }
     .filters { flex-wrap: wrap; }
+    .security { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+    .security > sas-icon { color: var(--ok); }
+    .security.warning > sas-icon { color: var(--warn); }
+    .security.critical > sas-icon { color: var(--danger); }
+    .security .grow { flex: 1; display: grid; gap: 2px; min-width: 220px; }
+    .sev-button { border: none; background: none; padding: 0; cursor: pointer; }
+    .vulns { list-style: none; margin: 0; padding: 0; display: grid; gap: 14px; max-height: 60vh; overflow: auto; }
+    .vulns li { display: grid; gap: 4px; padding-bottom: 12px; border-bottom: 1px solid var(--border); }
+    .vulns li:last-child { border-bottom: none; }
+    .vulns .row { flex-wrap: wrap; }
     .filters .input { width: 220px; min-height: 34px; }
     .name { overflow-wrap: anywhere; }
     .detail { color: var(--text-2); font-size: 0.86rem; max-width: 420px; overflow-wrap: anywhere; }
@@ -128,13 +178,16 @@ export default class ListDetail implements OnInit {
   private readonly api = inject(CollectorApi);
   private readonly router = inject(Router);
   private readonly toasts = inject(Toasts);
-  private readonly dialog = viewChild.required(Dialog);
+  private readonly dialog = viewChild.required<Dialog>('confirmDelete');
 
   protected readonly list = signal<PackageList | null>(null);
   protected readonly artifacts = signal<Artifact[]>([]);
   protected readonly error = signal('');
   protected readonly filter = signal('');
   protected readonly pendingOnly = signal(false);
+  protected readonly vulnerableOnly = signal(false);
+  protected readonly inspected = signal<Artifact | null>(null);
+  private readonly vulnDialog = viewChild.required<Dialog>('vulnDialog');
   protected readonly limit = signal(200);
   protected readonly templates = signal<Template[]>([]);
   protected readonly template = computed(() => this.templates().find((t) => t.id === this.list()?.options.template?.id) ?? null);
@@ -143,7 +196,7 @@ export default class ListDetail implements OnInit {
   protected readonly filtered = computed(() => {
     const q = this.filter().trim().toLowerCase();
     return this.artifacts().filter(
-      (a) => (!q || a.name.toLowerCase().includes(q) || (a.filename ?? '').toLowerCase().includes(q)) && (!this.pendingOnly() || !a.exportSequence),
+      (a) => (!q || a.name.toLowerCase().includes(q) || (a.filename ?? '').toLowerCase().includes(q)) && (!this.pendingOnly() || !a.exportSequence) && (!this.vulnerableOnly() || !!a.severity),
     );
   });
   protected readonly visible = computed(() => this.filtered().slice(0, this.limit()));
@@ -180,6 +233,20 @@ export default class ListDetail implements OnInit {
   protected async resolve(): Promise<void> {
     try {
       await this.api.resolve(+this.id());
+      await this.load();
+    } catch (e) {
+      this.error.set(errorMessage(e));
+    }
+  }
+
+  protected showVulnerabilities(artifact: Artifact): void {
+    this.inspected.set(artifact);
+    this.vulnDialog().open();
+  }
+
+  protected async audit(): Promise<void> {
+    try {
+      await this.api.audit(+this.id());
       await this.load();
     } catch (e) {
       this.error.set(errorMessage(e));

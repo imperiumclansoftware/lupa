@@ -130,7 +130,7 @@ final class ListController
         $artifacts = $list->getArtifacts()->toArray();
         usort($artifacts, static fn (Artifact $a, Artifact $b) => [$a->getName(), $a->getVersion(), $a->getFilename()] <=> [$b->getName(), $b->getVersion(), $b->getFilename()]);
 
-        return new JsonResponse(array_map(Presenter::artifact(...), $artifacts));
+        return new JsonResponse(array_map(static fn (Artifact $a) => Presenter::artifact($a, null !== $a->getSeverity()), $artifacts));
     }
 
     private function save(PackageList $list, ListInput $input, int $status): JsonResponse

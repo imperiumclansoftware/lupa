@@ -19,7 +19,7 @@ use Symfony\Contracts\HttpClient\HttpClientInterface;
  */
 final readonly class NpmResolver implements Resolver
 {
-    private const string NAME = '/^(@[a-z0-9][a-z0-9._~-]*\/)?[a-z0-9_][a-z0-9._~-]*$/';
+    private const string NAME = '/^(@[a-z0-9*?][a-z0-9._~*?-]*\/)?[a-z0-9_*?][a-z0-9._~*?-]*$/';
 
     public function __construct(
         private Downloader $downloader,

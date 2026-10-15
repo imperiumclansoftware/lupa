@@ -1,6 +1,6 @@
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
-import { EcosystemId, Job } from '@sas/shared';
+import { EcosystemId, Job, SecurityCounts, Severity, Vulnerability } from '@sas/shared';
 import { firstValueFrom } from 'rxjs';
 
 export interface Identity {
@@ -52,6 +52,7 @@ export interface PackageList {
   artifactCount: number;
   size: number;
   pendingCount: number;
+  security: SecurityCounts;
   createdAt: string;
   updatedAt: string;
   resolvedAt: string | null;
@@ -79,7 +80,32 @@ export interface Artifact {
   size: number;
   detail: string | null;
   exportSequence: number | null;
+  severity: Severity | null;
+  vulnerabilityCount: number;
+  auditedAt: string | null;
+  vulnerabilities?: Vulnerability[];
   updatedAt: string;
+}
+
+export interface SecurityItem extends Artifact {
+  vulnerabilities: Vulnerability[];
+  lists: { id: number; name: string }[];
+}
+
+export interface SecurityReport {
+  counts: SecurityCounts;
+  auditable: number;
+  audited: number;
+  oldestAudit: string | null;
+  job: Job | null;
+  items: SecurityItem[];
+}
+
+export interface SearchResult {
+  name: string;
+  description: string | null;
+  version: string | null;
+  info: string | null;
 }
 
 export interface Page<T> {
@@ -131,6 +157,7 @@ export interface Overview {
   lists: number;
   storage: { blobs: number; size: number; free: number | null };
   lastExport: Export | null;
+  security: SecurityCounts;
   activeJobs: Job[];
   recentJobs: Job[];
 }
@@ -211,6 +238,27 @@ export class CollectorApi {
 
   deleteExportFiles(id: number): Promise<Export> {
     return firstValueFrom(this.http.delete<Export>(`/api/exports/${id}/files`));
+  }
+
+  search(ecosystem: EcosystemId, q: string): Promise<SearchResult[]> {
+    return firstValueFrom(this.http.get<SearchResult[]>('/api/search', { params: { ecosystem, q } }));
+  }
+
+  versions(ecosystem: EcosystemId, name: string): Promise<{ versions: string[]; latest: string | null }> {
+    return firstValueFrom(this.http.get<{ versions: string[]; latest: string | null }>('/api/search/versions', { params: { ecosystem, name } }));
+  }
+
+  /** Aperçu d'un motif : paquets correspondants avec leur contrainte */
+  expand(ecosystem: EcosystemId, line: string): Promise<{ lines: string[]; skipped: string[]; pattern: boolean }> {
+    return firstValueFrom(this.http.post<{ lines: string[]; skipped: string[]; pattern: boolean }>('/api/search/expand', { ecosystem, line }));
+  }
+
+  security(): Promise<SecurityReport> {
+    return firstValueFrom(this.http.get<SecurityReport>('/api/security'));
+  }
+
+  audit(listId?: number): Promise<Job> {
+    return firstValueFrom(this.http.post<Job>('/api/security/audit', listId ? { listId } : {}));
   }
 
   settings(): Promise<{ identity: Identity; exportDir: string; storageDir: string }> {

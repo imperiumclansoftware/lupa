@@ -1,10 +1,10 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { BytesPipe, EcosystemPipe, Icon, JobStatus, RelativePipe, Toasts, errorMessage, isActive, poll, Eco } from '@sas/shared';
+import { BytesPipe, EcosystemPipe, Icon, JobStatus, SecuritySummary, RelativePipe, Toasts, errorMessage, isActive, poll, Eco } from '@sas/shared';
 import { CollectorApi, PackageList } from '../api';
 
 @Component({
-  imports: [Eco, RouterLink, Icon, JobStatus, BytesPipe, RelativePipe, EcosystemPipe],
+  imports: [Eco, SecuritySummary, RouterLink, Icon, JobStatus, BytesPipe, RelativePipe, EcosystemPipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="page">
@@ -35,7 +35,7 @@ import { CollectorApi, PackageList } from '../api';
           <div class="table-wrap">
             <table class="table">
               <thead>
-                <tr><th>Liste</th><th>Écosystème</th><th class="right">Paquets</th><th class="right">Taille</th><th>À exporter</th><th>Mise à jour</th></tr>
+                <tr><th>Liste</th><th>Écosystème</th><th class="right">Paquets</th><th class="right">Taille</th><th>À exporter</th><th>Sécurité</th><th>Mise à jour</th></tr>
               </thead>
               <tbody>
                 @for (list of lists(); track list.id) {
@@ -48,6 +48,7 @@ import { CollectorApi, PackageList } from '../api';
                     <td class="right num">{{ list.artifactCount }}</td>
                     <td class="right num">{{ list.size | bytes }}</td>
                     <td>@if (list.pendingCount > 0) { <span class="badge badge-accent">{{ list.pendingCount }}</span> } @else { <span class="subtle">—</span> }</td>
+                    <td>@if (list.ecosystem === 'docker') { <span class="subtle" title="Les images Docker ne sont pas analysées">—</span> } @else { <sas-security-summary [counts]="list.security" [showOk]="!!list.resolvedAt" /> }</td>
                     <td>
                       @if (list.job) { <sas-job-status [status]="list.job.status" /> }
                       @else if (list.resolvedAt) { <span class="subtle">{{ list.resolvedAt | relative }}</span> }

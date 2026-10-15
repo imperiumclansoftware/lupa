@@ -76,6 +76,29 @@ final class RegistryClient
         return ['digest' => $digest, 'mediaType' => $mediaType, 'size' => \strlen($body), 'document' => $document];
     }
 
+    /**
+     * Étiquettes d'une image (API OCI tags/list, avec pagination).
+     *
+     * @return list<string>
+     */
+    public function tags(ImageReference $image, int $max = 2000): array
+    {
+        $tags = [];
+        $url = sprintf('%s/v2/%s/tags/list?n=1000', $image->endpoint(), $image->repository);
+        while (null !== $url && \count($tags) < $max) {
+            $response = $this->request($image, $url, ['Accept' => 'application/json']);
+            if (200 !== $response->getStatusCode()) {
+                throw new DownloadException(sprintf('Étiquettes de %s indisponibles (HTTP %d).', $image->repository, $response->getStatusCode()));
+            }
+            array_push($tags, ...array_map('strval', $response->toArray()['tags'] ?? []));
+            // Lien « next » de l'en-tête Link (RFC 5988)
+            $link = $response->getHeaders()['link'][0] ?? '';
+            $url = preg_match('/<([^>]+)>;\s*rel="next"/', $link, $m) ? (str_starts_with($m[1], 'http') ? $m[1] : $image->endpoint().$m[1]) : null;
+        }
+
+        return $tags;
+    }
+
     /** @return array{sha256: string, size: int} */
     public function blob(ImageReference $image, string $digest): array
     {

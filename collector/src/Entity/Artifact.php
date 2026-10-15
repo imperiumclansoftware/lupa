@@ -58,6 +58,21 @@ class Artifact
     #[ORM\JoinColumn(onDelete: 'SET NULL')]
     private ?Export $export = null;
 
+    /**
+     * Vulnérabilités connues (OSV.dev) à la dernière analyse.
+     *
+     * @var list<array{id: string, aliases: list<string>, summary: string, severity: string, fixed: list<string>, url: string}>|null
+     */
+    #[ORM\Column(type: Types::JSON, nullable: true)]
+    private ?array $vulnerabilities = null;
+
+    /** Gravité la plus élevée (critical, high, moderate, unknown, low), null si aucune vulnérabilité */
+    #[ORM\Column(length: 16, nullable: true)]
+    private ?string $severity = null;
+
+    #[ORM\Column(nullable: true)]
+    private ?\DateTimeImmutable $auditedAt = null;
+
     /** @var Collection<int, PackageList> */
     #[ORM\ManyToMany(targetEntity: PackageList::class, mappedBy: 'artifacts')]
     private Collection $lists;
@@ -158,6 +173,30 @@ class Artifact
         $this->export = $export;
     }
 
+    /** @return list<array{id: string, aliases: list<string>, summary: string, severity: string, fixed: list<string>, url: string}> */
+    public function getVulnerabilities(): array
+    {
+        return $this->vulnerabilities ?? [];
+    }
+
+    public function getSeverity(): ?string
+    {
+        return $this->severity;
+    }
+
+    public function getAuditedAt(): ?\DateTimeImmutable
+    {
+        return $this->auditedAt;
+    }
+
+    /** @param list<array{id: string, aliases: list<string>, summary: string, severity: string, fixed: list<string>, url: string}> $vulnerabilities */
+    public function setAudit(array $vulnerabilities, ?string $severity): void
+    {
+        $this->vulnerabilities = $vulnerabilities;
+        $this->severity = $severity;
+        $this->auditedAt = new \DateTimeImmutable();
+    }
+
     /** @return Collection<int, PackageList> */
     public function getLists(): Collection
     {
@@ -173,7 +212,12 @@ class Artifact
             'version' => $this->version,
             'filename' => $this->filename,
             'blobs' => $this->blobs,
-            'metadata' => $this->metadata,
+            // Alertes de sécurité connues à l'export : Romulus les affiche sur le réseau isolé
+            'metadata' => null === $this->auditedAt ? $this->metadata : $this->metadata + ['security' => [
+                'auditedAt' => $this->auditedAt->format(\DATE_ATOM),
+                'severity' => $this->severity,
+                'vulnerabilities' => $this->vulnerabilities ?? [],
+            ]],
         ];
     }
 }

@@ -1,11 +1,11 @@
 import { ChangeDetectionStrategy, Component, OnInit, inject, input, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
-import { BytesPipe, ECOSYSTEMS, EcosystemPipe, Icon, PluralPipe, errorMessage, Eco } from '@sas/shared';
+import { BytesPipe, SeverityBadge, ECOSYSTEMS, EcosystemPipe, Icon, PluralPipe, errorMessage, Eco } from '@sas/shared';
 import { Artifact, CollectorApi, Page } from '../api';
 
 @Component({
-  imports: [Eco, FormsModule, Icon, BytesPipe, EcosystemPipe, PluralPipe],
+  imports: [Eco, SeverityBadge, FormsModule, Icon, BytesPipe, EcosystemPipe, PluralPipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="page">
@@ -41,7 +41,7 @@ import { Artifact, CollectorApi, Page } from '../api';
           } @else {
             <div class="table-wrap">
               <table class="table">
-                <thead><tr><th>Nom</th><th>Version</th><th>Écosystème</th><th>Détail</th><th class="right">Taille</th><th>Export</th></tr></thead>
+                <thead><tr><th>Nom</th><th>Version</th><th>Écosystème</th><th>Détail</th><th class="right">Taille</th><th>Sécurité</th><th>Export</th></tr></thead>
                 <tbody>
                   @for (a of d.items; track a.id) {
                     <tr>
@@ -50,6 +50,7 @@ import { Artifact, CollectorApi, Page } from '../api';
                       <td><span class="row"><sas-eco [ecosystem]="a.ecosystem" [size]="26" />{{ a.ecosystem | ecosystem }}</span></td>
                       <td class="detail">{{ a.detail }}</td>
                       <td class="right num">{{ a.size | bytes }}</td>
+                      <td><sas-severity [severity]="a.severity" [count]="a.vulnerabilityCount" /></td>
                       <td>@if (a.exportSequence) { <span class="badge">n° {{ a.exportSequence }}</span> } @else { <span class="badge badge-accent">À exporter</span> }</td>
                     </tr>
                   }

@@ -12,6 +12,7 @@ export class Layout {
     { path: '/', label: 'Tableau de bord', icon: 'dashboard', exact: true },
     { path: '/listes', label: 'Listes', icon: 'list' },
     { path: '/paquets', label: 'Paquets', icon: 'package' },
+    { path: '/securite', label: 'Sécurité', icon: 'shield' },
     { path: '/exports', label: 'Exports', icon: 'usb' },
     { path: '/activite', label: 'Activité', icon: 'activity' },
     { path: '/reglages', label: 'Réglages', icon: 'settings' },

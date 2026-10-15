@@ -38,6 +38,9 @@ d'aucun service externe : la base SQLite et les paquets sont dans le volume `/da
   - Composer 2 (`/composer`) ;
   - recettes Symfony Flex (`/composer/flex`) ;
   - registre Docker OCI en lecture seule (`/v2/`), utilisable comme *registry mirror* de Docker Hub.
+- **Alertes de sécurité :** les vulnérabilités connues relevées par Rémus (OSV.dev) au moment de l'export
+  voyagent avec les paquets. Le tableau de bord, la liste des paquets et la page de chaque paquet les
+  affichent (« critique », « avertissement », versions corrigées), sans accès à Internet.
 - **Interface :**
   - tableau de bord, historique des imports, navigation dans les paquets avec la commande d'installation de chacun ;
   - page **Utilisation**, qui donne la configuration exacte de chaque outil avec l'adresse du serveur ;
@@ -48,7 +51,8 @@ d'aucun service externe : la base SQLite et les paquets sont dans le volume `/da
 
 | Tag | Contenu |
 |---|---|
-| `1.0.1`, `latest` | Docker rootless : le conteneur tourne sous l'UID de l'hôte (`SAS_UID`, détecté par `configure.sh`), clés USB lisibles quels que soient leurs droits de montage ; messages d'aide sur les droits |
+| `1.1.0`, `latest` | Alertes de sécurité transportées par les bundles (tableau de bord, paquets, détail des failles et versions corrigées), dossiers de clés illisibles signalés, détection de Docker rootless, tâches interrompues débloquées automatiquement |
+| `1.0.1` | Docker rootless : le conteneur tourne sous l'UID de l'hôte (`SAS_UID`, détecté par `configure.sh`), clés USB lisibles quels que soient leurs droits de montage ; messages d'aide sur les droits |
 | `1.0.0` | Première version : npm, PyPI, Composer, Symfony Flex, Docker, import signé depuis clé USB ou navigateur |
 
 Plateforme : `linux/amd64`. Image associée : [`iemperor/remus`](https://hub.docker.com/r/iemperor/remus)
@@ -72,19 +76,19 @@ Le serveur n'a pas Internet : l'image voyage elle aussi par clé USB.
 `configure.sh`, ce guide et des sommes de contrôle :
 
 ```bash
-tar -xf romulus-1.0.1.tar && cd romulus-1.0.1
+tar -xf romulus-1.1.0.tar && cd romulus-1.1.0
 sha256sum -c SHA256SUMS                  # la copie sur la clé n'a rien abîmé
-docker load -i romulus-1.0.1.tar.gz
+docker load -i romulus-1.1.0.tar.gz
 ./configure.sh                           # crée .env ; à relire
 ```
 
 **Ou depuis Docker Hub**, sur une machine connectée :
 
 ```bash
-docker pull iemperor/romulus:1.0.1
-docker save iemperor/romulus:1.0.1 | gzip > romulus-1.0.1.tar.gz
+docker pull iemperor/romulus:1.1.0
+docker save iemperor/romulus:1.1.0 | gzip > romulus-1.1.0.tar.gz
 # … clé USB …
-docker load -i romulus-1.0.1.tar.gz      # sur le serveur isolé
+docker load -i romulus-1.1.0.tar.gz      # sur le serveur isolé
 ```
 
 ### 2. Créer `compose.yaml`
@@ -139,7 +143,7 @@ volumes:
 ### 3. Le fichier `.env` (facultatif)
 
 ```bash
-ROMULUS_IMAGE=iemperor/romulus:1.0.1
+ROMULUS_IMAGE=iemperor/romulus:1.1.0
 
 # UID des conteneurs : 0 en Docker rootless, votre UID (id -u) sinon ; ./configure.sh le détecte
 SAS_UID=0

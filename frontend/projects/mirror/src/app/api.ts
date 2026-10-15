@@ -1,6 +1,6 @@
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
-import { EcosystemId, Job } from '@sas/shared';
+import { EcosystemId, Job, SecurityCounts, Severity, Vulnerability } from '@sas/shared';
 import { firstValueFrom } from 'rxjs';
 
 export interface ImportedBundle {
@@ -25,6 +25,7 @@ export interface Overview {
   baseUrl: string;
   lastImport: ImportedBundle | null;
   trustedKeys: number;
+  security: SecurityCounts;
   activeJobs: Job[];
   recentJobs: Job[];
 }
@@ -73,6 +74,7 @@ export interface PackageSummary {
   files: number;
   size: number;
   updatedAt: string;
+  severity: Severity | null;
 }
 
 export interface PackageVersion {
@@ -83,6 +85,9 @@ export interface PackageVersion {
   detail: string | null;
   digest: string | null;
   bundleSequence: number | null;
+  severity: Severity | null;
+  vulnerabilities: Vulnerability[];
+  auditedAt: string | null;
   createdAt: string;
   updatedAt: string;
 }

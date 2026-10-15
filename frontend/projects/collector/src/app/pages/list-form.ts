@@ -3,6 +3,7 @@ import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { ECOSYSTEMS, EcosystemId, Icon, Toasts, errorMessage, formatBytes, Eco } from '@sas/shared';
 import { CollectorApi, EcosystemChoices, ListInput, ListTemplate, PypiTarget, Template } from '../api';
+import { PackagePicker } from '../package-picker';
 import { addLines, containsAll, duplicates, lineKey, removeDuplicates, removeLines, specLines } from '../spec-lines';
 
 const HELP: Record<EcosystemId, { placeholder: string; hint: string; lockfile: string; accept: string }> = {
@@ -33,7 +34,7 @@ const HELP: Record<EcosystemId, { placeholder: string; hint: string; lockfile: s
 };
 
 @Component({
-  imports: [Eco, FormsModule, RouterLink, Icon],
+  imports: [Eco, PackagePicker, FormsModule, RouterLink, Icon],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <form class="page" (ngSubmit)="save(false)">
@@ -117,6 +118,11 @@ const HELP: Record<EcosystemId, { placeholder: string; hint: string; lockfile: s
         <div class="field">
           <label for="name">Nom de la liste</label>
           <input class="input" id="name" name="name" required maxlength="120" [ngModel]="name" (ngModelChange)="name = $event; nameEdited = true" placeholder="ex. Projet web, Outils data…" />
+        </div>
+
+        <div class="field">
+          <span class="label">Ajouter depuis le registre</span>
+          <app-package-picker [ecosystem]="ecosystem()" (add)="addFromPicker($event)" />
         </div>
 
         <div class="field">
@@ -364,6 +370,18 @@ export default class ListForm implements OnInit {
     this.name = chosen
       .map((t) => (t.kind === 'generator' && this.template()?.version !== 'latest' ? `${t.label} ${this.template()?.version}` : t.label))
       .join(' + ');
+  }
+
+  /** Lignes choisies dans la recherche : ajoutées sans doublon */
+  protected addFromPicker(lines: string[]): void {
+    const before = specLines(this.specs()).length;
+    this.specs.set(addLines(this.specs(), lines, this.ecosystem()));
+    const added = specLines(this.specs()).length - before;
+    if (added) {
+      this.toasts.ok(added > 1 ? `${added} lignes ajoutées.` : 'Ajouté à la liste.');
+    } else {
+      this.toasts.info('Déjà dans la liste.');
+    }
   }
 
   protected dedupe(): void {

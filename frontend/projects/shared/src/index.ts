@@ -9,5 +9,6 @@ export * from './jobs';
 export * from './login';
 export * from './logo';
 export * from './setup';
+export * from './severity';
 export * from './shell';
 export * from './toast';

@@ -1,11 +1,11 @@
 import { ChangeDetectionStrategy, Component, OnInit, inject, input, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
-import { BytesPipe, ECOSYSTEMS, EcosystemPipe, Icon, PluralPipe, RelativePipe, errorMessage, Eco } from '@sas/shared';
+import { BytesPipe, SeverityBadge, ECOSYSTEMS, EcosystemPipe, Icon, PluralPipe, RelativePipe, errorMessage, Eco } from '@sas/shared';
 import { MirrorApi, Page, PackageSummary } from '../api';
 
 @Component({
-  imports: [Eco, FormsModule, RouterLink, Icon, BytesPipe, EcosystemPipe, RelativePipe, PluralPipe],
+  imports: [Eco, SeverityBadge, FormsModule, RouterLink, Icon, BytesPipe, EcosystemPipe, RelativePipe, PluralPipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="page">
@@ -38,7 +38,7 @@ import { MirrorApi, Page, PackageSummary } from '../api';
           } @else {
             <div class="table-wrap">
               <table class="table">
-                <thead><tr><th>Nom</th><th>Écosystème</th><th class="right">Versions</th><th class="right">Taille</th><th>Mis à jour</th></tr></thead>
+                <thead><tr><th>Nom</th><th>Écosystème</th><th class="right">Versions</th><th class="right">Taille</th><th>Sécurité</th><th>Mis à jour</th></tr></thead>
                 <tbody>
                   @for (p of d.items; track p.ecosystem + p.name) {
                     <tr>
@@ -46,6 +46,7 @@ import { MirrorApi, Page, PackageSummary } from '../api';
                       <td><span class="row"><sas-eco [ecosystem]="p.ecosystem" [size]="26" />{{ p.ecosystem | ecosystem }}</span></td>
                       <td class="right num">{{ p.versions }}@if (p.files !== p.versions) { <span class="subtle"> · {{ p.files }} fichiers</span> }</td>
                       <td class="right num">{{ p.size | bytes }}</td>
+                      <td><sas-severity [severity]="p.severity" /></td>
                       <td class="subtle">{{ p.updatedAt | relative }}</td>
                     </tr>
                   }

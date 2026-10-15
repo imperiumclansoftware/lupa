@@ -35,6 +35,7 @@ export const routes: Routes = [
       { path: 'listes/:id', loadComponent: () => import('./pages/list-detail'), title: 'Liste · Rémus' },
       { path: 'listes/:id/modifier', loadComponent: () => import('./pages/list-form'), title: 'Modifier la liste · Rémus' },
       { path: 'paquets', loadComponent: () => import('./pages/artifacts'), title: 'Paquets · Rémus' },
+      { path: 'securite', loadComponent: () => import('./pages/security'), title: 'Sécurité · Rémus' },
       { path: 'exports', loadComponent: () => import('./pages/exports'), title: 'Exports · Rémus' },
       { path: 'activite', component: JobsPage, title: 'Activité · Rémus', data: { intro: 'Résolutions de listes et exports récents, avec leur journal.' } },
       { path: 'reglages', loadComponent: () => import('./pages/settings'), title: 'Réglages · Rémus' },

@@ -55,7 +55,7 @@ final readonly class PypiResolver implements Resolver
             }
         }
         foreach ($this->requirements($list) as $line) {
-            if (!preg_match('/^[A-Za-z0-9][A-Za-z0-9._-]*(\[[^\]]*\])?\s*([<>=!~;@ (]|$)/', $line)) {
+            if (!preg_match('/^[A-Za-z0-9*?][A-Za-z0-9._*?-]*(\[[^\]]*\])?\s*([<>=!~;@ (]|$)/', $line)) {
                 $errors[] = sprintf('« %s » : exigence invalide (attendu : nom, nom==1.2.3, nom>=1,<2…).', $line);
             }
         }
