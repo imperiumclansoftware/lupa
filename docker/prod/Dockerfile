@@ -92,8 +92,10 @@ ENV SAS_APP=collector \
     COMPOSER_HOME=/data/cache/composer \
     PIP_CACHE_DIR=/data/cache/pip
 COPY --from=api-collector /src/app /app
+# Dossiers accessibles au groupe 0 : le conteneur peut tourner sous l'UID de l'hôte (SAS_UID, 0 en Docker rootless)
 RUN mkdir -p /data /exports /config/caddy /app/var/log \
- && chown -R app:app /data /exports /config /app/var
+ && chown -R app:0 /data /exports /config /app/var \
+ && chmod -R g=u /data /exports /config /app/var
 USER app
 VOLUME ["/data", "/exports"]
 
@@ -109,7 +111,9 @@ ENV SAS_APP=mirror \
     INBOX_DIR=/inbox \
     UPLOAD_DIR=/data/uploads
 COPY --from=api-mirror /src/app /app
+# Dossiers accessibles au groupe 0 : le conteneur peut tourner sous l'UID de l'hôte (SAS_UID, 0 en Docker rootless)
 RUN mkdir -p /data /inbox /config/caddy /app/var/log \
- && chown -R app:app /data /config /app/var
+ && chown -R app:0 /data /config /app/var \
+ && chmod -R g=u /data /config /app/var
 USER app
 VOLUME ["/data"]

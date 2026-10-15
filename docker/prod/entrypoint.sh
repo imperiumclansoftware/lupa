@@ -22,9 +22,35 @@ info() { echo "[$SAS_NAME] $*" >&2; }
 warn() { echo "[$SAS_NAME] ATTENTION : $*" >&2; }
 fail() { echo "[$SAS_NAME] ERREUR : $*" >&2; exit 1; }
 
+# ---------- Utilisateur et droits ----------
+# Le conteneur tourne sous SAS_UID (compose « user: ${SAS_UID}:0 ») : 0 en Docker rootless, où le root du
+# conteneur est l'utilisateur de l'hôte sans aucun privilège, et l'UID de l'utilisateur sinon. Les dossiers
+# montés depuis l'hôte (clé USB, export) lui appartiennent alors.
+uid=$(id -u)
+if [ "$uid" = 0 ]; then
+	# Volume créé par une version qui tournait en UID 1000 : on en reprend la propriété (une seule fois)
+	if [ -n "$(find /data -xdev ! -user 0 -print -quit 2>/dev/null)" ]; then
+		if chown -R 0:0 /data 2>/dev/null; then
+			info "Droits du volume /data repris pour l'UID 0 (Docker rootless)."
+		else
+			warn "volume /data créé sous un autre UID : ajoutez cap_add CHOWN, DAC_OVERRIDE et FOWNER (voir compose.yaml du package)."
+		fi
+	fi
+fi
+
+# Explique un dossier monté inaccessible : UID propriétaire et réglage à faire
+mount_hint() {
+	owner=$(stat -c %u "$1" 2>/dev/null || echo '?')
+	if [ "$owner" != "$uid" ] && [ "$owner" != '?' ]; then
+		echo "$1 appartient à l'UID $owner alors que l'application tourne avec l'UID $uid : réglez SAS_UID=$owner dans .env (Docker rootless : 0 ; ./configure.sh le détecte), puis docker compose up -d."
+	else
+		echo "vérifiez les droits de $1 sur l'hôte."
+	fi
+}
+
 # ---------- Volume de données ----------
 if ! (mkdir -p /data/secrets && touch /data/.write-test && rm -f /data/.write-test) 2>/dev/null; then
-	fail "le volume /data n'est pas accessible en écriture par l'utilisateur $(id -u):$(id -g) du conteneur."
+	fail "le volume /data n'est pas accessible en écriture : $(mount_hint /data)"
 fi
 chmod 700 /data/secrets
 mkdir -p /data/storage /data/sessions /data/home
@@ -109,11 +135,11 @@ if [ "$SAS_APP" = collector ]; then
 		warn "DOCKERHUB_USERNAME est renseigné sans DOCKERHUB_TOKEN : accès anonyme à Docker Hub."
 	fi
 	if ! (touch "$EXPORT_DIR/.write-test" && rm -f "$EXPORT_DIR/.write-test") 2>/dev/null; then
-		warn "dossier d'export $EXPORT_DIR non accessible en écriture (clé USB non montée ? droits ?) : les exports échoueront."
+		warn "dossier d'export non accessible en écriture, les exports échoueront : $(mount_hint "$EXPORT_DIR")"
 	fi
 	file_env REMUS_SIGNING_KEY
-elif [ ! -r "$INBOX_DIR" ]; then
-	warn "dossier des clés USB $INBOX_DIR illisible : seul l'envoi par le navigateur sera possible."
+elif [ ! -r "$INBOX_DIR" ] || [ ! -x "$INBOX_DIR" ]; then
+	warn "dossier des clés USB illisible, seul l'envoi par le navigateur sera possible : $(mount_hint "$INBOX_DIR")"
 fi
 
 # ---------- Application ----------

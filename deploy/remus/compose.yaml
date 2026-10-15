@@ -6,6 +6,9 @@ services:
   remus:
     image: ${REMUS_IMAGE:-iemperor/remus:latest}
     restart: unless-stopped
+    # UID de l'hôte qui possède les dossiers montés : 0 en Docker rootless (votre utilisateur, sans
+    # privilège), votre UID sinon. Renseigné par ./configure.sh.
+    user: "${SAS_UID:-1000}:0"
     ports:
       # Par défaut accessible seulement depuis cette machine
       - "${HTTP_BIND:-127.0.0.1}:${HTTP_PORT:-8080}:8080"
@@ -31,6 +34,12 @@ services:
       - no-new-privileges:true
     cap_drop:
       - ALL
+    # Effectives seulement si le conteneur tourne en root, c'est-à-dire en Docker rootless (root
+    # du conteneur = votre utilisateur) : reprise des droits d'un volume créé sous un autre UID.
+    cap_add:
+      - CHOWN
+      - DAC_OVERRIDE
+      - FOWNER
     read_only: true
     tmpfs:
       - /tmp:size=2g

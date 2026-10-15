@@ -5,6 +5,7 @@ namespace App\Job;
 use App\Entity\Artifact;
 use App\Entity\Blob;
 use App\Entity\Job;
+use App\Export\ExportDirectory;
 use App\Identity\CollectorIdentity;
 use App\Repository\ArtifactRepository;
 use App\Repository\BlobRepository;
@@ -78,8 +79,8 @@ final readonly class ExportRunner implements JobRunner
         }
 
         $total = array_sum(array_map(static fn (Blob $b) => $b->getSize(), $blobs));
-        if (!is_dir($this->exportDir) && !@mkdir($this->exportDir, 0o770, true)) {
-            throw new \RuntimeException(sprintf('Dossier d\'export %s inaccessible (clé USB non montée ?).', $this->exportDir));
+        if (null !== $problem = ExportDirectory::problem($this->exportDir)) {
+            throw new \RuntimeException($problem);
         }
         $free = @disk_free_space($this->exportDir);
         if (false !== $free && $free < $total + (16 << 20)) {

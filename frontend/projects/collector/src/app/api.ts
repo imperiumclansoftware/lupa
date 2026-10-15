@@ -118,6 +118,7 @@ export interface Pending {
 
 export interface Exports {
   exportDir: string;
+  problem: string | null;
   freeSpace: number | null;
   pending: Pending;
   full: Pending;

@@ -5,6 +5,7 @@ namespace App\Controller;
 use App\Dto\ExportInput;
 use App\Entity\Export;
 use App\Entity\Job;
+use App\Export\ExportDirectory;
 use App\Job\JobLauncher;
 use App\Repository\ExportRepository;
 use App\Repository\JobRepository;
@@ -37,6 +38,8 @@ final class ExportController
     {
         return new JsonResponse([
             'exportDir' => $this->exportDir,
+            // Affiché sur la page Exports avant même de lancer un export
+            'problem' => ExportDirectory::problem($this->exportDir),
             'freeSpace' => is_dir($this->exportDir) ? @disk_free_space($this->exportDir) ?: null : null,
             'pending' => $this->pending(false),
             'full' => $this->pending(true),

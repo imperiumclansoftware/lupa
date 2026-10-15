@@ -48,7 +48,8 @@ d'aucun service externe : la base SQLite et les paquets sont dans le volume `/da
 
 | Tag | Contenu |
 |---|---|
-| `1.0.0`, `latest` | Première version : npm, PyPI, Composer, Symfony Flex, Docker, import signé depuis clé USB ou navigateur |
+| `1.0.1`, `latest` | Docker rootless : le conteneur tourne sous l'UID de l'hôte (`SAS_UID`, détecté par `configure.sh`), clés USB lisibles quels que soient leurs droits de montage ; messages d'aide sur les droits |
+| `1.0.0` | Première version : npm, PyPI, Composer, Symfony Flex, Docker, import signé depuis clé USB ou navigateur |
 
 Plateforme : `linux/amd64`. Image associée : [`iemperor/remus`](https://hub.docker.com/r/iemperor/remus)
 (même version recommandée).
@@ -71,19 +72,19 @@ Le serveur n'a pas Internet : l'image voyage elle aussi par clé USB.
 `configure.sh`, ce guide et des sommes de contrôle :
 
 ```bash
-tar -xf romulus-1.0.0.tar && cd romulus-1.0.0
+tar -xf romulus-1.0.1.tar && cd romulus-1.0.1
 sha256sum -c SHA256SUMS                  # la copie sur la clé n'a rien abîmé
-docker load -i romulus-1.0.0.tar.gz
+docker load -i romulus-1.0.1.tar.gz
 ./configure.sh                           # crée .env ; à relire
 ```
 
 **Ou depuis Docker Hub**, sur une machine connectée :
 
 ```bash
-docker pull iemperor/romulus:1.0.0
-docker save iemperor/romulus:1.0.0 | gzip > romulus-1.0.0.tar.gz
+docker pull iemperor/romulus:1.0.1
+docker save iemperor/romulus:1.0.1 | gzip > romulus-1.0.1.tar.gz
 # … clé USB …
-docker load -i romulus-1.0.0.tar.gz      # sur le serveur isolé
+docker load -i romulus-1.0.1.tar.gz      # sur le serveur isolé
 ```
 
 ### 2. Créer `compose.yaml`
@@ -97,6 +98,8 @@ services:
   romulus:
     image: ${ROMULUS_IMAGE:-iemperor/romulus:latest}
     restart: unless-stopped
+    # UID de l'hôte propriétaire des dossiers montés : 0 en Docker rootless, votre UID sinon
+    user: "${SAS_UID:-1000}:0"
     ports:
       - "${HTTP_BIND:-0.0.0.0}:${HTTP_PORT:-8080}:8080"
     environment:
@@ -118,6 +121,11 @@ services:
       - no-new-privileges:true
     cap_drop:
       - ALL
+    # Effectives seulement en Docker rootless (root du conteneur = votre utilisateur)
+    cap_add:
+      - CHOWN
+      - DAC_OVERRIDE
+      - FOWNER
     read_only: true
     tmpfs:
       - /tmp
@@ -131,7 +139,10 @@ volumes:
 ### 3. Le fichier `.env` (facultatif)
 
 ```bash
-ROMULUS_IMAGE=iemperor/romulus:1.0.0
+ROMULUS_IMAGE=iemperor/romulus:1.0.1
+
+# UID des conteneurs : 0 en Docker rootless, votre UID (id -u) sinon ; ./configure.sh le détecte
+SAS_UID=0
 
 # Port d'écoute : les postes clients utiliseront http://<serveur>:8080
 HTTP_BIND=0.0.0.0
@@ -260,6 +271,24 @@ PUBLIC_URL=https://romulus.intranet
 
 Les postes utilisent alors `https://romulus.intranet/...` sans aucune option « insecure ».
 
+## Droits et Docker rootless
+
+Le conteneur tourne sous l'UID réglé par `SAS_UID` dans `.env` (`user: "${SAS_UID}:0"`), pour lire les
+clés USB quels que soient leurs droits de montage :
+
+| Docker | `SAS_UID` | Pourquoi |
+|---|---|---|
+| **rootless** | `0` | Le root du conteneur **est** votre utilisateur sur l'hôte, sans aucun privilège |
+| classique | votre UID (`id -u`, souvent `1000`) | Une clé montée pour votre utilisateur (`uid=…,umask=077`) reste lisible |
+
+`./configure.sh` le détecte. Lors d'une mise à jour, il l'ajoute s'il manque, sans toucher à une valeur
+existante.
+
+- **Mise à jour depuis la 1.0.0 en rootless :** au premier démarrage en UID 0, Romulus reprend la
+  propriété du volume créé sous l'UID 1000. Les capacités `CHOWN`, `DAC_OVERRIDE` et `FOWNER` du compose
+  servent à cela, et ne sont effectives qu'en rootless.
+- Si la clé USB reste illisible, le journal indique son UID propriétaire et la valeur de `SAS_UID` à mettre.
+
 ## Variables d'environnement
 
 Aucune n'est obligatoire.
@@ -269,7 +298,7 @@ Aucune n'est obligatoire.
 | `PUBLIC_URL` | adresse de la requête | Adresse mise dans les liens des paquets (`https://…` derrière un reverse proxy). Mal formée, elle arrête le démarrage |
 | `APP_SECRET` / `APP_SECRET_FILE` | généré | Secret des sessions, voir [Secrets](#secrets) |
 
-Côté Compose : `ROMULUS_IMAGE`, `HTTP_BIND`, `HTTP_PORT` et `USB_DIR` (voir l'étape 3).
+Côté Compose : `ROMULUS_IMAGE`, `SAS_UID`, `HTTP_BIND`, `HTTP_PORT` et `USB_DIR` (voir l'étape 3).
 
 ## Volumes et ports
 
@@ -324,7 +353,7 @@ Restauration sur un serveur neuf, avant le premier `up` :
 
 ```bash
 docker volume create romulus_data
-docker run --rm -v romulus_data:/data -v "$PWD":/backup alpine sh -c "tar -xzf /backup/romulus-data.tar.gz -C /data && chown -R 1000:1000 /data"
+docker run --rm -v romulus_data:/data -v "$PWD":/backup alpine sh -c "tar -xzf /backup/romulus-data.tar.gz -C /data"
 docker compose up -d
 ```
 
@@ -348,8 +377,9 @@ docker compose exec romulus php bin/console app:setup:code       # code d'instal
 - **Administration** protégée par mot de passe : session `HttpOnly` et `SameSite=Strict`, limitation des
   tentatives. Les **registres** sont en lecture seule et accessibles sans authentification sur le réseau
   isolé, comme un dépôt interne classique ; `docker push` est refusé.
-- **Conteneur :** utilisateur sans privilège (UID 1000), toutes les capabilities retirées, `no-new-privileges`,
-  système de fichiers en lecture seule, clés USB montées en lecture seule.
+- **Conteneur :** utilisateur sans privilège (votre UID, ou le root sans privilège de Docker rootless),
+  capabilities retirées sauf `CHOWN`, `DAC_OVERRIDE` et `FOWNER`, effectives seulement en rootless ;
+  `no-new-privileges`, système de fichiers en lecture seule, clés USB montées en lecture seule.
 
 ## Dépannage
 
@@ -363,4 +393,4 @@ docker compose exec romulus php bin/console app:setup:code       # code d'instal
 | `npm` affiche « EAI_AGAIN » ou cherche registry.npmjs.org | Registre non configuré sur le poste : `npm config get registry` |
 | `composer create-project symfony/skeleton` contacte raw.githubusercontent.com | `SYMFONY_ENDPOINT` absent sur le poste |
 | `docker pull` : « server gave HTTP response to HTTPS client » | Ajoutez le serveur à `insecure-registries`, ou passez par HTTPS |
-| `le volume /data n'est pas accessible en écriture` | `docker run --rm -v romulus_data:/data alpine chown -R 1000:1000 /data` |
+| `le volume /data n'est pas accessible en écriture`, ou clé USB illisible | Le message indique l'UID attendu : réglez `SAS_UID` (rootless : `0`), puis `docker compose up -d` |

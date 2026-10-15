@@ -52,13 +52,16 @@ import { KeyValuePipe } from '@angular/common';
               <span class="hint">Une clé FAT32 refuse les fichiers de plus de 4 Go. Les parties sont réassemblées à l’import.</span>
             </div>
 
+            @if (d.problem) {
+              <div class="alert alert-danger" role="alert"><sas-icon name="alert" /><span>{{ d.problem }}</span></div>
+            }
             @if (tooBig()) {
               <div class="alert alert-warn"><sas-icon name="alert" />Espace libre insuffisant dans le dossier d’export ({{ d.freeSpace | bytes }}).</div>
             }
 
             <div class="row footer">
               <span class="subtle">Destination : <code>{{ d.exportDir }}</code> · {{ d.freeSpace | bytes }} libres</span>
-              <button type="button" class="btn btn-primary" (click)="create()" [disabled]="busy() || !!activeJob() || selectedCount() === 0">
+              <button type="button" class="btn btn-primary" (click)="create()" [disabled]="busy() || !!activeJob() || selectedCount() === 0 || !!d.problem">
                 <sas-icon name="usb" />Créer le bundle
               </button>
             </div>

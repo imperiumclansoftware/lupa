@@ -49,7 +49,8 @@ les fichiers sont dans le volume `/data`.
 
 | Tag | Contenu |
 |---|---|
-| `1.0.0`, `latest` | Première version : npm, PyPI, Composer, Docker, modèles de framework, recettes Symfony Flex, bundles signés et découpables |
+| `1.0.1`, `latest` | Docker rootless : le conteneur tourne sous l'UID de l'hôte (`SAS_UID`, détecté par `configure.sh`), les exports vers un dossier de l'hôte fonctionnent sans changer ses droits ; messages d'aide sur les droits |
+| `1.0.0` | Première version : npm, PyPI, Composer, Docker, modèles de framework, recettes Symfony Flex, bundles signés et découpables |
 
 Plateforme : `linux/amd64`. Image associée : [`iemperor/romulus`](https://hub.docker.com/r/iemperor/romulus)
 (même version recommandée).
@@ -59,17 +60,19 @@ Plateforme : `linux/amd64`. Image associée : [`iemperor/romulus`](https://hub.d
 ## Démarrage rapide
 
 ```bash
-mkdir -p exports && chmod 777 exports
+mkdir -p exports
 docker run -d --name remus --restart unless-stopped \
+  --user "$(docker info -f '{{.SecurityOptions}}' | grep -q rootless && echo 0 || id -u):0" \
   -p 127.0.0.1:8080:8080 \
   -v remus-data:/data \
   -v "$PWD/exports:/exports" \
-  iemperor/remus:1.0.0
+  iemperor/remus:1.0.1
 docker logs remus 2>&1 | grep "Code d'installation"
 ```
 
 Ouvrez <http://127.0.0.1:8080> : l'assistant d'installation demande ce code, puis crée le compte
-administrateur. Aucune variable n'est obligatoire.
+administrateur. Aucune variable n'est obligatoire. L'option `--user` fait tourner Rémus sous l'UID qui
+possède `exports` : 0 en Docker rootless, votre UID sinon (voir [Droits et Docker rootless](#droits-et-docker-rootless)).
 
 ---
 
@@ -99,6 +102,8 @@ services:
   remus:
     image: ${REMUS_IMAGE:-iemperor/remus:latest}
     restart: unless-stopped
+    # UID de l'hôte propriétaire des dossiers montés : 0 en Docker rootless, votre UID sinon
+    user: "${SAS_UID:-1000}:0"
     ports:
       # Par défaut accessible seulement depuis cette machine
       - "${HTTP_BIND:-127.0.0.1}:${HTTP_PORT:-8080}:8080"
@@ -122,6 +127,11 @@ services:
       - no-new-privileges:true
     cap_drop:
       - ALL
+    # Effectives seulement en Docker rootless (root du conteneur = votre utilisateur)
+    cap_add:
+      - CHOWN
+      - DAC_OVERRIDE
+      - FOWNER
     read_only: true
     tmpfs:
       - /tmp:size=2g
@@ -138,7 +148,10 @@ Toutes les valeurs ont un défaut : ce fichier ne sert qu'à les changer.
 
 ```bash
 # Version de l'image
-REMUS_IMAGE=iemperor/remus:1.0.0
+REMUS_IMAGE=iemperor/remus:1.0.1
+
+# UID des conteneurs : 0 en Docker rootless, votre UID (id -u) sinon ; ./configure.sh le détecte
+SAS_UID=0
 
 # 127.0.0.1 = cette machine seulement ; 0.0.0.0 = accessible depuis le réseau local
 HTTP_BIND=127.0.0.1
@@ -198,9 +211,8 @@ la clé publique de Rémus dans l'assistant d'installation de Romulus, ou dans *
 
 ## Dossier d'export et clé USB
 
-- Le conteneur écrit avec l'**UID 1000**. Le dossier d'export doit lui être accessible en écriture :
-  `chown 1000:1000 exports` si votre utilisateur a l'UID 1000, sinon `chmod 777 exports`. Ce dernier cas
-  vaut aussi en **Docker rootless**, où l'UID 1000 du conteneur correspond à un sous-UID de votre utilisateur.
+- Le conteneur écrit avec l'UID `SAS_UID`, celui de votre utilisateur vu par Docker : aucun changement de
+  droits n'est nécessaire sur le dossier d'export (voir [Droits et Docker rootless](#droits-et-docker-rootless)).
 - `EXPORT_DIR` peut désigner directement la clé montée, par exemple `/media/moi/CLE`. Si la clé n'est pas
   branchée au démarrage, un avertissement s'affiche dans les journaux et les exports échouent jusqu'à son retour.
 - **FAT32** n'accepte pas de fichier de plus de 4 Go : choisissez alors « Parties de 4 Go ». Les parties
@@ -208,12 +220,35 @@ la clé publique de Rémus dans l'assistant d'installation de Romulus, ou dans *
 - Importez les bundles **dans l'ordre de leurs numéros** : un bundle « Nouveautés » s'appuie sur les
   précédents. Romulus signale tout bundle manquant.
 
+## Droits et Docker rootless
+
+Rémus écrit dans des dossiers de l'hôte : le dossier d'export ou la clé USB. Le conteneur doit donc
+tourner sous l'UID qui les possède, réglé par `SAS_UID` dans `.env` (`user: "${SAS_UID}:0"`) :
+
+| Docker | `SAS_UID` | Pourquoi |
+|---|---|---|
+| **rootless** | `0` | Le root du conteneur **est** votre utilisateur sur l'hôte, sans aucun privilège. L'UID 1000 du conteneur correspondrait à un sous-UID étranger à vos dossiers |
+| classique | votre UID (`id -u`, souvent `1000`) | Les fichiers créés vous appartiennent |
+
+`./configure.sh` détecte le mode de Docker et renseigne `SAS_UID`. Lors d'une mise à jour, il l'ajoute
+s'il manque, sans toucher à une valeur existante.
+
+- Le conteneur tourne aussi avec le **groupe 0**, et les dossiers de l'image lui sont accessibles :
+  l'application fonctionne quel que soit l'UID choisi.
+- **Mise à jour depuis la 1.0.0 en rootless :** le volume avait été créé sous l'UID 1000. Au premier
+  démarrage en UID 0, Rémus en reprend la propriété (« Droits du volume /data repris »). Les capacités
+  `CHOWN`, `DAC_OVERRIDE` et `FOWNER` du compose servent à cela. Docker ne les accorde qu'à un processus
+  root, donc seulement en rootless, où ce root n'a aucun privilège sur l'hôte.
+- Si un dossier reste inaccessible, le démarrage et la page **Exports** indiquent son UID propriétaire et
+  la valeur de `SAS_UID` à mettre.
+
 ## Variables d'environnement
 
 Aucune n'est obligatoire.
 
 | Variable | Défaut | Rôle |
 |---|---|---|
+| `SAS_UID` (compose) | `1000` | UID du conteneur, voir [Droits et Docker rootless](#droits-et-docker-rootless) |
 | `NPM_REGISTRY` | `https://registry.npmjs.org` | Registre npm amont (ex. un proxy d'entreprise) |
 | `PYPI_INDEX` | `https://pypi.org` | Index Python amont |
 | `GITHUB_TOKEN` / `GITHUB_TOKEN_FILE` | — | Jeton GitHub **sans aucune permission** : évite les limites de l'API pour certains paquets Composer |
@@ -284,7 +319,7 @@ Restauration sur une machine neuve, avant le premier `up` :
 
 ```bash
 docker volume create remus_data
-docker run --rm -v remus_data:/data -v "$PWD":/backup alpine sh -c "tar -xzf /backup/remus-data.tar.gz -C /data && chown -R 1000:1000 /data"
+docker run --rm -v remus_data:/data -v "$PWD":/backup alpine sh -c "tar -xzf /backup/remus-data.tar.gz -C /data"
 docker compose up -d
 ```
 
@@ -314,8 +349,9 @@ de session sont alors marqués `Secure` automatiquement.
   est adressé par sha256.
 - **Bundles :** manifeste signé en Ed25519 et sha256 de chaque fichier. Romulus vérifie la signature
   **avant** d'écrire quoi que ce soit.
-- **Conteneur :** utilisateur sans privilège (UID 1000), toutes les capabilities retirées, `no-new-privileges`,
-  système de fichiers en lecture seule.
+- **Conteneur :** utilisateur sans privilège (votre UID, ou le root sans privilège de Docker rootless),
+  capabilities retirées sauf `CHOWN`, `DAC_OVERRIDE` et `FOWNER`, effectives seulement en rootless ;
+  `no-new-privileges`, système de fichiers en lecture seule.
 - **Hors périmètre :** Rémus ne contrôle pas le **contenu** des paquets (vulnérabilités, code malveillant).
   Faites l'audit voulu, par exemple `npm audit` ou un scanner d'images, avant d'exporter.
 
@@ -332,8 +368,9 @@ de session sont alors marqués `Secure` automatiquement.
 
 | Symptôme | Cause et solution |
 |---|---|
-| `le volume /data n'est pas accessible en écriture` | Volume créé par un autre utilisateur : `docker run --rm -v remus_data:/data alpine chown -R 1000:1000 /data` |
-| Les exports échouent, « dossier d'export non accessible » | Clé non montée, ou droits : voir [Dossier d'export](#dossier-dexport-et-clé-usb) |
+| « Impossible d'écrire dans /exports : le dossier appartient à l'UID 0… » | Docker rootless : `SAS_UID=0` dans `.env` (ou `./configure.sh`), puis `docker compose up -d` |
+| `le volume /data n'est pas accessible en écriture` | Le message indique l'UID attendu : réglez `SAS_UID` en conséquence |
+| « dossier d'export absent ou inaccessible » | Clé USB non montée, ou `EXPORT_DIR` erroné |
 | `Clé secrète absente…` ou `Clé de signature … corrompue` | Restaurez `identity/secret.key` depuis une sauvegarde, ou fournissez-la par `REMUS_SIGNING_KEY` |
 | `toomanyrequests` sur Docker Hub | Limite anonyme atteinte : renseignez `DOCKERHUB_USERNAME` et `DOCKERHUB_TOKEN` |
 | Résolution Python « No matching distribution » | Paquet sans wheel pour la cible : changez de version ou retirez la cible |
