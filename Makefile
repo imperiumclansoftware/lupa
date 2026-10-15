@@ -66,11 +66,14 @@ npm: ## npm du front (make npm c="install foo")
 ng: ## Angular CLI (make ng c="generate component pages/foo --project mirror")
 	$(DC) exec node-collector npx ng $(c)
 
-test: test-back build-front ## Lance tous les tests
+test: test-back test-front build-front ## Lance tous les tests
 
 test-back: ## Tests PHPUnit du collecteur et du miroir
 	$(DC) run --rm --no-deps -T collector php bin/phpunit
 	$(DC) run --rm --no-deps -T mirror php bin/phpunit
+
+test-front: ## Tests unitaires du front (Node, sans navigateur)
+	$(DC) exec -T node-collector npm run test:unit
 
 build-front: ## Compile les deux fronts (vérification des types et des gabarits)
 	$(DC) exec -T node-collector sh -c 'npx ng build collector && npx ng build mirror'

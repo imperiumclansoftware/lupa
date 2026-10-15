@@ -3,6 +3,7 @@ import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { ECOSYSTEMS, EcosystemId, Icon, Toasts, errorMessage, formatBytes, Eco } from '@sas/shared';
 import { CollectorApi, EcosystemChoices, ListInput, ListTemplate, PypiTarget, Template } from '../api';
+import { addLines, containsAll, duplicates, lineKey, removeDuplicates, removeLines, specLines } from '../spec-lines';
 
 const HELP: Record<EcosystemId, { placeholder: string; hint: string; lockfile: string; accept: string }> = {
   npm: {
@@ -56,24 +57,36 @@ const HELP: Record<EcosystemId, { placeholder: string; hint: string; lockfile: s
             </label>
           }
         </fieldset>
+      }
 
-        @if (ecosystemTemplates().length) {
-          <section class="card card-body stack">
-            <div>
-              <h2>Partir d’un modèle</h2>
-              <p class="subtle">Pour qu’une commande comme « ng new » ou « composer create-project » fonctionne hors ligne, Rémus exécute le générateur et collecte tout ce qu’il installe.</p>
-            </div>
-            <div class="templates">
-              @for (t of ecosystemTemplates(); track t.id) {
-                <button type="button" class="template" [class.selected]="template()?.id === t.id" (click)="applyTemplate(t)">
-                  <span class="row"><sas-eco [ecosystem]="t.ecosystem" [size]="26" /><strong>{{ t.label }}</strong>
-                    @if (t.kind === 'generator') { <span class="badge badge-accent">Générateur</span> }</span>
-                  <span class="subtle">{{ t.description }}</span>
-                </button>
+      @if (ecosystemTemplates().length) {
+        <section class="card card-body stack">
+          <div>
+            <h2>{{ hasPresets() ? 'Listes prêtes à l’emploi' : 'Partir d’un modèle' }}</h2>
+            <p class="subtle">
+              @if (hasPresets()) {
+                Cochez une ou plusieurs listes : leurs paquets sont ajoutés sans doublon. Un second clic retire la liste.
+              } @else {
+                Pour qu’une commande comme « ng new » ou « composer create-project » fonctionne hors ligne, Rémus exécute le générateur et collecte tout ce qu’il installe.
               }
-            </div>
-          </section>
-        }
+            </p>
+          </div>
+          <div class="templates">
+            @for (t of ecosystemTemplates(); track t.id) {
+              @let on = isSelected(t);
+              <button type="button" class="template" [class.selected]="on" [attr.aria-pressed]="on" (click)="applyTemplate(t)">
+                <span class="row">
+                  <sas-eco [ecosystem]="t.ecosystem" [size]="26" />
+                  <strong class="grow">{{ t.label }}</strong>
+                  @if (t.kind === 'generator') { <span class="badge badge-accent">Générateur</span> }
+                  <span class="tick" [class.radio]="t.kind === 'generator'" aria-hidden="true">@if (on) { <sas-icon name="check" [size]="14" /> }</span>
+                </span>
+                <span class="subtle">{{ t.description }}</span>
+                @if (t.kind === 'preset') { <span class="count">{{ presetLines(t).length }} {{ t.ecosystem === 'docker' ? 'images' : 'paquets' }}</span> }
+              </button>
+            }
+          </div>
+        </section>
       }
 
       <section class="card card-body stack">
@@ -103,14 +116,21 @@ const HELP: Record<EcosystemId, { placeholder: string; hint: string; lockfile: s
 
         <div class="field">
           <label for="name">Nom de la liste</label>
-          <input class="input" id="name" name="name" required maxlength="120" [(ngModel)]="name" placeholder="ex. Projet web, Outils data…" />
+          <input class="input" id="name" name="name" required maxlength="120" [ngModel]="name" (ngModelChange)="name = $event; nameEdited = true" placeholder="ex. Projet web, Outils data…" />
         </div>
 
         <div class="field">
           <label for="specs">{{ ecosystem() === 'docker' ? 'Images' : selectedTemplate() ? 'Paquets supplémentaires' : 'Paquets' }}@if (selectedTemplate()) { <span class="subtle">(facultatif)</span> }</label>
-          <textarea class="textarea" id="specs" name="specs" rows="9" [(ngModel)]="specs" [placeholder]="help().placeholder"
+          <textarea class="textarea" id="specs" name="specs" rows="9" [ngModel]="specs()" (ngModelChange)="specs.set($event)" [placeholder]="help().placeholder"
             spellcheck="false" autocapitalize="off"></textarea>
           <span class="hint">{{ help().hint }}</span>
+          @if (duplicateKeys().length) {
+            <div class="alert alert-warn duplicates" role="status">
+              <sas-icon name="alert" />
+              <span class="grow">En double : {{ duplicateKeys().join(', ') }}</span>
+              <button type="button" class="btn btn-sm" (click)="dedupe()">Retirer les doublons</button>
+            </div>
+          }
         </div>
 
         @if (help().lockfile) {
@@ -220,6 +240,14 @@ const HELP: Record<EcosystemId, { placeholder: string; hint: string; lockfile: s
     .template:hover { box-shadow: inset 0 0 0 1px var(--border-strong); }
     .template.selected { background: var(--accent-soft); box-shadow: inset 0 0 0 1.5px var(--accent); }
     .template .subtle { font-size: 0.82rem; }
+    .template .tick { display: grid; place-items: center; width: 20px; height: 20px; border-radius: 6px; flex: none;
+      box-shadow: inset 0 0 0 1.5px var(--border-strong); color: var(--on-accent, #fff); }
+    .template.selected .tick { background: var(--accent); box-shadow: none; }
+    /* Générateurs : un seul à la fois (case ronde) ; listes prédéfinies : cumulables (case carrée) */
+    .template .tick.radio { border-radius: 50%; }
+    .template .count { font-size: 0.78rem; font-weight: 650; color: var(--text-3); }
+    .template.selected .count { color: var(--accent-strong); }
+    .duplicates { align-items: center; padding: 10px 14px; }
     .chosen { display: grid; gap: 14px; padding: 16px; border-radius: 14px; background: var(--accent-soft); }
     .chosen .head { align-items: flex-start; }
     .grow { flex: 1; }
@@ -244,7 +272,9 @@ export default class ListForm implements OnInit {
   protected readonly dragOver = signal(false);
 
   protected name = '';
-  protected specs = '';
+  /** Nom saisi par l'utilisateur : on ne le remplace plus automatiquement */
+  protected nameEdited = false;
+  protected readonly specs = signal('');
   protected includeDev = true;
   protected legacyPeerDeps = false;
   protected sdist = false;
@@ -255,6 +285,8 @@ export default class ListForm implements OnInit {
   protected readonly template = signal<ListTemplate | null>(null);
   protected readonly ecosystemTemplates = computed(() => this.templates().filter((t) => t.ecosystem === this.ecosystem()));
   protected readonly selectedTemplate = computed(() => this.templates().find((t) => t.id === this.template()?.id) ?? null);
+  protected readonly hasPresets = computed(() => this.ecosystemTemplates().some((t) => t.kind === 'preset'));
+  protected readonly duplicateKeys = computed(() => duplicates(this.specs(), this.ecosystem()));
 
   protected readonly lockfileName = signal<string | null>(null);
   protected readonly lockfileSize = signal('');
@@ -272,7 +304,8 @@ export default class ListForm implements OnInit {
       const list = await this.api.list(+id);
       this.ecosystem.set(list.ecosystem);
       this.name = list.name;
-      this.specs = list.specs ?? '';
+      this.nameEdited = true;
+      this.specs.set(list.specs ?? '');
       this.lockfileName.set(list.lockfileName);
       const o = list.options;
       this.includeDev = o.includeDev ?? list.ecosystem === 'npm';
@@ -290,17 +323,51 @@ export default class ListForm implements OnInit {
   protected setEcosystem(id: EcosystemId): void {
     this.ecosystem.set(id);
     if (this.selectedTemplate()?.ecosystem !== id) this.template.set(null);
+    this.autoName();
   }
 
-  /** Générateur : retenu avec sa version ; liste prédéfinie : recopiée dans le champ des paquets. */
+  protected presetLines(t: Template): string[] {
+    return specLines(t.specs ?? '');
+  }
+
+  /** Générateur : celui retenu ; liste prédéfinie : tous ses paquets sont dans le champ (suit la saisie). */
+  protected isSelected(t: Template): boolean {
+    return t.kind === 'generator' ? this.template()?.id === t.id : containsAll(this.specs(), this.presetLines(t), this.ecosystem());
+  }
+
+  /**
+   * Générateur : retenu avec sa version (un seul à la fois).
+   * Liste prédéfinie : ajoutée sans doublon, ou retirée si elle est déjà cochée ; les paquets
+   * qu'elle partage avec une autre liste encore cochée sont conservés.
+   */
   protected applyTemplate(t: Template): void {
-    if (!this.name.trim()) this.name = t.kind === 'generator' && t.version !== 'latest' ? `${t.label} ${t.version}` : t.label;
+    const eco = this.ecosystem();
     if (t.kind === 'generator') {
       this.template.set({ id: t.id, version: t.version ?? 'latest' });
+    } else if (this.isSelected(t)) {
+      const keep = new Set(
+        this.ecosystemTemplates()
+          .filter((o) => o.kind === 'preset' && o.id !== t.id && this.isSelected(o))
+          .flatMap((o) => this.presetLines(o).map((line) => lineKey(line, eco))),
+      );
+      this.specs.set(removeLines(this.specs(), this.presetLines(t), eco, keep));
     } else {
-      this.template.set(null);
-      this.specs = [this.specs.trim(), t.specs ?? ''].filter(Boolean).join('\n');
+      this.specs.set(addLines(this.specs(), this.presetLines(t), eco));
     }
+    this.autoName();
+  }
+
+  /** Nom proposé d'après les modèles cochés, tant que l'utilisateur n'a pas saisi le sien. */
+  private autoName(): void {
+    if (this.nameEdited) return;
+    const chosen = this.ecosystemTemplates().filter((t) => this.isSelected(t));
+    this.name = chosen
+      .map((t) => (t.kind === 'generator' && this.template()?.version !== 'latest' ? `${t.label} ${this.template()?.version}` : t.label))
+      .join(' + ');
+  }
+
+  protected dedupe(): void {
+    this.specs.set(removeDuplicates(this.specs(), this.ecosystem()));
   }
 
   protected setTemplateVersion(version: string): void {
@@ -363,7 +430,7 @@ export default class ListForm implements OnInit {
     const input: ListInput = {
       name: this.name.trim(),
       ecosystem: this.ecosystem(),
-      specs: this.specs,
+      specs: this.specs(),
       options: {
         includeDev: this.includeDev,
         legacyPeerDeps: this.legacyPeerDeps,
