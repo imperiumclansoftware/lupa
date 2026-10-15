@@ -34,6 +34,10 @@
   --eco-pypi: #3572a5;
   --eco-composer: #885630;
   --eco-docker: #1d8fd8;
+  --eco-deb: #a80030;
+  --eco-rpm: #8c3d9a;
+  --eco-galaxy: #cc0000;
+  --eco-terraform: #7b42bc;
 
   --radius-s: 8px;
   --radius: 12px;
@@ -72,6 +76,10 @@
     --eco-pypi: #74a9e0;
     --eco-composer: #d2a173;
     --eco-docker: #5bb8ee;
+    --eco-deb: #ef6f8f;
+    --eco-rpm: #cf8fe0;
+    --eco-galaxy: #ff7070;
+    --eco-terraform: #b48cf0;
 
     --shadow-card: 0 0 0 1px rgb(255 255 255 / 0.06), 0 8px 24px -10px rgb(0 0 0 / 0.6);
     --shadow-hover: 0 0 0 1px rgb(255 255 255 / 0.1), 0 16px 36px -12px rgb(0 0 0 / 0.7);

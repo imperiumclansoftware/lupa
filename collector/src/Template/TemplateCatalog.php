@@ -87,6 +87,71 @@ final class TemplateCatalog
                 'specs' => "pip\nsetuptools\nwheel\nvirtualenv\nuv\npytest\nruff",
             ],
             [
+                'id' => 'deb-admin', 'ecosystem' => 'deb', 'kind' => 'preset', 'label' => 'Outils d\'administration',
+                'description' => 'Le nécessaire courant sur un serveur.',
+                'specs' => "curl\nwget\nvim\nhtop\ntmux\ngit\nrsync\nca-certificates\nopenssh-server\nsudo",
+            ],
+            [
+                'id' => 'deb-web', 'ecosystem' => 'deb', 'kind' => 'preset', 'label' => 'Serveur web',
+                'description' => 'nginx et Certbot.',
+                'specs' => "nginx\ncertbot\npython3-certbot-nginx",
+            ],
+            [
+                'id' => 'deb-postgresql', 'ecosystem' => 'deb', 'kind' => 'preset', 'label' => 'PostgreSQL',
+                'description' => 'Serveur et client PostgreSQL de la distribution.',
+                'specs' => "postgresql\npostgresql-client",
+            ],
+            [
+                'id' => 'deb-build', 'ecosystem' => 'deb', 'kind' => 'preset', 'label' => 'Compilation',
+                'description' => 'Compilateurs et outils pour construire depuis les sources.',
+                'specs' => "build-essential\npkg-config\nautoconf\nautomake\nlibtool\ncmake",
+            ],
+            [
+                'id' => 'rpm-admin', 'ecosystem' => 'rpm', 'kind' => 'preset', 'label' => 'Outils d\'administration',
+                'description' => 'Le nécessaire courant sur un serveur.',
+                'specs' => "curl\nwget\nvim-enhanced\ntmux\ngit\nrsync\ntar\nopenssh-server\nsudo\nbash-completion",
+            ],
+            [
+                'id' => 'rpm-web', 'ecosystem' => 'rpm', 'kind' => 'preset', 'label' => 'Serveur web',
+                'description' => 'nginx et Apache httpd.',
+                'specs' => "nginx\nhttpd\nmod_ssl",
+            ],
+            [
+                'id' => 'rpm-postgresql', 'ecosystem' => 'rpm', 'kind' => 'preset', 'label' => 'PostgreSQL',
+                'description' => 'Serveur et client PostgreSQL de la distribution.',
+                'specs' => "postgresql-server\npostgresql",
+            ],
+            [
+                'id' => 'rpm-build', 'ecosystem' => 'rpm', 'kind' => 'preset', 'label' => 'Compilation',
+                'description' => 'Compilateurs et outils pour construire depuis les sources.',
+                'specs' => "gcc\ngcc-c++\nmake\nautoconf\nautomake\nlibtool\ncmake\npkgconf",
+            ],
+            [
+                'id' => 'galaxy-common', 'ecosystem' => 'galaxy', 'kind' => 'preset', 'label' => 'Collections courantes',
+                'description' => 'Modules système, Docker, cryptographie et utilitaires.',
+                'specs' => "community.general\nansible.posix\nansible.utils\ncommunity.docker\ncommunity.crypto",
+            ],
+            [
+                'id' => 'galaxy-cloud', 'ecosystem' => 'galaxy', 'kind' => 'preset', 'label' => 'Cloud et Kubernetes',
+                'description' => 'AWS, Azure, Kubernetes.',
+                'specs' => "amazon.aws\nazure.azcollection\nkubernetes.core",
+            ],
+            [
+                'id' => 'tf-aws', 'ecosystem' => 'terraform', 'kind' => 'preset', 'label' => 'AWS',
+                'description' => 'Provider AWS et modules VPC, EKS et S3 courants.',
+                'specs' => "hashicorp/aws ~> 5.0\nterraform-aws-modules/vpc/aws\nterraform-aws-modules/s3-bucket/aws",
+            ],
+            [
+                'id' => 'tf-azure', 'ecosystem' => 'terraform', 'kind' => 'preset', 'label' => 'Azure',
+                'description' => 'Providers Azure Resource Manager et Azure AD.',
+                'specs' => "hashicorp/azurerm ~> 4.0\nhashicorp/azuread",
+            ],
+            [
+                'id' => 'tf-utils', 'ecosystem' => 'terraform', 'kind' => 'preset', 'label' => 'Utilitaires et binaire',
+                'description' => 'Terraform lui-même et les providers utilitaires de HashiCorp.',
+                'specs' => "terraform ~> 1.9\nhashicorp/random\nhashicorp/null\nhashicorp/local\nhashicorp/tls\nhashicorp/http\nhashicorp/external",
+            ],
+            [
                 'id' => 'docker-web', 'ecosystem' => 'docker', 'kind' => 'preset', 'label' => 'Images web',
                 'description' => 'Images de base courantes pour des applications web.',
                 'specs' => "node:24-alpine\nphp:8.4-fpm-alpine\npython:3.12-slim\nnginx:alpine\ncaddy:2-alpine",

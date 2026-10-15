@@ -62,6 +62,9 @@ final class PatternExpander
             Ecosystem::Pypi => $this->pypi($line),
             Ecosystem::Composer => $this->composer($line),
             Ecosystem::Docker => $this->docker($line),
+            // Debian, RPM : développé par le résolveur, dans l'index de la distribution choisie
+            Ecosystem::Deb, Ecosystem::Rpm => [$line],
+            Ecosystem::Galaxy, Ecosystem::Terraform => throw new \InvalidArgumentException('Les motifs (« * », « ? ») ne sont pas pris en charge pour cet écosystème : saisissez les noms exacts.'),
         };
         if ([] === $lines) {
             throw new \InvalidArgumentException([] === $this->skipped

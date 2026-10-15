@@ -64,13 +64,21 @@ final class BlacklistController
         }
         $exact = match ($ecosystem) {
             Ecosystem::Docker => '/^(sha256:[a-f0-9]{64}|[\w][\w.-]{0,127})$/',
+            Ecosystem::Galaxy, Ecosystem::Terraform => '/^v?\d+(\.\d+){0,3}([-+][0-9a-z.]+)?$/i',
             Ecosystem::Composer => '/^v?\d+(\.\d+){0,3}([-.+]?[a-z0-9.]+)?$|^dev-[\w.\/-]+$/i',
+            // Debian : [époque:]amont[-révision] ; RPM : [époque:]version-release (release obligatoire)
+            Ecosystem::Deb => '/^(\d+:)?\d[A-Za-z0-9.+~-]*$/',
+            Ecosystem::Rpm => '/^(\d+:)?[A-Za-z0-9._+~^]+-[A-Za-z0-9._+~^]+$/',
             default => '/^v?\d+(\.\d+)*([-.+_]?[a-z0-9.+]+)?$/i',
         };
-        if (!preg_match($exact, $version) || preg_match('/(^|\.)[x*](\.|$)|[\^~<>=|,]/i', $version) || 'latest' === strtolower($version)) {
+        // « ~ » et « ^ » font partie des versions Debian et RPM (1.2~rc1) ; ailleurs ce sont des intervalles
+        $ranges = \in_array($ecosystem, [Ecosystem::Deb, Ecosystem::Rpm], true) ? '/[<>=|,*\s]/' : '/(^|\.)[x*](\.|$)|[\^~<>=|,]/i';
+        if (!preg_match($exact, $version) || preg_match($ranges, $version) || 'latest' === strtolower($version)) {
             return sprintf('« %s » n\'est pas une version précise (ex. %s) : les intervalles, « latest » et les motifs ne sont pas acceptés.', $version, match ($ecosystem) {
                 Ecosystem::Docker => '1.27.3',
                 Ecosystem::Pypi => '4.2.1',
+                Ecosystem::Deb => '3.0.15-1~deb12u1',
+                Ecosystem::Rpm => '1:3.0.7-27.el9 (version-release complète)',
                 default => '1.2.3',
             });
         }

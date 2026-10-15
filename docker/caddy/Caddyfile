@@ -35,7 +35,7 @@ http://{$MIRROR_DOMAIN}, http://miroir.test, http://localhost {
 	import security_headers
 
 	# Registres : servis par Symfony (paquets déjà compressés, pas de ré-encodage)
-	@registries path /npm /npm/* /pypi/* /composer/* /v2 /v2/*
+	@registries path /npm /npm/* /pypi/* /composer/* /v2 /v2/* /deb/* /rpm/* /galaxy/* /terraform/* /.well-known/terraform.json
 	handle @registries {
 		root * /srv/sas/mirror/public
 		php_fastcgi mirror:9000 {

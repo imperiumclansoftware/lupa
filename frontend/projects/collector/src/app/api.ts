@@ -40,6 +40,10 @@ export interface ListOptions {
   sdist?: boolean;
   php?: string | null;
   platforms?: string[];
+  distribution?: string;
+  architectures?: string[];
+  sections?: string[];
+  recommends?: boolean;
 }
 
 export interface PackageList {
@@ -224,10 +228,21 @@ export interface Choice {
   label: string;
 }
 
+export interface Distribution {
+  id: string;
+  ecosystem: EcosystemId;
+  label: string;
+  eol: boolean;
+  architectures: Choice[];
+  sections: (Choice & { default: boolean })[];
+}
+
 export interface EcosystemChoices {
   ecosystems: Choice[];
   pypi: { pythonVersions: string[]; platforms: Choice[] };
   docker: { platforms: Choice[] };
+  terraform: { platforms: Choice[] };
+  distributions: Distribution[];
 }
 
 @Injectable({ providedIn: 'root' })
@@ -297,17 +312,17 @@ export class CollectorApi {
     return firstValueFrom(this.http.delete<Export>(`/api/exports/${id}/files`));
   }
 
-  search(ecosystem: EcosystemId, q: string): Promise<SearchResult[]> {
-    return firstValueFrom(this.http.get<SearchResult[]>('/api/search', { params: { ecosystem, q } }));
+  search(ecosystem: EcosystemId, q: string, distribution?: string | null): Promise<SearchResult[]> {
+    return firstValueFrom(this.http.get<SearchResult[]>('/api/search', { params: { ecosystem, q, ...(distribution ? { distribution } : {}) } }));
   }
 
-  versions(ecosystem: EcosystemId, name: string): Promise<{ versions: string[]; latest: string | null }> {
-    return firstValueFrom(this.http.get<{ versions: string[]; latest: string | null }>('/api/search/versions', { params: { ecosystem, name } }));
+  versions(ecosystem: EcosystemId, name: string, distribution?: string | null): Promise<{ versions: string[]; latest: string | null }> {
+    return firstValueFrom(this.http.get<{ versions: string[]; latest: string | null }>('/api/search/versions', { params: { ecosystem, name, ...(distribution ? { distribution } : {}) } }));
   }
 
   /** Aperçu d'un motif : paquets correspondants avec leur contrainte */
-  expand(ecosystem: EcosystemId, line: string): Promise<{ lines: string[]; skipped: string[]; pattern: boolean }> {
-    return firstValueFrom(this.http.post<{ lines: string[]; skipped: string[]; pattern: boolean }>('/api/search/expand', { ecosystem, line }));
+  expand(ecosystem: EcosystemId, line: string, distribution?: string | null): Promise<{ lines: string[]; skipped: string[]; pattern: boolean }> {
+    return firstValueFrom(this.http.post<{ lines: string[]; skipped: string[]; pattern: boolean }>('/api/search/expand', { ecosystem, line, distribution }));
   }
 
   security(): Promise<SecurityReport> {

@@ -1,4 +1,5 @@
-import { ChangeDetectionStrategy, Component, OnInit, computed, inject, input, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit, WritableSignal, computed, inject, input, signal } from '@angular/core';
+import { NgTemplateOutlet } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { ECOSYSTEMS, EcosystemId, Icon, Toasts, errorMessage, formatBytes, Eco } from '@sas/shared';
@@ -31,10 +32,34 @@ const HELP: Record<EcosystemId, { placeholder: string; hint: string; lockfile: s
     lockfile: '',
     accept: '',
   },
+  deb: {
+    placeholder: 'nginx\npostgresql\ncurl=7.88.1-10+deb12u8\npython3-*',
+    hint: 'Un paquet par ligne, éventuellement =version. Les dépendances (Depends, Pre-Depends) sont ajoutées comme le ferait apt sur un système vide.',
+    lockfile: '',
+    accept: '',
+  },
+  galaxy: {
+    placeholder: 'community.general >=8.0.0\nansible.posix\nrole:geerlingguy.docker 7.4.1',
+    hint: 'Une ligne par collection (espace.nom, contrainte facultative : >=2.0.0,<3) ; les rôles avec « role: ». Les dépendances des collections sont ajoutées.',
+    lockfile: 'requirements.yml',
+    accept: '.yml,.yaml',
+  },
+  terraform: {
+    placeholder: 'hashicorp/aws ~> 5.0\nhashicorp/random\nterraform-aws-modules/vpc/aws 5.8.1\nterraform ~> 1.9',
+    hint: 'Providers (espace/type), modules (espace/nom/fournisseur) et « terraform » pour le binaire, avec une contrainte Terraform facultative (~> 5.0).',
+    lockfile: '.terraform.lock.hcl',
+    accept: '.hcl',
+  },
+  rpm: {
+    placeholder: 'nginx\ngit\npostgresql-server=15.10\n@nodejs:20',
+    hint: 'Un paquet par ligne, éventuellement =version. EL8 : « @module:stream » choisit un stream de module (sinon celui par défaut). Les dépendances sont ajoutées comme le ferait dnf.',
+    lockfile: '',
+    accept: '',
+  },
 };
 
 @Component({
-  imports: [Eco, PackagePicker, FormsModule, RouterLink, Icon],
+  imports: [Eco, PackagePicker, FormsModule, RouterLink, Icon, NgTemplateOutlet],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <form class="page" (ngSubmit)="save(false)">
@@ -122,7 +147,7 @@ const HELP: Record<EcosystemId, { placeholder: string; hint: string; lockfile: s
 
         <div class="field">
           <span class="label">Ajouter depuis le registre</span>
-          <app-package-picker [ecosystem]="ecosystem()" (add)="addFromPicker($event)" />
+          <app-package-picker [ecosystem]="ecosystem()" [distribution]="isSystem() ? distribution() : null" (add)="addFromPicker($event)" />
         </div>
 
         <div class="field">
@@ -204,6 +229,22 @@ const HELP: Record<EcosystemId, { placeholder: string; hint: string; lockfile: s
             <label class="check"><input type="checkbox" name="includeDevComposer" [(ngModel)]="includeDev" />
               <span>Inclure require-dev (composer.json / composer.lock importé)</span></label>
           }
+          @case ('terraform') {
+            <fieldset class="field">
+              <legend class="label">Plateformes des providers et du binaire</legend>
+              <div class="chips">
+                @for (p of choices()?.terraform?.platforms ?? []; track p.id) {
+                  <label class="chip"><input type="checkbox" [name]="'tf-' + p.id" [checked]="tfPlatforms().includes(p.id)" (change)="toggle(tfPlatforms, p.id)" />{{ p.label }}</label>
+                }
+              </div>
+              <span class="hint">Linux amd64 par défaut. Les modules sont indépendants de la plateforme.</span>
+            </fieldset>
+          }
+          @case ('galaxy') {
+            <p class="subtle">Pas d’option : les collections Ansible sont indépendantes de la plateforme.</p>
+          }
+          @case ('deb') { <ng-container *ngTemplateOutlet="system" /> }
+          @case ('rpm') { <ng-container *ngTemplateOutlet="system" /> }
           @case ('docker') {
             <fieldset class="field">
               <legend class="label">Plateformes</legend>
@@ -217,6 +258,36 @@ const HELP: Record<EcosystemId, { placeholder: string; hint: string; lockfile: s
           }
         }
       </section>
+
+      <ng-template #system>
+        <div class="field dist">
+          <label for="distribution">Distribution</label>
+          <select class="select" id="distribution" name="distribution" [ngModel]="distribution()" (ngModelChange)="setDistribution($event)">
+            @for (d of distributions(); track d.id) { <option [value]="d.id">{{ d.label }}</option> }
+          </select>
+          @if (currentDistribution()?.eol) { <span class="hint warn">Fin de vie : plus aucun correctif de sécurité. Dépôts figés sur vault.centos.org.</span> }
+        </div>
+        <fieldset class="field">
+          <legend class="label">Architectures</legend>
+          <div class="chips">
+            @for (a of currentDistribution()?.architectures ?? []; track a.id) {
+              <label class="chip"><input type="checkbox" [name]="'arch-' + a.id" [checked]="architectures().includes(a.id)" (change)="toggle(architectures, a.id)" />{{ a.label }}</label>
+            }
+          </div>
+          <span class="hint">Linux amd64 (x86_64) par défaut.</span>
+        </fieldset>
+        <fieldset class="field">
+          <legend class="label">{{ ecosystem() === 'deb' ? 'Sections' : 'Dépôts' }}</legend>
+          <div class="chips">
+            @for (sec of currentDistribution()?.sections ?? []; track sec.id) {
+              <label class="chip"><input type="checkbox" [name]="'sec-' + sec.id" [checked]="sections().includes(sec.id)" (change)="toggle(sections, sec.id)" />{{ sec.label }}</label>
+            }
+          </div>
+          <span class="hint">{{ ecosystem() === 'deb' ? 'Suites principale, -updates et -security fusionnées : la version la plus récente est retenue.' : 'Les dépôts choisis sont fusionnés en un seul dépôt dans Romulus.' }}</span>
+        </fieldset>
+        <label class="check"><input type="checkbox" name="recommends" [(ngModel)]="recommends" />
+          <span>Inclure les paquets recommandés (Recommends)<br /><span class="hint">Comme une installation par défaut ; sinon, installez avec {{ ecosystem() === 'deb' ? '« apt install --no-install-recommends »' : '« dnf install --setopt=install_weak_deps=False »' }}.</span></span></label>
+      </ng-template>
 
       <div class="actions">
         <button type="submit" class="btn" [disabled]="busy()">Enregistrer</button>
@@ -237,6 +308,8 @@ const HELP: Record<EcosystemId, { placeholder: string; hint: string; lockfile: s
     .drop:focus-within { outline: 2px solid var(--accent); outline-offset: 2px; }
     .file { padding: 10px 12px; background: var(--surface-2); border-radius: var(--radius-s); flex-wrap: wrap; }
     .targets { display: grid; gap: 8px; }
+    .dist { max-width: 420px; }
+    .hint.warn { color: var(--warn); }
     .target { display: grid; grid-template-columns: 150px 1fr auto; gap: 8px; }
     .add { justify-self: start; }
     .templates { display: grid; gap: 10px; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); }
@@ -287,6 +360,14 @@ export default class ListForm implements OnInit {
   protected php = '';
   protected readonly targets = signal<PypiTarget[]>([{ python: '3.12', platform: 'linux-x86_64' }]);
   protected readonly platforms = signal<string[]>(['linux/amd64']);
+  protected readonly tfPlatforms = signal<string[]>(['linux_amd64']);
+  protected readonly distribution = signal('');
+  protected readonly architectures = signal<string[]>([]);
+  protected readonly sections = signal<string[]>([]);
+  protected recommends = false;
+  protected readonly isSystem = computed(() => this.ecosystem() === 'deb' || this.ecosystem() === 'rpm');
+  protected readonly distributions = computed(() => (this.choices()?.distributions ?? []).filter((d) => d.ecosystem === this.ecosystem()));
+  protected readonly currentDistribution = computed(() => this.distributions().find((d) => d.id === this.distribution()) ?? null);
   protected readonly templates = signal<Template[]>([]);
   protected readonly template = signal<ListTemplate | null>(null);
   protected readonly ecosystemTemplates = computed(() => this.templates().filter((t) => t.ecosystem === this.ecosystem()));
@@ -320,7 +401,14 @@ export default class ListForm implements OnInit {
       this.php = o.php ?? '';
       if (o.targets?.length) this.targets.set(o.targets.map((t) => ({ ...t })));
       if (o.platforms?.length) this.platforms.set([...o.platforms]);
+      if (o.platforms?.length && list.ecosystem === 'terraform') this.tfPlatforms.set([...o.platforms]);
       this.template.set(o.template ?? null);
+      if (o.distribution) {
+        this.setDistribution(o.distribution);
+        if (o.architectures?.length) this.architectures.set([...o.architectures]);
+        if (o.sections?.length) this.sections.set([...o.sections]);
+      }
+      this.recommends = o.recommends ?? false;
     } catch (e) {
       this.error.set(errorMessage(e));
     }
@@ -329,7 +417,20 @@ export default class ListForm implements OnInit {
   protected setEcosystem(id: EcosystemId): void {
     this.ecosystem.set(id);
     if (this.selectedTemplate()?.ecosystem !== id) this.template.set(null);
+    if (this.isSystem() && !this.currentDistribution()) this.setDistribution(this.distributions()[0]?.id ?? '');
     this.autoName();
+  }
+
+  /** Nouvelle distribution : première architecture (Linux amd64 / x86_64) et sections par défaut */
+  protected setDistribution(id: string): void {
+    this.distribution.set(id);
+    const d = this.currentDistribution();
+    this.architectures.set(d?.architectures.length ? [d.architectures[0].id] : []);
+    this.sections.set(d?.sections.filter((s) => s.default).map((s) => s.id) ?? []);
+  }
+
+  protected toggle(target: WritableSignal<string[]>, id: string): void {
+    target.update((list) => (list.includes(id) ? list.filter((x) => x !== id) : [...list, id]));
   }
 
   protected presetLines(t: Template): string[] {
@@ -454,8 +555,14 @@ export default class ListForm implements OnInit {
         targets: this.targets(),
         sdist: this.sdist,
         php: this.php.trim() || null,
-        platforms: this.platforms(),
+        platforms: this.ecosystem() === 'terraform' ? (this.tfPlatforms().length ? this.tfPlatforms() : ['linux_amd64']) : this.platforms(),
         template: this.template(),
+        ...(this.isSystem() ? {
+          distribution: this.distribution(),
+          architectures: this.architectures().length ? this.architectures() : [this.currentDistribution()?.architectures[0]?.id ?? 'amd64'],
+          sections: this.sections(),
+          recommends: this.recommends,
+        } : {}),
       },
       lockfileName: this.lockfileContent ? this.lockfileName() : null,
       lockfileContent: this.lockfileContent,

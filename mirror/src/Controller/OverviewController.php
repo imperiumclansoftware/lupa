@@ -30,6 +30,7 @@ final class OverviewController
         private readonly EntityManagerInterface $em,
         private readonly CacheInterface $cache,
         private readonly Quarantine $quarantine,
+        private readonly \App\Registry\OpenPgp $pgp,
         private readonly string $storageDir,
         private readonly string $publicUrl,
     ) {
@@ -60,6 +61,43 @@ final class OverviewController
             'activeJobs' => array_map(Presenter::job(...), $this->jobs->findBy(['status' => [Job::QUEUED, Job::RUNNING]], ['id' => 'ASC'])),
             'recentJobs' => array_map(Presenter::job(...), $this->jobs->findBy([], ['id' => 'DESC'], 8)),
         ]);
+    }
+
+    /** Distributions Debian et RPM servies, avec leurs architectures et sections (page Utilisation). */
+    #[Route('/distributions', methods: ['GET'])]
+    public function distributions(Request $request): JsonResponse
+    {
+        $rows = $this->db->fetchAllAssociative(
+            "SELECT ecosystem, substr(filename, 1, instr(filename, '/') - 1) AS distribution, COUNT(*) AS packages,
+                    group_concat(DISTINCT json_extract(metadata, '$.repoArch')) AS arches,
+                    group_concat(DISTINCT json_extract(metadata, '$.architecture')) AS packageArches,
+                    group_concat(DISTINCT json_extract(metadata, '$.component')) AS components
+             FROM package WHERE ecosystem IN ('deb', 'rpm') GROUP BY ecosystem, distribution ORDER BY distribution"
+        );
+        $base = '' !== $this->publicUrl ? rtrim($this->publicUrl, '/') : $request->getSchemeAndHttpHost();
+        $items = [];
+        foreach ($rows as $row) {
+            $dist = \Sas\Bundle\Distributions::find((string) $row['distribution']);
+            if (!$dist) {
+                continue;
+            }
+            $deb = 'deb' === $row['ecosystem'];
+            $arches = array_values(array_filter(explode(',', (string) ($deb ? $row['packageArches'] : $row['arches'])), static fn ($a) => '' !== $a && 'all' !== $a));
+            $items[] = [
+                'id' => $row['distribution'],
+                'ecosystem' => $row['ecosystem'],
+                'label' => $dist['label'],
+                'codename' => $dist['codename'],
+                'release' => $dist['release'],
+                'eol' => $dist['eol'],
+                'packages' => (int) $row['packages'],
+                'architectures' => $arches,
+                'components' => $deb ? array_values(array_filter(explode(',', (string) $row['components']))) : [],
+                'repoFile' => $deb ? null : SystemRegistryController::repoFile($base, (string) $row['distribution'], $dist),
+            ];
+        }
+
+        return new JsonResponse(['items' => $items, 'keyFingerprint' => $this->pgp->fingerprint()]);
     }
 
     #[Route('/imports', methods: ['GET'])]

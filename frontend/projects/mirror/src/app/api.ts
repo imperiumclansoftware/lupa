@@ -69,6 +69,19 @@ export interface Inbox {
   unreadable: { path: string; hint: string | null }[];
 }
 
+export interface SystemDistribution {
+  id: string;
+  ecosystem: 'deb' | 'rpm';
+  label: string;
+  codename: string;
+  release: string;
+  eol: boolean;
+  packages: number;
+  architectures: string[];
+  components: string[];
+  repoFile: string | null;
+}
+
 export interface PackageSummary {
   ecosystem: EcosystemId;
   name: string;
@@ -137,6 +150,10 @@ export interface TrustedKey {
 @Injectable({ providedIn: 'root' })
 export class MirrorApi {
   private readonly http = inject(HttpClient);
+
+  distributions(): Promise<{ items: SystemDistribution[]; keyFingerprint: string }> {
+    return firstValueFrom(this.http.get<{ items: SystemDistribution[]; keyFingerprint: string }>('/api/distributions'));
+  }
 
   overview(): Promise<Overview> {
     return firstValueFrom(this.http.get<Overview>('/api/overview'));

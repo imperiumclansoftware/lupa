@@ -21,7 +21,7 @@
 	}
 
 	# API d'administration et registres (npm, PyPI, Composer, Docker) : Symfony
-	@php path /api/* /npm /npm/* /pypi/* /composer/* /v2 /v2/*
+	@php path /api/* /npm /npm/* /pypi/* /composer/* /v2 /v2/* /deb/* /rpm/* /galaxy/* /terraform/* /.well-known/terraform.json
 	handle @php {
 		php_server {
 			root /app/public

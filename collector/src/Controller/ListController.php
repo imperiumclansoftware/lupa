@@ -15,6 +15,7 @@ use App\Resolver\PypiPlatforms;
 use App\Resolver\Resolver;
 use App\Template\TemplateCatalog;
 use Doctrine\ORM\EntityManagerInterface;
+use Sas\Bundle\Distributions;
 use Sas\Bundle\Ecosystem;
 use Symfony\Component\DependencyInjection\Attribute\AutowireIterator;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -48,6 +49,16 @@ final class ListController
                 'platforms' => self::choices(PypiPlatforms::labels()),
             ],
             'docker' => ['platforms' => self::choices(DockerResolver::PLATFORMS)],
+            'terraform' => ['platforms' => self::choices(\App\Resolver\TerraformResolver::PLATFORMS)],
+            // Debian et RPM : distributions, architectures et sections (dépôts) proposées
+            'distributions' => array_map(static fn (string $id, array $d) => [
+                'id' => $id,
+                'ecosystem' => $d['ecosystem']->value,
+                'label' => $d['label'],
+                'eol' => $d['eol'],
+                'architectures' => self::choices($d['architectures']),
+                'sections' => array_map(static fn (string $sid, array $s) => ['id' => $sid, 'label' => $s['label'], 'default' => $s['default']], array_keys($d['sections']), $d['sections']),
+            ], array_keys(Distributions::all()), Distributions::all()),
         ]);
     }
 
@@ -185,6 +196,16 @@ final class ListController
             ],
             Ecosystem::Docker => [
                 'platforms' => array_values(array_filter((array) ($options['platforms'] ?? []), 'is_string')),
+            ],
+            Ecosystem::Galaxy => [],
+            Ecosystem::Terraform => [
+                'platforms' => array_values(array_filter((array) ($options['platforms'] ?? []), 'is_string')),
+            ],
+            Ecosystem::Deb, Ecosystem::Rpm => [
+                'distribution' => (string) ($options['distribution'] ?? ''),
+                'architectures' => array_values(array_filter((array) ($options['architectures'] ?? []), 'is_string')),
+                'sections' => array_values(array_filter((array) ($options['sections'] ?? []), 'is_string')),
+                'recommends' => (bool) ($options['recommends'] ?? false),
             ],
         };
     }

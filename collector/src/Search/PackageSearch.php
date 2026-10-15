@@ -32,11 +32,12 @@ final class PackageSearch
         #[Autowire('%kernel.cache_dir%')]
         private readonly string $cacheDir,
         private readonly ?Sources $sources = null,
+        private readonly ?\App\System\SystemSearch $system = null,
     ) {
     }
 
     /** @return list<Result> */
-    public function search(Ecosystem $ecosystem, string $query, int $limit = 20): array
+    public function search(Ecosystem $ecosystem, string $query, int $limit = 20, ?string $distribution = null): array
     {
         $query = trim($query);
         if ('' === $query) {
@@ -48,6 +49,9 @@ final class PackageSearch
             Ecosystem::Pypi => $this->pypiSearch($query, $limit),
             Ecosystem::Composer => $this->composerSearch($query, $limit),
             Ecosystem::Docker => $this->dockerSearch($query, $limit),
+            Ecosystem::Deb, Ecosystem::Rpm => $this->system->search($ecosystem, $distribution, $query, $limit),
+            Ecosystem::Galaxy => $this->galaxySearch($query, $limit),
+            Ecosystem::Terraform => $this->terraformSearch($query, $limit),
         };
     }
 
@@ -56,13 +60,16 @@ final class PackageSearch
      *
      * @return array{versions: list<string>, latest: string|null}
      */
-    public function versions(Ecosystem $ecosystem, string $name): array
+    public function versions(Ecosystem $ecosystem, string $name, ?string $distribution = null): array
     {
         $versions = match ($ecosystem) {
             Ecosystem::Npm => $this->npmVersions($name),
             Ecosystem::Pypi => $this->pypiVersions($name),
             Ecosystem::Composer => $this->composerVersions($name),
             Ecosystem::Docker => $this->dockerTags($name),
+            Ecosystem::Deb, Ecosystem::Rpm => $this->system->versions($ecosystem, $distribution, $name),
+            Ecosystem::Galaxy => $this->galaxyVersions($name),
+            Ecosystem::Terraform => $this->terraformVersions($name),
         };
 
         return ['versions' => \array_slice($versions['versions'], 0, 200), 'latest' => $versions['latest']];
@@ -73,13 +80,15 @@ final class PackageSearch
      *
      * @return list<string>
      */
-    public function names(Ecosystem $ecosystem, string $pattern): array
+    public function names(Ecosystem $ecosystem, string $pattern, ?string $distribution = null): array
     {
         $names = match ($ecosystem) {
             Ecosystem::Npm => $this->npmNames($pattern),
             Ecosystem::Pypi => array_values(array_filter($this->pypiIndex(), static fn (string $n) => Glob::matches(self::pep503($pattern), self::pep503($n)))),
             Ecosystem::Composer => $this->composerNames($pattern),
             Ecosystem::Docker => $this->dockerRepositories($pattern),
+            Ecosystem::Deb, Ecosystem::Rpm => $this->system->names($ecosystem, $distribution, $pattern),
+            Ecosystem::Galaxy, Ecosystem::Terraform => throw new \InvalidArgumentException('Les motifs ne sont pas pris en charge pour cet écosystème.'),
         };
         sort($names);
 
@@ -103,7 +112,7 @@ final class PackageSearch
                     Ecosystem::Npm => [sprintf('%s/%s', $this->npmRegistry($name), $name), ['Accept' => 'application/vnd.npm.install-v1+json']],
                     Ecosystem::Composer => [sprintf('https://repo.packagist.org/p2/%s.json', strtolower($name)), []],
                     Ecosystem::Pypi => [sprintf('%s/pypi/%s/json', rtrim($this->pypiIndex, '/'), rawurlencode($name)), []],
-                    Ecosystem::Docker => throw new \LogicException('Sans objet pour Docker.'),
+                    default => throw new \LogicException('Sans objet pour cet écosystème.'),
                 };
                 $responses[$name] = $this->http->request('GET', $url, ($this->sources?->httpOptions($url) ?? []) + ['headers' => $headers, 'timeout' => 60]);
             }
@@ -161,6 +170,95 @@ final class PackageSearch
         usort($versions, static fn (string $a, string $b) => self::compareVersions($b, $a));
 
         return ['versions' => $versions, 'latest' => $data['dist-tags']['latest'] ?? ($versions[0] ?? null)];
+    }
+
+    /** Collections (nom exact, puis mots-clés) et rôles Galaxy. */
+    private function galaxySearch(string $query, int $limit): array
+    {
+        $base = 'https://galaxy.ansible.com';
+        $results = [];
+        foreach ([['name' => strtolower($query)], ['keywords' => $query]] as $filter) {
+            $data = $this->json($base.'/api/v3/plugin/ansible/search/collection-versions/', $filter + ['is_highest' => 'true', 'limit' => $limit]);
+            foreach ($data['data'] ?? [] as $item) {
+                $c = $item['collection_version'] ?? [];
+                $name = ($c['namespace'] ?? '').'.'.($c['name'] ?? '');
+                $results[$name] ??= self::result($name, $c['description'] ?? null, $c['version'] ?? null, 'Collection');
+            }
+        }
+        // Collections officielles et communautaires d'abord (community.docker avant uumas.docker)
+        uksort($results, static fn (string $a, string $b) => (int) !preg_match('/^(ansible|community)\./', $a) <=> (int) !preg_match('/^(ansible|community)\./', $b));
+        $results = \array_slice($results, 0, max(1, $limit - 5), true);
+        $roles = $this->json($base.'/api/v1/roles/', ['keywords' => $query, 'page_size' => 5, 'order_by' => '-download_count']);
+        foreach ($roles['results'] ?? [] as $role) {
+            $name = 'role:'.($role['summary_fields']['namespace']['name'] ?? $role['github_user']).'.'.$role['name'];
+            $results[$name] ??= self::result($name, $role['description'] ?? null, $role['summary_fields']['versions'][0]['name'] ?? null, 'Rôle');
+        }
+
+        return \array_slice(array_values($results), 0, $limit);
+    }
+
+    /** @return array{versions: list<string>, latest: string|null} */
+    private function galaxyVersions(string $name): array
+    {
+        $base = 'https://galaxy.ansible.com';
+        if (str_starts_with($name, 'role:')) {
+            [$owner, $role] = explode('.', substr($name, 5), 2) + [1 => ''];
+            $data = $this->json($base.'/api/v1/roles/', ['namespace' => $owner, 'name' => $role]);
+            $versions = array_map(static fn (array $v) => (string) $v['name'], $data['results'][0]['summary_fields']['versions'] ?? []);
+        } else {
+            [$namespace, $collection] = explode('.', $name, 2) + [1 => ''];
+            $data = $this->json(sprintf('%s/api/v3/plugin/ansible/content/published/collections/index/%s/%s/versions/', $base, $namespace, $collection), ['limit' => 100]);
+            $versions = array_map(static fn (array $v) => (string) $v['version'], $data['data'] ?? []);
+        }
+        usort($versions, static fn (string $a, string $b) => self::compareVersions($b, $a));
+
+        return ['versions' => $versions, 'latest' => array_values(array_filter($versions, static fn ($v) => !str_contains($v, '-')))[0] ?? ($versions[0] ?? null)];
+    }
+
+    /** Providers (officiels et partenaires d'abord) et modules du registre Terraform. */
+    private function terraformSearch(string $query, int $limit): array
+    {
+        $base = 'https://registry.terraform.io';
+        $query = strtolower(trim($query));
+        $results = [];
+        if ('terraform' === $query) {
+            $results['terraform'] = self::result('terraform', 'Le binaire Terraform (CLI)', null, 'CLI');
+        }
+        $providers = $this->json($base.'/v2/providers', ['filter[name]' => $query, 'page[size]' => 50]);
+        $tiers = ['official' => 0, 'partner' => 1];
+        $items = $providers['data'] ?? [];
+        usort($items, static fn (array $a, array $b) => ($tiers[$a['attributes']['tier'] ?? ''] ?? 2) <=> ($tiers[$b['attributes']['tier'] ?? ''] ?? 2)
+            ?: ($b['attributes']['downloads'] ?? 0) <=> ($a['attributes']['downloads'] ?? 0));
+        foreach (\array_slice($items, 0, 8) as $item) {
+            $name = strtolower((string) $item['attributes']['full-name']);
+            $results[$name] = self::result($name, $item['attributes']['description'] ?? null, null, 'Provider '.($item['attributes']['tier'] ?? ''));
+        }
+        $modules = $this->json($base.'/v1/modules/search', ['q' => $query, 'limit' => $limit]);
+        foreach ($modules['modules'] ?? [] as $module) {
+            $name = sprintf('%s/%s/%s', $module['namespace'], $module['name'], $module['provider']);
+            $results[$name] ??= self::result($name, $module['description'] ?? null, $module['version'] ?? null, 'Module');
+        }
+
+        return \array_slice(array_values($results), 0, $limit);
+    }
+
+    /** @return array{versions: list<string>, latest: string|null} */
+    private function terraformVersions(string $name): array
+    {
+        $segments = explode('/', strtolower($name));
+        if ('terraform' === $name) {
+            $versions = array_keys($this->json('https://releases.hashicorp.com/terraform/index.json')['versions'] ?? []);
+        } elseif (3 === \count($segments)) {
+            $data = $this->json('https://registry.terraform.io/v1/modules/'.$name.'/versions');
+            $versions = array_map(static fn (array $v) => (string) $v['version'], $data['modules'][0]['versions'] ?? []);
+        } else {
+            $data = $this->json('https://registry.terraform.io/v1/providers/'.$name.'/versions');
+            $versions = array_map(static fn (array $v) => (string) $v['version'], $data['versions'] ?? []);
+        }
+        $versions = array_map('strval', $versions);
+        usort($versions, static fn (string $a, string $b) => self::compareVersions($b, $a));
+
+        return ['versions' => $versions, 'latest' => array_values(array_filter($versions, static fn ($v) => !str_contains($v, '-')))[0] ?? ($versions[0] ?? null)];
     }
 
     /** @return list<string> */

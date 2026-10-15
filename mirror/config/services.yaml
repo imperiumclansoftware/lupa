@@ -6,6 +6,8 @@ parameters:
     env(UPLOAD_DIR): '%kernel.project_dir%/var/uploads'
     # Adresse publique du miroir dans les URL des paquets ; vide = déduite de la requête
     env(PUBLIC_URL): ''
+    # Clé OpenPGP qui signe les index apt régénérés
+    env(MIRROR_KEY_DIR): '%kernel.project_dir%/var/identity'
 
 services:
     _defaults:

@@ -9,7 +9,7 @@ final class ListInput
     public function __construct(
         #[Assert\NotBlank(message: 'Donnez un nom à la liste.'), Assert\Length(max: 120)]
         public string $name = '',
-        #[Assert\Choice(choices: ['npm', 'pypi', 'composer', 'docker'], message: 'Écosystème inconnu.')]
+        #[Assert\Choice(choices: ['npm', 'pypi', 'composer', 'docker', 'deb', 'rpm', 'galaxy', 'terraform'], message: 'Écosystème inconnu.')]
         public string $ecosystem = 'npm',
         #[Assert\Length(max: 200_000, maxMessage: 'Liste trop longue.')]
         public string $specs = '',

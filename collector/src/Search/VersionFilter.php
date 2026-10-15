@@ -38,7 +38,7 @@ final readonly class VersionFilter
             Ecosystem::Npm => $this->npm($versions, $constraint),
             Ecosystem::Composer => self::composer($versions, $constraint),
             Ecosystem::Pypi => $this->pypi($versions, $constraint),
-            Ecosystem::Docker => array_keys($versions),
+            Ecosystem::Docker, Ecosystem::Deb, Ecosystem::Rpm, Ecosystem::Galaxy, Ecosystem::Terraform => array_keys($versions),
         };
 
         return ['keep' => array_values($keep), 'skipped' => array_values(array_diff(array_keys($versions), $keep))];

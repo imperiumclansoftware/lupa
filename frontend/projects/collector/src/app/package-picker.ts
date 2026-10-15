@@ -26,6 +26,26 @@ const MODES: Record<EcosystemId, { id: Mode; label: string; build: (name: string
     { id: 'latest', label: 'Toujours la dernière', build: (n) => n },
   ],
   docker: [{ id: 'exact', label: 'Étiquette', build: (n, v) => `${n}:${v}` }],
+  galaxy: [
+    { id: 'compatible', label: 'Majeure (>=x,<x+1)', build: (n, v) => `${n} >=${v},<${(parseInt(v, 10) || 0) + 1}.0.0` },
+    { id: 'exact', label: 'Exacte', build: (n, v) => `${n} ${v}` },
+    { id: 'minimum', label: 'Minimum (>=)', build: (n, v) => `${n} >=${v}` },
+    { id: 'latest', label: 'Toujours la dernière', build: (n) => n },
+  ],
+  terraform: [
+    { id: 'compatible', label: 'Compatible (~>)', build: (n, v) => `${n} ~> ${v.split('.').slice(0, 2).join('.')}` },
+    { id: 'exact', label: 'Exacte', build: (n, v) => `${n} ${v}` },
+    { id: 'minimum', label: 'Minimum (>=)', build: (n, v) => `${n} >= ${v}` },
+    { id: 'latest', label: 'Toujours la dernière', build: (n) => n },
+  ],
+  deb: [
+    { id: 'latest', label: 'Toujours la dernière', build: (n) => n },
+    { id: 'exact', label: 'Exacte (=)', build: (n, v) => `${n}=${v}` },
+  ],
+  rpm: [
+    { id: 'latest', label: 'Toujours la dernière', build: (n) => n },
+    { id: 'exact', label: 'Exacte (=)', build: (n, v) => `${n}=${v}` },
+  ],
 };
 
 /**
@@ -144,6 +164,8 @@ const MODES: Record<EcosystemId, { id: Mode; label: string; build: (name: string
 })
 export class PackagePicker {
   readonly ecosystem = input.required<EcosystemId>();
+  /** Debian, RPM : distribution dont l'index est consulté */
+  readonly distribution = input<string | null>(null);
   readonly add = output<string[]>();
   private readonly api = inject(CollectorApi);
 
@@ -171,6 +193,10 @@ export class PackagePicker {
     pypi: 'Rechercher un paquet Python, ou un motif : django-rest-*',
     composer: 'Rechercher un paquet Composer, ou un motif : symfony/*-bundle:^7.3',
     docker: 'Rechercher une image, ou un motif : node:24-alpine*, bitnami/*-exporter',
+    deb: 'Rechercher un paquet Debian, ou un motif : python3-django*',
+    galaxy: 'Rechercher une collection ou un rôle Ansible : docker, community.general',
+    terraform: 'Rechercher un provider ou un module Terraform : aws, vpc, « terraform » pour le binaire',
+    rpm: 'Rechercher un paquet RPM, ou un motif : perl-*',
   })[this.ecosystem()]);
   protected readonly hint = computed(() =>
     this.isPattern()
@@ -185,6 +211,7 @@ export class PackagePicker {
     // Changement d'écosystème : on repart de zéro
     effect(() => {
       this.ecosystem();
+      this.distribution();
       untracked(() => this.reset());
     });
   }
@@ -206,7 +233,7 @@ export class PackagePicker {
     const id = ++this.request;
     this.busy.set(true);
     try {
-      const results = await this.api.search(this.ecosystem(), this.query().trim());
+      const results = await this.api.search(this.ecosystem(), this.query().trim(), this.distribution());
       if (id === this.request) this.results.set(results);
     } catch (e) {
       if (id === this.request) this.error.set(errorMessage(e));
@@ -222,7 +249,7 @@ export class PackagePicker {
     this.mode.set(this.modes()[0].id);
     this.busy.set(true);
     try {
-      const data = await this.api.versions(this.ecosystem(), result.name);
+      const data = await this.api.versions(this.ecosystem(), result.name, this.distribution());
       this.versions.set(data.versions);
       this.latest.set(data.latest);
       this.version.set(data.latest ?? data.versions[0] ?? '');
@@ -237,7 +264,7 @@ export class PackagePicker {
     this.busy.set(true);
     this.error.set('');
     try {
-      const result = await this.api.expand(this.ecosystem(), this.query().trim());
+      const result = await this.api.expand(this.ecosystem(), this.query().trim(), this.distribution());
       this.preview.set(result.lines);
       this.skipped.set(result.skipped);
     } catch (e) {

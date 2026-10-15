@@ -10,6 +10,9 @@ parameters:
     env(NPM_REGISTRY): 'https://registry.npmjs.org'
     env(PYPI_INDEX): 'https://pypi.org'
     env(PIP_BIN): '/opt/pip/bin/pip'
+    env(SYSTEM_CACHE_DIR): '%kernel.project_dir%/var/system'
+    env(GPGV_BIN): 'gpgv'
+    env(GALAXY_URL): 'https://galaxy.ansible.com'
 
 services:
     _defaults:

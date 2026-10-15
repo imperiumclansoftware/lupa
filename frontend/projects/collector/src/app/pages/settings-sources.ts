@@ -3,7 +3,7 @@ import { FormsModule } from '@angular/forms';
 import { Dialog, ECOSYSTEMS, Eco, EcosystemId, EcosystemPipe, Icon, Toasts, errorMessage } from '@sas/shared';
 import { CollectorApi, Source, SourceInput } from '../api';
 
-const HINTS: Record<EcosystemId, { url: string; help: string }> = {
+const HINTS: Partial<Record<EcosystemId, { url: string; help: string }>> = {
   npm: { url: 'https://npm.example.com', help: 'Verdaccio, Nexus, Artifactory, GitLab… Une portée (@entreprise) envoie ces paquets vers ce dépôt ; sans portée, il remplace npmjs.' },
   pypi: { url: 'https://pypi.example.com/simple', help: 'Adresse de l’index « simple » (devpi, Nexus, Artifactory, GitLab). Ajouté à PyPI (--extra-index-url) ou à sa place.' },
   composer: { url: 'https://repo.example.com', help: 'Dépôt de type « composer » : Satis, Private Packagist, Nexus, GitLab. Consulté avant Packagist, ou à sa place.' },
@@ -131,7 +131,8 @@ export class SettingsSources implements OnInit {
   private readonly api = inject(CollectorApi);
   private readonly toasts = inject(Toasts);
   private readonly dialog = viewChild.required<Dialog>('dialog');
-  protected readonly ecosystems = ECOSYSTEMS;
+  /** Dépôts privés : npm, Python, Composer, Docker (pas encore Debian ni RPM) */
+  protected readonly ecosystems = ECOSYSTEMS.filter((e) => e.id in HINTS);
   protected readonly items = signal<Source[]>([]);
   protected readonly error = signal('');
   protected readonly formError = signal('');
@@ -150,7 +151,7 @@ export class SettingsSources implements OnInit {
   }
 
   protected hint(): { url: string; help: string } {
-    return HINTS[this.form.ecosystem];
+    return HINTS[this.form.ecosystem] ?? { url: '', help: '' };
   }
 
   protected authLabel(s: Source): string {

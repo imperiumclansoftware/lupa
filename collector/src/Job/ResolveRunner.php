@@ -50,7 +50,7 @@ final readonly class ResolveRunner implements JobRunner
 
         // Motifs (« * », « ? ») : remplacés par les paquets correspondants du registre
         $lines = $list->getSpecLines();
-        if (array_filter($lines, Glob::isPattern(...))) {
+        if (array_filter($lines, Glob::isPattern(...)) && !\in_array($list->getEcosystem(), [\Sas\Bundle\Ecosystem::Deb, \Sas\Bundle\Ecosystem::Rpm], true)) {
             $context->report('Recherche des paquets correspondant aux motifs');
             $expanded = $this->expander->expand($list->getEcosystem(), $lines);
             foreach ($expanded['patterns'] as $pattern => $result) {

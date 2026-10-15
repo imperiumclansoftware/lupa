@@ -1,12 +1,16 @@
 import { Pipe, PipeTransform } from '@angular/core';
 
-export type EcosystemId = 'npm' | 'pypi' | 'composer' | 'docker';
+export type EcosystemId = 'npm' | 'pypi' | 'composer' | 'docker' | 'deb' | 'rpm' | 'galaxy' | 'terraform';
 
 export const ECOSYSTEMS: { id: EcosystemId; label: string; noun: string }[] = [
   { id: 'npm', label: 'npm', noun: 'paquets npm' },
   { id: 'pypi', label: 'Python', noun: 'fichiers Python' },
   { id: 'composer', label: 'Composer', noun: 'paquets Composer' },
   { id: 'docker', label: 'Docker', noun: 'images Docker' },
+  { id: 'deb', label: 'Debian', noun: 'paquets Debian' },
+  { id: 'rpm', label: 'RPM', noun: 'paquets RPM (AlmaLinux, CentOS)' },
+  { id: 'galaxy', label: 'Ansible', noun: 'collections et rôles Ansible' },
+  { id: 'terraform', label: 'Terraform', noun: 'providers et modules Terraform' },
 ];
 
 export function ecosystemLabel(id: string): string {

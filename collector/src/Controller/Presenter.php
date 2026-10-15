@@ -54,6 +54,13 @@ final class Presenter
             'detail' => str_starts_with($artifact->getName(), '_flex/') ? sprintf('Recette Symfony Flex (%s)', $artifact->getFilename() ?? 'index') : match ($artifact->getEcosystem()->value) {
                 'docker' => implode(', ', array_diff(array_column($metadata['manifests'] ?? [], 'platform'), ['attestation'])),
                 'pypi' => $metadata['requiresPython'] ?? null,
+                'galaxy' => ('role' === ($metadata['type'] ?? null) ? 'Rôle' : 'Collection').(isset($metadata['description']) ? ' · '.mb_substr((string) $metadata['description'], 0, 120) : ''),
+                'terraform' => match ($metadata['kind'] ?? null) {
+                    'provider' => 'Provider · '.($metadata['os'] ?? '').'_'.($metadata['arch'] ?? ''),
+                    'cli' => 'Terraform · '.($metadata['os'] ?? '').'_'.($metadata['arch'] ?? ''),
+                    default => 'Module',
+                },
+                'deb', 'rpm' => trim(sprintf('%s · %s · %s', \Sas\Bundle\Distributions::find((string) ($metadata['distribution'] ?? ''))['label'] ?? '', $metadata['architecture'] ?? '', $metadata['description'] ?? ''), ' ·'),
                 'npm', 'composer' => isset($metadata['description']) ? mb_substr((string) $metadata['description'], 0, 140) : null,
                 default => null,
             },

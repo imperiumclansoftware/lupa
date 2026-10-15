@@ -12,7 +12,7 @@ COPY --from=composer:2 /usr/bin/composer /usr/local/bin/composer
 
 # nodejs/npm, python3/pip et composer servent au collecteur pour résoudre les dépendances
 # (même image pour le collecteur et le miroir en développement)
-RUN apk add --no-cache git unzip icu-data-full bash nodejs npm python3 py3-pip \
+RUN apk add --no-cache git unzip icu-data-full bash nodejs npm python3 py3-pip xz zstd bzip2 gpgv \
  && install-php-extensions intl opcache zip apcu \
  && python3 -m venv /opt/pip && /opt/pip/bin/pip install --no-cache-dir --quiet --upgrade pip \
  && mv "$PHP_INI_DIR/php.ini-development" "$PHP_INI_DIR/php.ini" \

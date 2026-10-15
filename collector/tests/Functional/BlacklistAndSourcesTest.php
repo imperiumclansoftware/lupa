@@ -191,6 +191,25 @@ final class BlacklistAndSourcesTest extends WebTestCase
         self::assertCount(3, $this->json());
     }
 
+    public function testSystemPackageVersions(): void
+    {
+        foreach (['deb' => '3.0.15-1~deb12u1', 'rpm' => '1:3.0.7-27.el9'] as $ecosystem => $version) {
+            $this->client->jsonRequest('POST', '/api/blacklist', ['ecosystem' => $ecosystem, 'name' => 'openssl', 'version' => $version]);
+            self::assertResponseStatusCodeSame(201, $version);
+        }
+        // RPM : version-release complète ; pas d'intervalle
+        foreach ([['rpm', '3.0.7'], ['deb', '>=3.0'], ['deb', '3.0*']] as [$ecosystem, $version]) {
+            $this->client->jsonRequest('POST', '/api/blacklist', ['ecosystem' => $ecosystem, 'name' => 'openssl', 'version' => $version]);
+            self::assertResponseStatusCodeSame(422, $version);
+        }
+        // Époque nulle implicite
+        $context = new \App\Job\JobContext($this->em()->getConnection(), 0);
+        $blacklist = static::getContainer()->get(\App\Blacklist\Blacklist::class);
+        $blacklist->reset();
+        self::assertTrue($blacklist->blocks(Ecosystem::Rpm, 'openssl', '1:3.0.7-27.el9', $context));
+        self::assertFalse($blacklist->blocks(Ecosystem::Rpm, 'openssl', '3.0.7-27.el9', $context));
+    }
+
     public function testBlacklistedVersionsAreNotDownloaded(): void
     {
         $blacklist = static::getContainer()->get(\App\Blacklist\Blacklist::class);

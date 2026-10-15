@@ -76,11 +76,11 @@ CMD ["frankenphp", "run", "--config", "/etc/frankenphp/Caddyfile"]
 FROM runtime AS collector
 ARG APP_VERSION=dev
 LABEL org.opencontainers.image.title="Rémus" \
-      org.opencontainers.image.description="Rémus, collecteur Lupa : télécharge paquets npm, Python, Composer et images Docker et prépare des bundles signés pour Romulus, le miroir hors ligne." \
+      org.opencontainers.image.description="Rémus, collecteur Lupa : télécharge paquets npm, Python, Composer, Debian, RPM, Ansible, Terraform et images Docker et prépare des bundles signés pour Romulus, le miroir hors ligne." \
       org.opencontainers.image.url="https://hub.docker.com/r/iemperor/remus" \
       org.opencontainers.image.version="${APP_VERSION}"
 COPY --from=composer:2 /usr/bin/composer /usr/local/bin/composer
-RUN apk add --no-cache nodejs npm python3 git unzip \
+RUN apk add --no-cache nodejs npm python3 git unzip xz zstd bzip2 gpgv \
  && python3 -m venv /opt/pip && /opt/pip/bin/pip install --no-cache-dir --quiet --upgrade pip
 COPY --from=front /front/dist/collector/browser /srv/front
 ENV SAS_APP=collector \
@@ -90,7 +90,8 @@ ENV SAS_APP=collector \
     npm_config_cache=/data/cache/npm \
     npm_config_update_notifier=false \
     COMPOSER_HOME=/data/cache/composer \
-    PIP_CACHE_DIR=/data/cache/pip
+    PIP_CACHE_DIR=/data/cache/pip \
+    SYSTEM_CACHE_DIR=/data/cache/system
 COPY --from=api-collector /src/app /app
 # Dossiers accessibles au groupe 0 : le conteneur peut tourner sous l'UID de l'hôte (SAS_UID, 0 en Docker rootless)
 RUN mkdir -p /data /exports /config/caddy /app/var/log \
@@ -103,13 +104,14 @@ VOLUME ["/data", "/exports"]
 FROM runtime AS mirror
 ARG APP_VERSION=dev
 LABEL org.opencontainers.image.title="Romulus" \
-      org.opencontainers.image.description="Romulus, miroir hors ligne Lupa : importe les bundles signés de Rémus et sert les dépôts npm, PyPI, Composer et Docker sur un réseau isolé." \
+      org.opencontainers.image.description="Romulus, miroir hors ligne Lupa : importe les bundles signés de Rémus et sert les dépôts npm, PyPI, Composer, Docker, apt, dnf, Ansible Galaxy et Terraform sur un réseau isolé." \
       org.opencontainers.image.url="https://hub.docker.com/r/iemperor/romulus" \
       org.opencontainers.image.version="${APP_VERSION}"
 COPY --from=front /front/dist/mirror/browser /srv/front
 ENV SAS_APP=mirror \
     INBOX_DIR=/inbox \
-    UPLOAD_DIR=/data/uploads
+    UPLOAD_DIR=/data/uploads \
+    MIRROR_KEY_DIR=/data/identity
 COPY --from=api-mirror /src/app /app
 # Dossiers accessibles au groupe 0 : le conteneur peut tourner sous l'UID de l'hôte (SAS_UID, 0 en Docker rootless)
 RUN mkdir -p /data /inbox /config/caddy /app/var/log \

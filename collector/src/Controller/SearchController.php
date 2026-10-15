@@ -25,14 +25,14 @@ final class SearchController
     #[Route('', methods: ['GET'])]
     public function search(Request $request): JsonResponse
     {
-        return $this->guard(fn () => $this->search->search($this->ecosystem($request), $request->query->getString('q')));
+        return $this->guard(fn () => $this->search->search($this->ecosystem($request), $request->query->getString('q'), 20, $request->query->getString('distribution') ?: null));
     }
 
     /** ?ecosystem=npm&name=lodash */
     #[Route('/versions', methods: ['GET'])]
     public function versions(Request $request): JsonResponse
     {
-        return $this->guard(fn () => $this->search->versions($this->ecosystem($request), $request->query->getString('name')));
+        return $this->guard(fn () => $this->search->versions($this->ecosystem($request), $request->query->getString('name'), $request->query->getString('distribution') ?: null));
     }
 
     /** Aperçu d'un motif avant de l'enregistrer : {ecosystem, line} → lignes obtenues */
@@ -43,6 +43,19 @@ final class SearchController
         $ecosystem = Ecosystem::tryFrom((string) ($data['ecosystem'] ?? '')) ?? Ecosystem::Npm;
 
         return $this->guard(function () use ($ecosystem, $data) {
+            // Debian, RPM : noms correspondants dans l'index de la distribution choisie
+            if (\in_array($ecosystem, [Ecosystem::Deb, Ecosystem::Rpm], true)) {
+                $line = trim((string) ($data['line'] ?? ''));
+                if (!\App\Search\Glob::isPattern($line)) {
+                    return ['lines' => [], 'skipped' => [], 'pattern' => false];
+                }
+                $names = $this->search->names($ecosystem, $line, (string) ($data['distribution'] ?? '') ?: null);
+                if ([] === $names) {
+                    throw new \InvalidArgumentException(sprintf('Motif « %s » : aucun paquet ne correspond.', $line));
+                }
+
+                return ['lines' => $names, 'skipped' => [], 'pattern' => true];
+            }
             $result = $this->expander->expandLine($ecosystem, (string) ($data['line'] ?? ''));
 
             return ['lines' => $result['lines'] ?? [], 'skipped' => $result['skipped'] ?? [], 'pattern' => null !== $result];

@@ -1,8 +1,9 @@
 # Romulus
 
 **Romulus** est le miroir hors ligne de **Lupa**. Sur un réseau isolé d'Internet, il sert aux postes
-de travail des dépôts **npm**, **Python (PyPI)**, **Composer** (avec les recettes **Symfony Flex**) et un
-registre **Docker**. Son contenu arrive par clé USB, sous forme de **bundles signés** produits par son
+de travail des dépôts **npm**, **Python (PyPI)**, **Composer** (avec les recettes **Symfony Flex**), un
+registre **Docker**, des dépôts système **apt** (Debian) et **dnf/yum** (AlmaLinux, CentOS), un serveur
+**Ansible Galaxy** et un miroir **Terraform** (providers, modules, binaire). Son contenu arrive par clé USB, sous forme de **bundles signés** produits par son
 jumeau [**Rémus**](https://hub.docker.com/r/iemperor/remus), le collecteur installé côté Internet.
 
 ```
@@ -37,7 +38,13 @@ d'aucun service externe : la base SQLite et les paquets sont dans le volume `/da
   - index Python « simple » PEP 503/691 (`/pypi/simple/`), pour pip et uv ;
   - Composer 2 (`/composer`) ;
   - recettes Symfony Flex (`/composer/flex`) ;
-  - registre Docker OCI en lecture seule (`/v2/`), utilisable comme *registry mirror* de Docker Hub.
+  - registre Docker OCI en lecture seule (`/v2/`), utilisable comme *registry mirror* de Docker Hub ;
+  - dépôts **apt** Debian (`/deb/<distribution>`), avec index signés par la clé de Romulus ;
+  - dépôts **dnf/yum** AlmaLinux et CentOS (`/rpm/<distribution>/<arch>`). Les paquets gardent la
+    signature de leur distribution ;
+  - **Ansible Galaxy** (`/galaxy/`, API v3) pour ansible-galaxy ;
+  - **Terraform** : miroir réseau de providers (`/terraform/providers/`), archive pour miroir local,
+    modules (`/terraform/modules/`) et binaire (`/terraform/releases/`).
 - **Alertes de sécurité :** les vulnérabilités connues relevées par Rémus (OSV.dev) au moment de l'export
   voyagent avec les paquets. Le tableau de bord, la liste des paquets et la page de chaque paquet les
   affichent (« critique », « avertissement », versions corrigées), sans accès à Internet.
@@ -60,7 +67,8 @@ d'aucun service externe : la base SQLite et les paquets sont dans le volume `/da
 
 | Tag | Contenu |
 |---|---|
-| `1.2.0`, `latest` | Quarantaine des versions de la liste noire reçue de Rémus (plus servies par les registres npm, Python, Composer et Docker ; badges, tableau de bord, liste consultable dans Réglages) |
+| `1.3.0`, `latest` | Dépôts apt (index signés par la clé de Romulus) et dnf/yum ; serveur Ansible Galaxy (API v3) ; miroir Terraform (providers en miroir réseau ou archive locale, modules, binaire) ; quarantaine étendue à ces dépôts |
+| `1.2.0` | Quarantaine des versions de la liste noire reçue de Rémus (plus servies par les registres npm, Python, Composer et Docker ; badges, tableau de bord, liste consultable dans Réglages) |
 | `1.1.0` | Alertes de sécurité transportées par les bundles (tableau de bord, paquets, détail des failles et versions corrigées), dossiers de clés illisibles signalés, détection de Docker rootless, tâches interrompues débloquées automatiquement ; docker rootless : le conteneur tourne sous l'UID de l'hôte (`SAS_UID`, détecté par `configure.sh`), clés USB lisibles quels que soient leurs droits de montage ; messages d'aide sur les droits |
 | `1.0.0` | Première version : npm, PyPI, Composer, Symfony Flex, Docker, import signé depuis clé USB ou navigateur |
 
@@ -85,19 +93,19 @@ Le serveur n'a pas Internet : l'image voyage elle aussi par clé USB.
 `configure.sh`, ce guide et des sommes de contrôle :
 
 ```bash
-tar -xf romulus-1.2.0.tar && cd romulus-1.2.0
+tar -xf romulus-1.3.0.tar && cd romulus-1.3.0
 sha256sum -c SHA256SUMS                  # la copie sur la clé n'a rien abîmé
-docker load -i romulus-1.2.0.tar.gz
+docker load -i romulus-1.3.0.tar.gz
 ./configure.sh                           # crée .env ; à relire
 ```
 
 **Ou depuis Docker Hub**, sur une machine connectée :
 
 ```bash
-docker pull iemperor/romulus:1.2.0
-docker save iemperor/romulus:1.2.0 | gzip > romulus-1.2.0.tar.gz
+docker pull iemperor/romulus:1.3.0
+docker save iemperor/romulus:1.3.0 | gzip > romulus-1.3.0.tar.gz
 # … clé USB …
-docker load -i romulus-1.2.0.tar.gz      # sur le serveur isolé
+docker load -i romulus-1.3.0.tar.gz      # sur le serveur isolé
 ```
 
 ### 2. Créer `compose.yaml`
@@ -152,7 +160,7 @@ volumes:
 ### 3. Le fichier `.env` (facultatif)
 
 ```bash
-ROMULUS_IMAGE=iemperor/romulus:1.2.0
+ROMULUS_IMAGE=iemperor/romulus:1.3.0
 
 # UID des conteneurs : 0 en Docker rootless, votre UID (id -u) sinon ; ./configure.sh le détecte
 SAS_UID=0
@@ -258,6 +266,73 @@ export SYMFONY_ENDPOINT=http://romulus:8080/composer/flex     # dans ~/.bashrc o
 
 - Les images Docker Hub se tirent alors sans changer leur nom : `docker pull nginx:1.27`.
 - Les images d'autres registres se tirent avec le préfixe du miroir : `docker pull romulus:8080/ghcr.io/owner/app:1.0`.
+
+**Ansible :** dans `ansible.cfg` (ou `~/.ansible.cfg`) :
+
+```ini
+[galaxy]
+server_list = romulus
+
+[galaxy_server.romulus]
+url = http://romulus:8080/galaxy/
+```
+
+Puis `ansible-galaxy collection install community.general`. Les rôles s'installent par l'adresse de leur
+archive, indiquée dans la page du paquet :
+
+```yaml
+roles:
+  - src: http://romulus:8080/galaxy/roles/geerlingguy.docker-7.4.1.tar.gz
+    name: geerlingguy.docker
+```
+
+**Terraform :** Terraform n'accepte un miroir réseau qu'en **HTTPS** (voir [HTTPS](#https)). Dans
+`~/.terraformrc` :
+
+```hcl
+provider_installation {
+  network_mirror {
+    url = "https://romulus.intranet/terraform/providers/"
+  }
+}
+```
+
+En HTTP, copiez les providers dans le dossier que Terraform consulte d'office, puis recommencez après
+chaque import :
+
+```bash
+mkdir -p ~/.terraform.d/plugins
+curl -s "http://romulus:8080/terraform/providers.tar?platform=linux_amd64" | tar -x -C ~/.terraform.d/plugins
+```
+
+Les modules se référencent par l'adresse de leur archive :
+`source = "http://romulus:8080/terraform/modules/terraform-aws-modules/vpc/aws/5.8.1.tar.gz"`.
+En HTTPS, le registre du miroir permet aussi `source = "romulus.intranet/terraform-aws-modules/vpc/aws"`
+avec `version = "5.8.1"`. Le binaire est sous `/terraform/releases/terraform_<version>_<os>_<arch>.zip`.
+
+**Debian (apt) :** Romulus régénère les index de ce qu'il a reçu et les signe avec sa propre clé. Installez-la
+une fois par poste, puis déclarez le dépôt. La page Utilisation donne aussi l'empreinte de la clé.
+
+```bash
+sudo install -d -m 0755 /etc/apt/keyrings
+sudo wget -qO /etc/apt/keyrings/romulus.gpg http://romulus:8080/deb/romulus.gpg
+sudo wget -qO /etc/apt/sources.list.d/romulus.sources http://romulus:8080/deb/debian-12/romulus.sources
+sudo rm -f /etc/apt/sources.list.d/debian.sources /etc/apt/sources.list    # dépôts Internet injoignables
+sudo apt update && sudo apt install nginx
+```
+
+**AlmaLinux, CentOS (dnf, yum) :** les paquets gardent la signature de la distribution (`gpgcheck=1`, la clé
+est déjà sur le poste).
+
+```bash
+sudo curl -o /etc/yum.repos.d/romulus.repo http://romulus:8080/rpm/almalinux-9/romulus.repo
+sudo dnf config-manager --set-disabled '*' && sudo dnf config-manager --set-enabled romulus-almalinux-9
+sudo dnf install nginx
+```
+
+Sur CentOS 7, remplacez `dnf config-manager` par `yum-config-manager --disable \*` puis
+`--enable romulus-centos-7`. Le fichier `.repo` contient `module_hotfixes=1` : sur EL8 et EL9, seuls les
+streams de modules collectés sont présents et dnf ne doit pas les filtrer.
 - Podman et containerd passent par `/etc/containers/registries.conf`, avec un `[[registry.mirror]]` dont
   `location = "romulus:8080"` et `insecure = true`.
 
@@ -347,9 +422,9 @@ aucune clé secrète : il ne fait que vérifier les signatures.
 Copiez le nouveau package **dans le même dossier** que le précédent. Votre `.env` est conservé.
 
 ```bash
-tar -xf romulus-1.2.0.tar --strip-components=1
+tar -xf romulus-1.3.0.tar --strip-components=1
 sha256sum -c SHA256SUMS
-docker load -i romulus-1.2.0.tar.gz
+docker load -i romulus-1.3.0.tar.gz
 ./configure.sh          # ajoute les nouvelles variables et passe à la nouvelle image ; vos réglages ne changent pas
 docker compose up -d    # migrations appliquées au démarrage ; secrets, paquets et collecteurs approuvés conservés
 ```
@@ -372,6 +447,9 @@ docker volume create romulus_data
 docker run --rm -v romulus_data:/data -v "$PWD":/backup alpine sh -c "tar -xzf /backup/romulus-data.tar.gz -C /data"
 docker compose up -d
 ```
+
+Le volume contient aussi la **clé qui signe les index apt** (`/data/identity/apt-signing.json`). Si elle est
+perdue, Romulus en crée une nouvelle, et chaque poste Debian doit réinstaller `romulus.gpg`.
 
 Romulus peut aussi être reconstruit sans sauvegarde : demandez à Rémus un **export complet**, puis
 importez-le dans un Romulus neuf.

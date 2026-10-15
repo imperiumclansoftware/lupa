@@ -22,7 +22,7 @@ import { BlacklistEntry, BlacklistInput, CollectorApi } from './api';
           </div>
           <div class="field">
             <label for="bl-version">Version précise</label>
-            <input class="input mono" id="bl-version" name="version" required [(ngModel)]="input.version" [placeholder]="input.ecosystem === 'docker' ? '1.27.3' : '4.17.20'" />
+            <input class="input mono" id="bl-version" name="version" required [(ngModel)]="input.version" [placeholder]="versionPlaceholder()" />
           </div>
         </div>
         <div class="field">
@@ -59,8 +59,12 @@ export class BlacklistDialog {
     this.dialog().open();
   }
 
+  protected versionPlaceholder(): string {
+    return ({ npm: '4.17.20', pypi: '4.2.1', composer: '3.5.0', docker: '1.27.3', deb: '3.0.15-1~deb12u1', rpm: '1:3.0.7-27.el9', galaxy: '8.2.0', terraform: '5.31.0' } as Record<EcosystemId, string>)[this.input.ecosystem];
+  }
+
   protected placeholder(): string {
-    return ({ npm: 'lodash', pypi: 'django', composer: 'monolog/monolog', docker: 'nginx ou ghcr.io/org/app' } as Record<EcosystemId, string>)[this.input.ecosystem];
+    return ({ npm: 'lodash', pypi: 'django', composer: 'monolog/monolog', docker: 'nginx ou ghcr.io/org/app', deb: 'openssl', rpm: 'openssl', galaxy: 'community.general', terraform: 'hashicorp/aws' } as Record<EcosystemId, string>)[this.input.ecosystem];
   }
 
   protected async submit(): Promise<void> {

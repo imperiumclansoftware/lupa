@@ -8,6 +8,10 @@ enum Ecosystem: string
     case Pypi = 'pypi';
     case Composer = 'composer';
     case Docker = 'docker';
+    case Deb = 'deb';
+    case Rpm = 'rpm';
+    case Galaxy = 'galaxy';
+    case Terraform = 'terraform';
 
     public function label(): string
     {
@@ -16,6 +20,10 @@ enum Ecosystem: string
             self::Pypi => 'Python (PyPI)',
             self::Composer => 'Composer',
             self::Docker => 'Docker',
+            self::Deb => 'Debian (apt)',
+            self::Rpm => 'RPM (AlmaLinux, CentOS)',
+            self::Galaxy => 'Ansible Galaxy',
+            self::Terraform => 'Terraform',
         };
     }
 }

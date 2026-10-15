@@ -1,7 +1,8 @@
 # Lupa — Rémus & Romulus
 
-Dépôts de paquets **hors ligne** pour un réseau isolé d'Internet : npm, Python (PyPI), Composer et
-images Docker. Deux applications web jumelles, reliées par une clé USB :
+Dépôts de paquets **hors ligne** pour un réseau isolé d'Internet : npm, Python (PyPI), Composer,
+images Docker, paquets système Debian (apt) et RPM (AlmaLinux, CentOS : dnf, yum), collections et rôles
+Ansible Galaxy, providers et modules Terraform. Deux applications web jumelles, reliées par une clé USB :
 
 - **Rémus**, le collecteur : il franchit la limite et rapporte les paquets d'Internet ;
 - **Romulus**, le miroir : il garde l'enceinte du réseau isolé et ne laisse entrer que ce qui est signé.
@@ -37,6 +38,10 @@ Images Docker : [`iemperor/remus`](https://hub.docker.com/r/iemperor/remus) et [
 | Composer | archives des versions résolues (contrainte de version PHP en option) | dépôt `composer` `http://miroir/composer` (format p2) |
 | Symfony Flex | recettes des paquets collectés (officielles et contrib) | `SYMFONY_ENDPOINT=http://miroir/composer/flex` |
 | Docker | index multi-plateformes d'origine + plateformes choisies + attestations | `docker pull miroir/library/nginx:1.27` ou `registry-mirrors` |
+| Debian 12, 13 | paquets choisis et leurs dépendances (Depends, Pre-Depends, Recommends en option), amd64/arm64 | `deb [signed-by=…/romulus.gpg] http://miroir/deb/debian-12 bookworm main` |
+| Ansible Galaxy | collections (dépendances comprises, sha256 vérifié) et rôles ; requirements.yml accepté | `ansible-galaxy collection install -s http://miroir/galaxy/ …` |
+| Terraform | providers des plateformes choisies (SHA256SUMS signé vérifié), modules (GitHub), binaire terraform ; .terraform.lock.hcl accepté | `network_mirror` (HTTPS) ou `~/.terraform.d/plugins` ; modules par URL ou registre |
+| AlmaLinux 8/9/10, CentOS Stream 9/10, CentOS 7/8 (vault) | paquets choisis et leurs dépendances (capacités, fichiers, dépendances booléennes, streams de modules EL8/EL9) | `baseurl=http://miroir/rpm/almalinux-9/$basearch/` (`/rpm/<distribution>/romulus.repo`) |
 
 ## Recherche, motifs et sécurité
 
@@ -46,6 +51,21 @@ Images Docker : [`iemperor/remus`](https://hub.docker.com/r/iemperor/remus) et [
   développés au moment de la mise à jour (`PatternExpander`). Les paquets sans version compatible sont
   écartés avec les règles exactes de chaque écosystème (`VersionFilter` : semver de npm, composer/semver,
   packaging de pip).
+- **Paquets système** (`collector/src/System/`, `DebResolver`, `RpmResolver`) : Rémus lit les index
+  officiels après en avoir vérifié la signature avec gpgv et les clés livrées (`collector/resources/keys`,
+  aucune clé téléchargée) : `InRelease` Debian, `repomd.xml.asc` RPM. Il résout ensuite lui-même les
+  dépendances comme apt ou dnf le feraient sur un système vide. Les index RPM sont lus dans les bases
+  `primary.sqlite` ; ceux d'EL8/EL9 dans `modules.yaml` (streams par défaut, contextes). Romulus
+  (`mirror/src/Registry/SystemRepositories.php`) régénère `Packages`/`Release` et `repodata`. Il signe les
+  index apt avec sa propre clé OpenPGP Ed25519 (`OpenPgp.php`, en PHP, sans gpg). Les RPM gardent la
+  signature de leur distribution, vérifiée par dnf sur le poste.
+- **Ansible Galaxy** (`GalaxyResolver`) : API v3 de galaxy.ansible.com, dépendances suivies
+  (contraintes évaluées avec composer/semver, `Constraint`). Romulus (`GalaxyController`) sert une API v3
+  minimale compatible avec ansible-galaxy. Les rôles viennent de GitHub et s'installent par leur URL.
+- **Terraform** (`TerraformResolver`) : le fichier SHA256SUMS de chaque provider est vérifié avec gpgv,
+  d'abord avec la clé HashiCorp livrée, sinon avec la clé de l'éditeur publiée par le registre. Les
+  modules GitHub sont réempaquetés, module à la racine. Romulus (`TerraformController`) sert le
+  protocole « network mirror », une archive « filesystem mirror » et le registre de modules.
 - **Liste noire** (`collector/src/Blacklist/`) : versions précises refusées par les résolveurs et exclues
   des exports ; liste complète et révision dans le manifeste signé (`Manifest::$blacklist`). Romulus
   l'applique à l'import (`mirror/src/Quarantine/`) et ses registres filtrent les versions en quarantaine.
@@ -176,6 +196,14 @@ développement, `make up` fait de même avec le `.env` du projet.
   autre que celle du collecteur ; l'option « sources (sdist) » ajoute les sources des versions retenues.
 - npm : yarn.lock et pnpm-lock.yaml ne sont pas lus (utiliser les noms de paquets ou un package-lock.json).
 - Docker : les couches « non redistribuables » (images Windows) sont ignorées.
+- Paquets système : seuls les dépôts officiels des distributions sont pris en charge, pas encore EPEL ni
+  les dépôts tiers (Docker CE, PGDG…), ni Ubuntu. L'analyse de sécurité OSV.dev ne couvre pas encore ces
+  paquets. Les dépendances sont résolues pour un système vide : la bibliothèque C et les autres paquets de
+  base sont aussi collectés, ce qui garantit l'installation sur un poste moins à jour.
+- Ansible : les dépendances des rôles (meta/main.yml) ne sont pas suivies, ni les collections et rôles
+  hors Galaxy (git, URL). Terraform : les modules qu'un module appelle ne sont pas suivis ; seuls les
+  modules hébergés sur GitHub ou en archive .tar.gz sont pris en charge. Le miroir réseau de providers
+  exige HTTPS ; en HTTP, utiliser l'archive /terraform/providers.tar.
 - Liste noire : une version interdite n'est pas remplacée automatiquement. Si npm, pip ou Composer
   l'avaient retenue comme dépendance, elle manque simplement (le journal la signale) ; fixez une autre
   version dans la liste. La quarantaine bloque les manifestes Docker, pas les couches partagées.

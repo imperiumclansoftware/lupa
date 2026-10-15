@@ -79,6 +79,13 @@ final class Presenter
             'detail' => match ($package->getEcosystem()->value) {
                 'docker' => implode(', ', array_diff(array_column($metadata['manifests'] ?? [], 'platform'), ['attestation'])),
                 'pypi' => isset($metadata['requiresPython']) ? 'Python '.$metadata['requiresPython'] : null,
+                'galaxy' => 'role' === ($metadata['type'] ?? null) ? 'Rôle · /galaxy/roles/'.basename((string) $package->getFilename()) : 'Collection',
+                'terraform' => match ($metadata['kind'] ?? null) {
+                    'provider' => 'Provider · '.($metadata['os'] ?? '').'_'.($metadata['arch'] ?? ''),
+                    'cli' => 'Binaire · '.($metadata['os'] ?? '').'_'.($metadata['arch'] ?? '').' · /terraform/releases/'.$package->getFilename(),
+                    default => 'Module',
+                },
+                'deb', 'rpm' => trim(sprintf('%s · %s', \Sas\Bundle\Distributions::find((string) ($metadata['distribution'] ?? ''))['label'] ?? '', $metadata['architecture'] ?? ''), ' ·'),
                 default => null,
             },
             'digest' => $metadata['digest'] ?? null,

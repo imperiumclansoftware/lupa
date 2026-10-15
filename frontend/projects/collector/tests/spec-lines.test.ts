@@ -55,3 +55,18 @@ test('nettoyage des doublons existants : première occurrence gardée', () => {
   assert.deepEqual(duplicates(text, 'pypi'), ['django', 'gunicorn']);
   assert.equal(removeDuplicates(text, 'pypi'), 'django\nflask\n\ngunicorn');
 });
+
+test('Debian et RPM : nom du paquet, sans version ni stream', () => {
+  assert.equal(lineKey('nginx=1.22.1-9', 'deb'), 'nginx');
+  assert.equal(lineKey('Curl', 'deb'), 'curl');
+  assert.equal(lineKey('nginx = 1.20.1', 'rpm'), 'nginx');
+  assert.equal(lineKey('@nodejs:20', 'rpm'), '@nodejs');
+  assert.equal(addLines('nginx\ngit', ['nginx=1.26', 'curl'], 'rpm'), 'nginx\ngit\ncurl');
+});
+
+test('Ansible Galaxy et Terraform : nom sans contrainte', () => {
+  assert.equal(lineKey('community.general >=8.0.0', 'galaxy'), 'community.general');
+  assert.equal(lineKey('role:geerlingguy.docker 7.4.1', 'galaxy'), 'role:geerlingguy.docker');
+  assert.equal(lineKey('hashicorp/aws ~> 5.0', 'terraform'), 'hashicorp/aws');
+  assert.equal(addLines('hashicorp/aws', ['hashicorp/aws ~> 5.0', 'terraform ~> 1.9'], 'terraform'), 'hashicorp/aws\nterraform ~> 1.9');
+});

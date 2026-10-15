@@ -17,7 +17,7 @@ export function specLines(text: string): string[] {
  * Clé d'identité d'une ligne :
  *  - Python : nom normalisé (PEP 503), sans version ni extras : « Django>=5 » et « django » → « django » ;
  *  - Docker : référence complète normalisée : « nginx » et « docker.io/library/nginx:latest » → « nginx:latest » ;
- *  - npm, Composer : nom du paquet, en minuscules.
+ *  - npm, Composer, Debian, RPM : nom du paquet, en minuscules.
  */
 export function lineKey(line: string, ecosystem: EcosystemId): string {
   const value = line.trim().replace(/\s+#.*$/, '');
@@ -37,6 +37,14 @@ export function lineKey(line: string, ecosystem: EcosystemId): string {
     }
     case 'composer':
       return value.split(/[\s:]/)[0].toLowerCase();
+    case 'galaxy':
+    case 'terraform':
+      // « community.general >=8 » → « community.general » ; « hashicorp/aws ~> 5 » → « hashicorp/aws »
+      return value.split(/\s/)[0].toLowerCase();
+    case 'deb':
+    case 'rpm':
+      // « nginx=1.22 » → « nginx » ; « @nodejs:20 » (module EL8) → « @nodejs »
+      return value.split(/[\s=:]/)[0].toLowerCase();
   }
 }
 

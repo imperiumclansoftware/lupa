@@ -1,7 +1,8 @@
 # Rémus
 
 **Rémus** est le collecteur de **Lupa**. Il permet d'installer des paquets **npm**, **Python (PyPI)**,
-**Composer** et des **images Docker** sur un réseau isolé d'Internet. Installé sur une machine connectée,
+**Composer**, des **images Docker**, des paquets système **Debian** et **RPM** (AlmaLinux, CentOS), des
+collections **Ansible Galaxy** et des providers et modules **Terraform** sur un réseau isolé d'Internet. Installé sur une machine connectée,
 il télécharge les paquets et toutes leurs dépendances, puis prépare des **bundles signés** à copier sur
 une clé USB. De l'autre côté, son jumeau [**Romulus**](https://hub.docker.com/r/iemperor/romulus) importe
 ces bundles et sert les dépôts aux postes du réseau isolé.
@@ -45,7 +46,7 @@ les fichiers sont dans le volume `/data`.
   GitHub, PyPA, npm, Packagist) après chaque mise à jour, ou à la demande. Gravité « critique » ou
   « avertissement », versions corrigées, page **Sécurité** dédiée. Les alertes voyagent dans les bundles :
   Romulus les affiche sur le réseau isolé.
-- **Liste noire :** des versions précises (`lodash 4.17.20`, `nginx 1.25.3`) sont interdites de téléchargement
+- **Liste noire :** des versions précises (y compris Debian et RPM, `openssl 1:3.0.7-27.el9`) (`lodash 4.17.20`, `nginx 1.25.3`) sont interdites de téléchargement
   et d'export (Réglages › Liste noire, ou bouton « Interdire » sur la page Sécurité et dans chaque liste).
   La liste voyage, signée, dans chaque bundle. Romulus met ces versions en **quarantaine** : elles ne sont
   plus servies, même si elles avaient été importées avant. Un bundle sans nouveau paquet suffit à
@@ -61,6 +62,21 @@ les fichiers sont dans le volume `/data`.
   L'authentification se fait par identifiant et mot de passe ou par jeton. Le bouton **Tester** vérifie
   l'accès et les identifiants avant l'enregistrement. Les secrets sont chiffrés dans la base et ne sont
   jamais réaffichés.
+- **Paquets système Debian et RPM :** Debian 12 et 13, AlmaLinux 8, 9 et 10, CentOS Stream 9 et 10,
+  CentOS 7 et 8 (dépôts figés de vault.centos.org). On choisit des paquets (`nginx`, `postgresql`, motifs
+  `python3-*`, versions exactes `curl=7.88.1-10+deb12u8`, streams de modules `@nodejs:20` sur EL8). Rémus
+  ajoute leurs dépendances comme le feraient apt ou dnf sur un système vide.
+  - Architectures : amd64 / x86_64 par défaut, arm64 / aarch64 en option.
+  - Sections Debian ou dépôts BaseOS, AppStream, CRB… au choix.
+  - Les index officiels ne sont acceptés qu'avec une signature valide des clés Debian, AlmaLinux ou CentOS
+    livrées avec l'image, et chaque paquet est vérifié par son sha256.
+- **Ansible Galaxy :** collections (`community.general >=8.0.0`, dépendances comprises, sha256 vérifié) et
+  rôles (`role:geerlingguy.docker 7.4.1`). Un `requirements.yml` peut être importé.
+- **Terraform :**
+  - providers (`hashicorp/aws ~> 5.0`) pour les plateformes choisies, Linux amd64 par défaut. Le fichier
+    SHA256SUMS signé par l'éditeur est vérifié avec GPG.
+  - modules (`terraform-aws-modules/vpc/aws 5.8.1`) et le binaire `terraform`.
+  - Un `.terraform.lock.hcl` peut être importé.
 - **Python multi-plateformes :** des wheels pour chaque cible voulue. Versions de Python de 3.9 à 3.14 ;
   plateformes Linux glibc ou musl (x86_64, ARM64), Windows et macOS. Les sources (sdist) sont disponibles en option.
 - **Docker :** les plateformes à collecter sont au choix (amd64, arm64…). L'index multi-plateformes d'origine
@@ -76,7 +92,8 @@ les fichiers sont dans le volume `/data`.
 
 | Tag | Contenu |
 |---|---|
-| `1.2.0`, `latest` | Liste noire de versions interdites (ni téléchargées, ni exportées, transmise signée à Romulus), dépôts sources privés (npm par portée, index Python, dépôts Composer, registres Docker ; identifiants chiffrés, test de connexion), cible par défaut Linux amd64 |
+| `1.3.0`, `latest` | Paquets système Debian (12, 13) et RPM (AlmaLinux 8/9/10, CentOS Stream 9/10, CentOS 7/8) avec résolution des dépendances et index signés vérifiés ; collections et rôles Ansible Galaxy ; providers, modules et binaire Terraform (signatures vérifiées) ; listes prêtes à l'emploi |
+| `1.2.0` | Liste noire de versions interdites (ni téléchargées, ni exportées, transmise signée à Romulus), dépôts sources privés (npm par portée, index Python, dépôts Composer, registres Docker ; identifiants chiffrés, test de connexion), cible par défaut Linux amd64 |
 | `1.1.0` | Recherche dans les registres, motifs de noms (`*`, `?`), alertes de sécurité OSV.dev transportées jusqu'à Romulus, listes prédéfinies cumulables sans doublon, tâches interrompues par un redémarrage débloquées automatiquement ; docker rootless : le conteneur tourne sous l'UID de l'hôte (`SAS_UID`, détecté par `configure.sh`), les exports vers un dossier de l'hôte fonctionnent sans changer ses droits ; messages d'aide sur les droits |
 | `1.0.0` | Première version : npm, PyPI, Composer, Docker, modèles de framework, recettes Symfony Flex, bundles signés et découpables |
 
@@ -94,7 +111,7 @@ docker run -d --name remus --restart unless-stopped \
   -p 127.0.0.1:8080:8080 \
   -v remus-data:/data \
   -v "$PWD/exports:/exports" \
-  iemperor/remus:1.2.0
+  iemperor/remus:1.3.0
 docker logs remus 2>&1 | grep "Code d'installation"
 ```
 
@@ -176,7 +193,7 @@ Toutes les valeurs ont un défaut : ce fichier ne sert qu'à les changer.
 
 ```bash
 # Version de l'image
-REMUS_IMAGE=iemperor/remus:1.2.0
+REMUS_IMAGE=iemperor/remus:1.3.0
 
 # UID des conteneurs : 0 en Docker rootless, votre UID (id -u) sinon ; ./configure.sh le détecte
 SAS_UID=0
