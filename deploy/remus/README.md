@@ -92,10 +92,10 @@ les fichiers sont dans le volume `/data`.
 
 | Tag | Contenu |
 |---|---|
-| `1.3.0`, `latest` | Paquets système Debian (12, 13) et RPM (AlmaLinux 8/9/10, CentOS Stream 9/10, CentOS 7/8) avec résolution des dépendances et index signés vérifiés ; collections et rôles Ansible Galaxy ; providers, modules et binaire Terraform (signatures vérifiées) ; listes prêtes à l'emploi |
-| `1.2.0` | Liste noire de versions interdites (ni téléchargées, ni exportées, transmise signée à Romulus), dépôts sources privés (npm par portée, index Python, dépôts Composer, registres Docker ; identifiants chiffrés, test de connexion), cible par défaut Linux amd64 |
-| `1.1.0` | Recherche dans les registres, motifs de noms (`*`, `?`), alertes de sécurité OSV.dev transportées jusqu'à Romulus, listes prédéfinies cumulables sans doublon, tâches interrompues par un redémarrage débloquées automatiquement ; docker rootless : le conteneur tourne sous l'UID de l'hôte (`SAS_UID`, détecté par `configure.sh`), les exports vers un dossier de l'hôte fonctionnent sans changer ses droits ; messages d'aide sur les droits |
-| `1.0.0` | Première version : npm, PyPI, Composer, Docker, modèles de framework, recettes Symfony Flex, bundles signés et découpables |
+| `1.3.0`, `latest` | Paquets Debian et RPM (AlmaLinux, CentOS), Ansible Galaxy, Terraform |
+| `1.2.0` | Liste noire, dépôts sources privés, cible par défaut Linux amd64 |
+| `1.1.0` | Recherche dans les registres, motifs de noms, alertes de sécurité OSV.dev, prise en charge de Docker rootless (`SAS_UID`) |
+| `1.0.0` | Première version : npm, PyPI, Composer, Docker, modèles de framework, bundles signés |
 
 Plateforme : `linux/amd64`. Image associée : [`iemperor/romulus`](https://hub.docker.com/r/iemperor/romulus)
 (même version recommandée).
