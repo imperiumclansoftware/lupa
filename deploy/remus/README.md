@@ -60,8 +60,7 @@ les fichiers sont dans le volume `/data`.
 
 | Tag | Contenu |
 |---|---|
-| `1.1.0`, `latest` | Recherche dans les registres, motifs de noms (`*`, `?`), alertes de sécurité OSV.dev transportées jusqu'à Romulus, listes prédéfinies cumulables sans doublon, tâches interrompues par un redémarrage débloquées automatiquement |
-| `1.0.1` | Docker rootless : le conteneur tourne sous l'UID de l'hôte (`SAS_UID`, détecté par `configure.sh`), les exports vers un dossier de l'hôte fonctionnent sans changer ses droits ; messages d'aide sur les droits |
+| `1.1.0`, `latest` | Recherche dans les registres, motifs de noms (`*`, `?`), alertes de sécurité OSV.dev transportées jusqu'à Romulus, listes prédéfinies cumulables sans doublon, tâches interrompues par un redémarrage débloquées automatiquement ; docker rootless : le conteneur tourne sous l'UID de l'hôte (`SAS_UID`, détecté par `configure.sh`), les exports vers un dossier de l'hôte fonctionnent sans changer ses droits ; messages d'aide sur les droits |
 | `1.0.0` | Première version : npm, PyPI, Composer, Docker, modèles de framework, recettes Symfony Flex, bundles signés et découpables |
 
 Plateforme : `linux/amd64`. Image associée : [`iemperor/romulus`](https://hub.docker.com/r/iemperor/romulus)
