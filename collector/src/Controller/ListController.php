@@ -2,6 +2,7 @@
 
 namespace App\Controller;
 
+use App\Blacklist\Blacklist;
 use App\Dto\ListInput;
 use App\Entity\Artifact;
 use App\Entity\Job;
@@ -32,6 +33,7 @@ final class ListController
         private readonly JobLauncher $launcher,
         #[AutowireIterator('app.resolver')]
         private readonly iterable $resolvers,
+        private readonly Blacklist $blacklist,
     ) {
     }
 
@@ -130,7 +132,7 @@ final class ListController
         $artifacts = $list->getArtifacts()->toArray();
         usort($artifacts, static fn (Artifact $a, Artifact $b) => [$a->getName(), $a->getVersion(), $a->getFilename()] <=> [$b->getName(), $b->getVersion(), $b->getFilename()]);
 
-        return new JsonResponse(array_map(static fn (Artifact $a) => Presenter::artifact($a, null !== $a->getSeverity()), $artifacts));
+        return new JsonResponse(array_map(fn (Artifact $a) => Presenter::artifact($a, null !== $a->getSeverity(), $this->blacklist->find($a->getEcosystem(), $a->getName(), $a->getVersion())), $artifacts));
     }
 
     private function save(PackageList $list, ListInput $input, int $status): JsonResponse

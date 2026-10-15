@@ -1,14 +1,15 @@
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, signal, viewChild } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import {
   DateTimePipe, Eco, EcosystemPipe, Icon, JobProgress, RelativePipe, SEVERITY_LABELS, SeverityBadge, Toasts, alertLevel, errorMessage, isActive, poll,
 } from '@sas/shared';
 import { CollectorApi, SecurityItem, SecurityReport } from '../api';
+import { BlacklistDialog } from '../blacklist-dialog';
 
 type Filter = 'all' | 'critical' | 'warning' | 'low';
 
 @Component({
-  imports: [RouterLink, Icon, Eco, SeverityBadge, JobProgress, RelativePipe, DateTimePipe, EcosystemPipe],
+  imports: [BlacklistDialog, RouterLink, Icon, Eco, SeverityBadge, JobProgress, RelativePipe, DateTimePipe, EcosystemPipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="page">
@@ -69,6 +70,11 @@ type Filter = 'all' | 'critical' | 'warning' | 'low';
                         </span>
                       </span>
                       <span class="fix">@if (fixHint(item); as f) { Corrigé en <strong class="mono">{{ f }}</strong> }</span>
+                      @if (item.blacklisted) {
+                        <span class="badge badge-danger" [title]="item.blacklisted.reason">Liste noire</span>
+                      } @else {
+                        <button type="button" class="btn btn-ghost btn-sm ban" (click)="ban($event, item)" title="Interdire cette version : plus téléchargée, plus exportée, quarantaine dans Romulus"><sas-icon name="lock" />Interdire</button>
+                      }
                       <sas-severity [severity]="item.severity" [count]="item.vulnerabilityCount" />
                       <sas-icon class="chev" name="chevron" [size]="16" />
                     </summary>
@@ -97,8 +103,10 @@ type Filter = 'all' | 'critical' | 'warning' | 'low';
         <p class="subtle">Les images Docker ne sont pas analysées : leurs failles se trouvent dans les paquets du système, qui demandent un scanner d’images dédié.</p>
       }
     </div>
+    <sas-blacklist-dialog #banDialog (added)="refresh()" />
   `,
   styles: `
+    .ban { white-space: nowrap; }
     .stats { grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); }
     button.stat { border: none; text-align: left; font: inherit; color: inherit; cursor: pointer; transition-property: box-shadow, transform; transition-duration: 160ms; }
     button.stat:hover { box-shadow: var(--shadow-hover); transform: translateY(-1px); }
@@ -148,6 +156,18 @@ export default class SecurityPage {
       }
       return this.wasActive;
     });
+  }
+
+  private readonly banDialog = viewChild.required<BlacklistDialog>('banDialog');
+
+  protected ban(event: Event, item: SecurityItem): void {
+    event.preventDefault();
+    event.stopPropagation();
+    this.banDialog().open({ ecosystem: item.ecosystem, name: item.name, version: item.version, reason: item.vulnerabilities.map((v) => v.id).slice(0, 3).join(', ') });
+  }
+
+  protected async refresh(): Promise<void> {
+    this.data.set(await this.api.security());
   }
 
   protected setFilter(filter: Filter): void {

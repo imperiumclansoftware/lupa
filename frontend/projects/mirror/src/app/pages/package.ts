@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, OnInit, computed, inject, input, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { BytesPipe, SeverityBadge, CopyButton, EcosystemPipe, Icon, RelativePipe, errorMessage, Eco } from '@sas/shared';
-import { MirrorApi, PackageDetail } from '../api';
+import { MirrorApi, PackageDetail, PackageVersion } from '../api';
 import { installCommand } from '../clients';
 
 @Component({
@@ -23,7 +23,7 @@ import { installCommand } from '../clients';
       @if (error()) { <div class="alert alert-danger">{{ error() }}</div> }
 
       @if (data(); as d) {
-        @if (d.items[0]; as latest) {
+        @if (installable(); as latest) {
           <section class="card card-body stack">
             <h2>Installer</h2>
             <div class="cmd"><pre class="kbd-block">{{ command(latest.version) }}</pre><sas-copy [text]="command(latest.version)" /></div>
@@ -61,8 +61,11 @@ import { installCommand } from '../clients';
               <tbody>
                 @for (v of d.items; track v.id) {
                   <tr>
-                    <td class="mono">{{ v.version }}</td>
+                    <td class="mono">{{ v.version }}
+                      @if (v.quarantine; as q) { <div><span class="badge badge-danger" [title]="'Liste noire de ' + q.collectorName">Quarantaine</span></div> }
+                    </td>
                     <td class="detail">
+                      @if (v.quarantine; as q) { <div class="quarantine">Plus servie par le registre{{ q.reason ? ' : ' + q.reason : '' }}</div> }
                       @if (v.filename) { <span class="mono">{{ v.filename }}</span> }
                       {{ v.detail }}
                       @if (v.digest) { <div class="subtle mono">{{ v.digest.slice(0, 19) }}…</div> }
@@ -71,7 +74,7 @@ import { installCommand } from '../clients';
                     <td><sas-severity [severity]="v.severity" [count]="v.vulnerabilities.length" /></td>
                     <td>@if (v.bundleSequence) { <span class="badge">n° {{ v.bundleSequence }}</span> }</td>
                     <td class="subtle">{{ v.updatedAt | relative }}</td>
-                    <td class="right"><sas-copy [text]="command(v.version)" /></td>
+                    <td class="right">@if (!v.quarantine) { <sas-copy [text]="command(v.version)" /> }</td>
                   </tr>
                 }
               </tbody>
@@ -82,6 +85,7 @@ import { installCommand } from '../clients';
     </div>
   `,
   styles: `
+    .quarantine { color: var(--danger); font-size: 0.86rem; }
     .back { display: inline-flex; align-items: center; gap: 4px; text-decoration: none; margin-bottom: 6px; }
     .name { overflow-wrap: anywhere; }
     .meta { flex-wrap: wrap; color: var(--text-2); }
@@ -111,6 +115,11 @@ export default class PackagePage implements OnInit {
     } catch (e) {
       this.error.set(errorMessage(e));
     }
+  }
+
+  /** Version la plus récente servie (hors quarantaine) */
+  protected installable(): PackageVersion | undefined {
+    return this.data()?.items.find((v) => !v.quarantine);
   }
 
   protected command(version: string): string {

@@ -2,6 +2,7 @@
 
 namespace App\Controller;
 
+use App\Quarantine\Quarantine;
 use App\Registry\Files;
 use App\Repository\OciManifestRepository;
 use App\Repository\PackageRepository;
@@ -25,6 +26,7 @@ final class DockerRegistryController
         private readonly OciManifestRepository $manifests,
         private readonly Connection $db,
         private readonly Files $files,
+        private readonly Quarantine $quarantine,
     ) {
     }
 
@@ -54,6 +56,7 @@ final class DockerRegistryController
                 return self::error('NAME_UNKNOWN', 'Dépôt absent du miroir.', 404);
             }
             $tags = $this->db->fetchFirstColumn("SELECT version FROM package WHERE ecosystem = 'docker' AND name = ? AND version NOT LIKE 'sha256:%' ORDER BY version", [$name]);
+            $tags = array_values(array_filter($tags, fn ($tag) => null === $this->quarantine->find(Ecosystem::Docker, $name, (string) $tag)));
 
             return new JsonResponse(['name' => $m[1], 'tags' => $tags]);
         }
@@ -98,6 +101,12 @@ final class DockerRegistryController
             }
             $digest = (string) $package->getMetadata()['digest'];
             $mediaType = (string) $package->getMetadata()['mediaType'];
+        }
+
+        // Étiquette interdite, ou image interdite tirée par son empreinte ou sous une autre étiquette
+        $entry = (str_starts_with($reference, 'sha256:') ? null : $this->quarantine->find(Ecosystem::Docker, $name, $reference)) ?? $this->quarantine->digest($digest);
+        if ($entry) {
+            return self::error('DENIED', sprintf('Image %s:%s en quarantaine (liste noire)%s', $entry->getName(), $entry->getVersion(), '' !== $entry->getReason() ? ' : '.$entry->getReason() : ''), 403);
         }
 
         $response = $this->files->serve(substr($digest, 7), $mediaType);

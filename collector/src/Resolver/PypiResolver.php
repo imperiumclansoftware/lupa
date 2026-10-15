@@ -2,9 +2,11 @@
 
 namespace App\Resolver;
 
+use App\Blacklist\Blacklist;
 use App\Entity\PackageList;
 use App\Http\Downloader;
 use App\Job\JobContext;
+use App\Source\Sources;
 use Sas\Bundle\Ecosystem;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 
@@ -18,6 +20,8 @@ final readonly class PypiResolver implements Resolver
     public function __construct(
         private Downloader $downloader,
         private ArtifactCatalog $catalog,
+        private Blacklist $blacklist,
+        private Sources $sources,
         #[Autowire('%env(PYPI_INDEX)%')]
         private string $index,
         #[Autowire('%env(PIP_BIN)%')]
@@ -81,7 +85,7 @@ final readonly class PypiResolver implements Resolver
                 $command = [
                     $this->pip, 'install', '--dry-run', '--ignore-installed', '--quiet', '--no-input',
                     '--report', $report, '--target', $dir.'/target',
-                    '--index-url', rtrim($this->index, '/').'/simple',
+                    ...$this->sources->pipIndexOptions($this->index),
                     '--only-binary=:all:', '--implementation', 'cp', '--python-version', $target['python'],
                 ];
                 foreach (PypiPlatforms::tags($target['platform']) as $tag) {
@@ -118,6 +122,9 @@ final readonly class PypiResolver implements Resolver
         $done = 0;
         foreach ($files as $file) {
             ++$done;
+            if ($this->blacklist->blocks(Ecosystem::Pypi, $file['name'], $file['version'], $context)) {
+                continue;
+            }
             $artifact = $this->catalog->complete(Ecosystem::Pypi, $file['name'], $file['version'], $file['filename']);
             if (!$artifact) {
                 $context->report('Téléchargement '.$file['filename'], 40 + (int) ($done * 60 / \count($files)));
@@ -191,7 +198,13 @@ final readonly class PypiResolver implements Resolver
         }
         $sdists = [];
         foreach ($versions as $file) {
-            $data = $this->downloader->json(sprintf('%s/pypi/%s/%s/json', rtrim($this->index, '/'), $file['name'], $file['version']));
+            try {
+                $data = $this->downloader->json(sprintf('%s/pypi/%s/%s/json', rtrim($this->index, '/'), $file['name'], $file['version']));
+            } catch (\App\Http\DownloadException) {
+                // Paquet d'un dépôt privé (l'API JSON n'existe que sur PyPI) : pas de sources
+                $context->log(sprintf('Pas de sources trouvées sur PyPI pour %s %s.', $file['displayName'], $file['version']));
+                continue;
+            }
             $found = false;
             foreach ($data['urls'] ?? [] as $url) {
                 if ('sdist' === ($url['packagetype'] ?? null) && !($url['yanked'] ?? false)) {

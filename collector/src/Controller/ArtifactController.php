@@ -2,6 +2,7 @@
 
 namespace App\Controller;
 
+use App\Blacklist\Blacklist;
 use App\Entity\Artifact;
 use App\Repository\ArtifactRepository;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -13,8 +14,10 @@ final class ArtifactController
 {
     private const int PAGE_SIZE = 100;
 
-    public function __construct(private readonly ArtifactRepository $artifacts)
-    {
+    public function __construct(
+        private readonly ArtifactRepository $artifacts,
+        private readonly Blacklist $blacklist,
+    ) {
     }
 
     /** Recherche paginée : ?ecosystem=npm&q=lodash&pending=1&page=2 */
@@ -37,7 +40,7 @@ final class ArtifactController
         $items = $qb->setFirstResult(($page - 1) * self::PAGE_SIZE)->setMaxResults(self::PAGE_SIZE)->getQuery()->getResult();
 
         return new JsonResponse([
-            'items' => array_map(Presenter::artifact(...), $items),
+            'items' => array_map(fn (Artifact $a) => Presenter::artifact($a, false, $this->blacklist->find($a->getEcosystem(), $a->getName(), $a->getVersion())), $items),
             'total' => $total,
             'page' => $page,
             'pageSize' => self::PAGE_SIZE,

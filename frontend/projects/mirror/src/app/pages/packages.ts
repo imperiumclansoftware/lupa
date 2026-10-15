@@ -46,7 +46,7 @@ import { MirrorApi, Page, PackageSummary } from '../api';
                       <td><span class="row"><sas-eco [ecosystem]="p.ecosystem" [size]="26" />{{ p.ecosystem | ecosystem }}</span></td>
                       <td class="right num">{{ p.versions }}@if (p.files !== p.versions) { <span class="subtle"> · {{ p.files }} fichiers</span> }</td>
                       <td class="right num">{{ p.size | bytes }}</td>
-                      <td><sas-severity [severity]="p.severity" /></td>
+                      <td><sas-severity [severity]="p.severity" />@if (p.quarantined) { <span class="badge badge-danger" title="Versions de la liste noire, plus servies par le registre">{{ p.quarantined }} en quarantaine</span> }</td>
                       <td class="subtle">{{ p.updatedAt | relative }}</td>
                     </tr>
                   }

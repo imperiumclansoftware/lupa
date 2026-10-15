@@ -22,12 +22,14 @@ final class RegistryEndToEndTest extends MirrorWebTestCase
     private array $data = [];
     /** @var array<string, string> sha256 des fichiers par rôle */
     private array $sha = [];
+    /** @var array{secretKey: string, publicKey: string} */
+    private array $keys;
 
     protected function setUp(): void
     {
         parent::setUp();
 
-        $keys = Signer::generateKeyPair();
+        $keys = $this->keys = Signer::generateKeyPair();
         $builder = new BundleBuilder($this->dir.'/source');
 
         // npm : une version stable et une préversion (latest doit rester sur la stable)
@@ -360,6 +362,85 @@ final class RegistryEndToEndTest extends MirrorWebTestCase
         self::assertSame(Job::SUCCEEDED, $job->getStatus(), (string) $job->getError());
         self::assertSame(6, $this->countRows(Package::class));
         self::assertSame(1, $this->countRows(\App\Entity\ImportedBundle::class));
+    }
+
+    public function testBlacklistPutsPackagesInQuarantineAndCanLiftIt(): void
+    {
+        // Bundle sans paquet, ne transportant que la liste noire (écritures différentes des noms et versions)
+        $this->blacklistBundle(2, 4, [
+            ['ecosystem' => 'npm', 'name' => '@sas/demo', 'version' => '1.2.0', 'reason' => 'CVE-2099-0001'],
+            ['ecosystem' => 'pypi', 'name' => 'My_Pkg', 'version' => '1.0', 'reason' => ''],
+            ['ecosystem' => 'composer', 'name' => 'acme/lib', 'version' => 'v1.4.0', 'reason' => 'licence'],
+            ['ecosystem' => 'docker', 'name' => 'nginx', 'version' => '1.27', 'reason' => 'image interdite'],
+            ['ecosystem' => 'npm', 'name' => 'absent', 'version' => '1.0.0', 'reason' => ''],
+        ]);
+
+        // npm : version retirée du document, latest recalculé, archive refusée
+        $this->client->request('GET', '/npm/@sas/demo');
+        self::assertSame(['2.0.0-beta.1'], array_keys($this->json()['versions']));
+        self::assertSame('2.0.0-beta.1', $this->json()['dist-tags']['latest']);
+        $this->client->request('GET', '/npm/@sas/demo/1.2.0');
+        self::assertResponseStatusCodeSame(403);
+        self::assertStringContainsString('quarantaine', $this->json()['error']);
+        $this->client->request('GET', '/npm/@sas/demo/-/demo-1.2.0.tgz');
+        self::assertResponseStatusCodeSame(403);
+        $this->client->request('GET', '/npm/@sas/demo/-/demo-2.0.0-beta.1.tgz');
+        self::assertResponseIsSuccessful();
+
+        // PyPI : fichiers masqués et refusés
+        $this->client->request('GET', '/pypi/simple/my-pkg/');
+        self::assertStringNotContainsString('my_pkg-1.0.0', $this->body());
+        $this->client->request('GET', sprintf('/pypi/files/%s/my_pkg-1.0.0-py3-none-any.whl', $this->sha['my_pkg-1.0.0-py3-none-any.whl']));
+        self::assertResponseStatusCodeSame(403);
+
+        // Composer : version masquée, archive refusée
+        $this->client->request('GET', '/composer/p2/acme/lib.json');
+        self::assertResponseStatusCodeSame(404);
+        $this->client->request('GET', sprintf('/composer/dist/%s/acme-lib-1.4.0.zip', $this->sha['composer']));
+        self::assertResponseStatusCodeSame(403);
+
+        // Docker : étiquette et empreintes (index et plateforme) refusées
+        foreach (['1.27', 'sha256:'.$this->sha['index'], 'sha256:'.$this->sha['manifest']] as $reference) {
+            $this->client->request('GET', '/v2/nginx/manifests/'.$reference);
+            self::assertResponseStatusCodeSame(403, $reference);
+            self::assertSame('DENIED', $this->json()['errors'][0]['code']);
+        }
+        $this->client->request('GET', '/v2/library/nginx/tags/list');
+        self::assertSame([], $this->json()['tags']);
+
+        // Interface : liste en lecture seule, paquets marqués
+        $this->client->request('GET', '/api/packages/-/quarantine');
+        $data = $this->json();
+        self::assertSame(4, $data['collectors'][0]['revision']);
+        self::assertCount(5, $data['items']);
+        self::assertSame(4, \count(array_filter($data['items'], static fn ($i) => [] !== $i['present'])));
+        $this->client->request('GET', '/api/overview');
+        self::assertSame(['entries' => 5, 'present' => 4], $this->json()['quarantine']);
+        $this->client->request('GET', '/api/packages/npm/@sas/demo');
+        self::assertSame('CVE-2099-0001', array_column($this->json()['items'], 'quarantine', 'version')['1.2.0']['reason']);
+
+        // Révision plus ancienne rejouée : ignorée
+        $this->blacklistBundle(3, 2, []);
+        $this->client->request('GET', '/npm/@sas/demo/-/demo-1.2.0.tgz');
+        self::assertResponseStatusCodeSame(403);
+
+        // Liste allégée : les paquets sortent de quarantaine
+        $this->blacklistBundle(4, 5, [['ecosystem' => 'docker', 'name' => 'library/nginx', 'version' => '1.27', 'reason' => '']]);
+        $this->client->request('GET', '/npm/@sas/demo/-/demo-1.2.0.tgz');
+        self::assertResponseIsSuccessful();
+        $this->client->request('GET', '/composer/p2/acme/lib.json');
+        self::assertResponseIsSuccessful();
+        $this->client->request('GET', '/v2/nginx/manifests/1.27');
+        self::assertResponseStatusCodeSame(403);
+    }
+
+    /** @param list<array{ecosystem: string, name: string, version: string, reason: string}> $entries */
+    private function blacklistBundle(int $sequence, int $revision, array $entries): void
+    {
+        $builder = (new BundleBuilder($this->dir.'/source-'.$sequence))->blacklist($revision, $entries);
+        $name = $builder->write($this->dir.'/inbox', $this->keys, $sequence, false);
+        $job = $this->import($name);
+        self::assertSame(Job::SUCCEEDED, $job->getStatus(), (string) $job->getError());
     }
 
     private function add(BundleBuilder $builder, string $role, string $data): void

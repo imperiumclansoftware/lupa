@@ -51,7 +51,7 @@ import { Artifact, CollectorApi, Page } from '../api';
                       <td class="detail">{{ a.detail }}</td>
                       <td class="right num">{{ a.size | bytes }}</td>
                       <td><sas-severity [severity]="a.severity" [count]="a.vulnerabilityCount" /></td>
-                      <td>@if (a.exportSequence) { <span class="badge">n° {{ a.exportSequence }}</span> } @else { <span class="badge badge-accent">À exporter</span> }</td>
+                      <td>@if (a.blacklisted) { <span class="badge badge-danger" [title]="a.blacklisted.reason || 'Liste noire'">Liste noire</span> } @else if (a.exportSequence) { <span class="badge">n° {{ a.exportSequence }}</span> } @else { <span class="badge badge-accent">À exporter</span> }</td>
                     </tr>
                   }
                 </tbody>

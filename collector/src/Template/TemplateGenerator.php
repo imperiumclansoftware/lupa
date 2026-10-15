@@ -5,6 +5,7 @@ namespace App\Template;
 use App\Entity\PackageList;
 use App\Job\JobContext;
 use App\Resolver\Tool;
+use App\Source\Sources;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 
 /**
@@ -18,6 +19,7 @@ final readonly class TemplateGenerator
         private string $registry,
         #[Autowire('%env(GITHUB_TOKEN)%')]
         private string $githubToken,
+        private ?Sources $sources = null,
     ) {
     }
 
@@ -67,7 +69,7 @@ final readonly class TemplateGenerator
         // Le modèle est un dossier du paquet create-vite : on le lit sans lancer l'assistant interactif
         $context->report('Récupération de create-vite');
         Tool::run(['npm', 'install', '--no-save', '--ignore-scripts', '--no-audit', '--no-fund', '--prefix', $dir.'/gen',
-            '--registry', $this->registry, 'create-vite@'.$version], $dir, $context, $this->npmEnv());
+            '--registry', $this->npmRegistry(), 'create-vite@'.$version], $dir, $context, $this->npmEnv());
         $source = sprintf('%s/gen/node_modules/create-vite/template-%s-ts/package.json', $dir, $flavour);
         if (!is_file($source)) {
             throw new \RuntimeException(sprintf('Modèle %s-ts absent de create-vite %s.', $flavour, $version));
@@ -115,7 +117,7 @@ final readonly class TemplateGenerator
     private function npmLock(string $project, JobContext $context): string
     {
         $context->report('Résolution des dépendances du projet généré');
-        $command = ['npm', 'install', '--package-lock-only', '--ignore-scripts', '--no-audit', '--no-fund', '--registry', $this->registry];
+        $command = ['npm', 'install', '--package-lock-only', '--ignore-scripts', '--no-audit', '--no-fund', '--registry', $this->npmRegistry()];
         try {
             Tool::run($command, $project, $context, $this->npmEnv());
         } catch (\RuntimeException $e) {
@@ -151,8 +153,9 @@ final readonly class TemplateGenerator
     private function composer(array $arguments, string $cwd, JobContext $context): void
     {
         $env = ['COMPOSER_NO_INTERACTION' => '1'];
-        if ('' !== $this->githubToken) {
-            $env['COMPOSER_AUTH'] = (string) json_encode(['github-oauth' => ['github.com' => $this->githubToken]]);
+        $auth = '' !== $this->githubToken ? ['github-oauth' => ['github.com' => $this->githubToken]] : [];
+        if ([] !== $auth = $this->sources?->composerAuth($auth) ?? $auth) {
+            $env['COMPOSER_AUTH'] = (string) json_encode($auth, \JSON_UNESCAPED_SLASHES);
         }
         Tool::run(['composer', ...$arguments, '--no-scripts', '--no-plugins', '--no-interaction', '--no-progress'], $cwd, $context, $env);
     }
@@ -160,6 +163,12 @@ final readonly class TemplateGenerator
     /** @return array<string, string> */
     private function npmEnv(): array
     {
-        return ['npm_config_registry' => $this->registry, 'npm_config_update_notifier' => 'false', 'npm_config_fund' => 'false'];
+        return ['npm_config_registry' => $this->npmRegistry(), 'npm_config_update_notifier' => 'false', 'npm_config_fund' => 'false'];
+    }
+
+    /** Registre npm public, ou le dépôt qui le remplace */
+    private function npmRegistry(): string
+    {
+        return $this->sources?->npmRegistry('', $this->registry) ?? $this->registry;
     }
 }

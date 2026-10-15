@@ -18,6 +18,8 @@ final class BundleBuilder
     private array $artifacts = [];
     /** @var array<string, array{sha256: string, size: int}> */
     private array $blobs = [];
+    /** @var array<string, mixed>|null */
+    private ?array $blacklist = null;
 
     public function __construct(string $sourceDir, private readonly string $collectorName = 'Collecteur test')
     {
@@ -44,6 +46,14 @@ final class BundleBuilder
         return $this;
     }
 
+    /** @param list<array{ecosystem: string, name: string, version: string, reason: string}> $entries */
+    public function blacklist(int $revision, array $entries): self
+    {
+        $this->blacklist = ['revision' => $revision, 'updatedAt' => (new \DateTimeImmutable())->format(\DATE_ATOM), 'entries' => $entries];
+
+        return $this;
+    }
+
     /**
      * Écrit le bundle dans $dir ; $signingKey permet de signer avec une autre clé que celle annoncée.
      *
@@ -63,6 +73,7 @@ final class BundleBuilder
             $full,
             $this->artifacts,
             array_values($this->blobs),
+            $this->blacklist,
         );
         $name = BundleFiles::baseName($this->collectorName, $sequence);
         BundleWriter::write($dir.'/'.$name, $manifest, $signingKey ?? $keys['secretKey'], $this->store);

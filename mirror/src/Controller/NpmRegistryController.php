@@ -3,6 +3,7 @@
 namespace App\Controller;
 
 use App\Entity\Package;
+use App\Quarantine\Quarantine;
 use App\Registry\Files;
 use App\Registry\Semver;
 use App\Repository\PackageRepository;
@@ -23,6 +24,7 @@ final class NpmRegistryController
     public function __construct(
         private readonly PackageRepository $packages,
         private readonly Files $files,
+        private readonly Quarantine $quarantine,
     ) {
     }
 
@@ -56,6 +58,11 @@ final class NpmRegistryController
     {
         $versions = $this->versions($request, $name);
         if ([] === $versions) {
+            // Paquet présent mais toutes ses versions en quarantaine : le dire plutôt que « absent »
+            foreach ($this->packages->findBy(['ecosystem' => Ecosystem::Npm, 'name' => $name], limit: 1) as $package) {
+                return self::quarantined($name, $package->getVersion(), $this->quarantine->forPackage($package)?->getReason() ?? '');
+            }
+
             return self::notFound();
         }
 
@@ -94,7 +101,7 @@ final class NpmRegistryController
             $version = (string) (end($stable) ?: array_key_last($versions));
         }
         if (!isset($versions[$version])) {
-            return self::notFound();
+            return null !== ($entry = $this->quarantine->find(Ecosystem::Npm, $name, $version)) ? self::quarantined($name, $version, $entry->getReason()) : self::notFound();
         }
         unset($versions[$version]['_mirroredAt']);
 
@@ -105,6 +112,10 @@ final class NpmRegistryController
     {
         foreach ($this->packages->findBy(['ecosystem' => Ecosystem::Npm, 'name' => $name]) as $package) {
             if (($package->getMetadata()['dist']['tarballName'] ?? null) === $file && [] !== $package->getBlobs()) {
+                if ($entry = $this->quarantine->forPackage($package)) {
+                    return self::quarantined($name, $package->getVersion(), $entry->getReason());
+                }
+
                 return $this->files->serve($package->getBlobs()[0], 'application/octet-stream');
             }
         }
@@ -119,6 +130,10 @@ final class NpmRegistryController
         $versions = [];
         /** @var Package $package */
         foreach ($this->packages->findBy(['ecosystem' => Ecosystem::Npm, 'name' => $name]) as $package) {
+            // Versions en quarantaine : absentes du document, npm choisit une autre version
+            if ($this->quarantine->forPackage($package)) {
+                continue;
+            }
             $document = $package->getMetadata();
             $tarball = $document['dist']['tarballName'] ?? sprintf('%s-%s.tgz', basename($name), $package->getVersion());
             unset($document['dist']['tarballName']);
@@ -129,6 +144,11 @@ final class NpmRegistryController
         uksort($versions, static fn ($a, $b) => Semver::compare((string) $a, (string) $b));
 
         return $versions;
+    }
+
+    private static function quarantined(string $name, string $version, string $reason): JsonResponse
+    {
+        return new JsonResponse(['error' => sprintf('%s@%s est en quarantaine (liste noire)%s', $name, $version, '' !== $reason ? ' : '.$reason : '')], 403);
     }
 
     private static function notFound(): JsonResponse

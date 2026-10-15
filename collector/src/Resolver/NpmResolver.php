@@ -2,10 +2,12 @@
 
 namespace App\Resolver;
 
+use App\Blacklist\Blacklist;
 use App\Entity\Artifact;
 use App\Entity\PackageList;
 use App\Http\Downloader;
 use App\Job\JobContext;
+use App\Source\Sources;
 use App\Template\TemplateCatalog;
 use App\Template\TemplateGenerator;
 use Sas\Bundle\Ecosystem;
@@ -26,6 +28,8 @@ final readonly class NpmResolver implements Resolver
         private ArtifactCatalog $catalog,
         private HttpClientInterface $http,
         private TemplateGenerator $templates,
+        private Blacklist $blacklist,
+        private Sources $sources,
         #[Autowire('%env(NPM_REGISTRY)%')]
         private string $registry,
     ) {
@@ -92,7 +96,7 @@ final readonly class NpmResolver implements Resolver
         $context->log(sprintf('%d paquets (dépendances comprises).', $total));
 
         // Métadonnées des versions à télécharger, 16 requêtes à la fois
-        $missing = array_filter($entries, fn (array $e) => !$this->catalog->complete(Ecosystem::Npm, $e['name'], $e['version']));
+        $missing = array_filter($entries, fn (array $e) => !$this->blacklist->find(Ecosystem::Npm, $e['name'], $e['version']) && !$this->catalog->complete(Ecosystem::Npm, $e['name'], $e['version']));
         $context->log(sprintf('%d déjà présents, %d à télécharger.', $total - \count($missing), \count($missing)));
         $documents = $this->fetchVersionDocuments($missing, $context);
 
@@ -100,6 +104,9 @@ final readonly class NpmResolver implements Resolver
         $done = 0;
         foreach ($entries as $key => $entry) {
             ++$done;
+            if ($this->blacklist->blocks(Ecosystem::Npm, $entry['name'], $entry['version'], $context)) {
+                continue;
+            }
             $artifact = $this->catalog->complete(Ecosystem::Npm, $entry['name'], $entry['version']);
             if (!$artifact) {
                 $context->report(sprintf('Téléchargement %s@%s', $entry['name'], $entry['version']), (int) ($done * 100 / max(1, $total)));
@@ -148,19 +155,25 @@ final readonly class NpmResolver implements Resolver
                 'dependencies' => $dependencies,
             ], \JSON_PRETTY_PRINT | \JSON_UNESCAPED_SLASHES));
 
-            $command = ['npm', 'install', '--package-lock-only', '--ignore-scripts', '--no-audit', '--no-fund', '--registry', $this->registry];
+            $command = ['npm', 'install', '--package-lock-only', '--ignore-scripts', '--no-audit', '--no-fund', '--registry', $this->sources->npmRegistry('', $this->registry)];
+            $env = [];
+            // Dépôts privés : registre par portée et identifiants, dans un .npmrc propre à la résolution
+            if (null !== $npmrc = $this->sources->npmrc($this->registry)) {
+                file_put_contents($dir.'/.sas-npmrc', $npmrc);
+                $env['npm_config_userconfig'] = $dir.'/.sas-npmrc';
+            }
             if ($list->getOptions()['legacyPeerDeps'] ?? false) {
                 $command[] = '--legacy-peer-deps';
             }
             try {
-                Tool::run($command, $dir, $context);
+                Tool::run($command, $dir, $context, $env);
             } catch (\RuntimeException $e) {
                 if (\in_array('--legacy-peer-deps', $command, true) || !str_contains($e->getMessage(), 'ERESOLVE')) {
                     throw $e;
                 }
                 $context->log('Conflit de dépendances « peer » : nouvelle tentative avec --legacy-peer-deps.');
                 $command[] = '--legacy-peer-deps';
-                Tool::run($command, $dir, $context);
+                Tool::run($command, $dir, $context, $env);
             }
 
             return $this->lockEntries((string) file_get_contents($dir.'/package-lock.json'), true);
@@ -243,7 +256,8 @@ final readonly class NpmResolver implements Resolver
         foreach (array_chunk($entries, 16, true) as $chunk) {
             $responses = [];
             foreach ($chunk as $key => $entry) {
-                $responses[$key] = $this->http->request('GET', sprintf('%s/%s/%s', rtrim($this->registry, '/'), $entry['name'], rawurlencode($entry['version'])), [
+                $url = sprintf('%s/%s/%s', $this->sources->npmRegistry($entry['name'], $this->registry), $entry['name'], rawurlencode($entry['version']));
+                $responses[$key] = $this->http->request('GET', $url, $this->sources->httpOptions($url) + [
                     'headers' => ['Accept' => 'application/json'],
                     'timeout' => 60,
                 ]);

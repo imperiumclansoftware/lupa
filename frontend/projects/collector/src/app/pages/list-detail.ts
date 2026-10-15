@@ -3,9 +3,10 @@ import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { BytesPipe, CopyButton, SecuritySummary, SeverityBadge, Dialog, EcosystemPipe, Icon, JobProgress, PluralPipe, RelativePipe, Toasts, errorMessage, isActive, poll, Eco } from '@sas/shared';
 import { Artifact, CollectorApi, PackageList, Template } from '../api';
+import { BlacklistDialog } from '../blacklist-dialog';
 
 @Component({
-  imports: [Eco, CopyButton, SecuritySummary, SeverityBadge, FormsModule, RouterLink, Icon, JobProgress, Dialog, BytesPipe, RelativePipe, EcosystemPipe, PluralPipe],
+  imports: [BlacklistDialog, Eco, CopyButton, SecuritySummary, SeverityBadge, FormsModule, RouterLink, Icon, JobProgress, Dialog, BytesPipe, RelativePipe, EcosystemPipe, PluralPipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="page">
@@ -89,7 +90,7 @@ import { Artifact, CollectorApi, PackageList, Template } from '../api';
             <div class="table-wrap">
               <table class="table">
                 <thead>
-                  <tr><th>Nom</th><th>Version</th><th>{{ l.ecosystem === 'docker' ? 'Plateformes' : l.ecosystem === 'pypi' ? 'Fichier' : 'Description' }}</th><th class="right">Taille</th>@if (l.ecosystem !== 'docker') { <th>Sécurité</th> }<th>Export</th></tr>
+                  <tr><th>Nom</th><th>Version</th><th>{{ l.ecosystem === 'docker' ? 'Plateformes' : l.ecosystem === 'pypi' ? 'Fichier' : 'Description' }}</th><th class="right">Taille</th>@if (l.ecosystem !== 'docker') { <th>Sécurité</th> }<th>Export</th><th></th></tr>
                 </thead>
                 <tbody>
                   @for (a of visible(); track a.id) {
@@ -107,7 +108,15 @@ import { Artifact, CollectorApi, PackageList, Template } from '../api';
                           }
                         </td>
                       }
-                      <td>@if (a.exportSequence) { <span class="badge">n° {{ a.exportSequence }}</span> } @else { <span class="badge badge-accent">À exporter</span> }</td>
+                      <td>
+                        @if (a.blacklisted) { <span class="badge badge-danger" [title]="a.blacklisted.reason || 'Liste noire'">Liste noire</span> }
+                        @else if (a.exportSequence) { <span class="badge">n° {{ a.exportSequence }}</span> } @else { <span class="badge badge-accent">À exporter</span> }
+                      </td>
+                      <td>
+                        @if (!a.blacklisted) {
+                          <button type="button" class="btn btn-ghost btn-icon btn-sm" (click)="ban(a)" title="Ajouter à la liste noire" [attr.aria-label]="'Ajouter ' + a.name + ' ' + a.version + ' à la liste noire'"><sas-icon name="lock" /></button>
+                        }
+                      </td>
                     </tr>
                   }
                 </tbody>
@@ -137,6 +146,8 @@ import { Artifact, CollectorApi, PackageList, Template } from '../api';
         </ul>
       }
     </sas-dialog>
+
+    <sas-blacklist-dialog #banDialog (added)="reload()" />
 
     <sas-dialog #confirmDelete heading="Supprimer cette liste ?">
       <p>Les paquets déjà téléchargés restent dans Rémus et dans Romulus ; seule la liste est supprimée.</p>
@@ -188,6 +199,16 @@ export default class ListDetail implements OnInit {
   protected readonly vulnerableOnly = signal(false);
   protected readonly inspected = signal<Artifact | null>(null);
   private readonly vulnDialog = viewChild.required<Dialog>('vulnDialog');
+  private readonly banDialog = viewChild.required<BlacklistDialog>('banDialog');
+
+  protected ban(a: Artifact): void {
+    const fix = [...new Set((a.vulnerabilities ?? []).map((v) => v.id))].slice(0, 3).join(', ');
+    this.banDialog().open({ ecosystem: a.ecosystem, name: a.name, version: a.version, reason: fix });
+  }
+
+  protected async reload(): Promise<void> {
+    await this.load();
+  }
   protected readonly limit = signal(200);
   protected readonly templates = signal<Template[]>([]);
   protected readonly template = computed(() => this.templates().find((t) => t.id === this.list()?.options.template?.id) ?? null);

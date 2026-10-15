@@ -2,6 +2,7 @@
 
 namespace App\Controller;
 
+use App\Blacklist\Blacklist;
 use App\Entity\Artifact;
 use App\Entity\Job;
 use App\Job\JobLauncher;
@@ -24,6 +25,7 @@ final class SecurityController
         private readonly JobRepository $jobs,
         private readonly JobLauncher $launcher,
         private readonly Connection $db,
+        private readonly Blacklist $blacklist,
     ) {
     }
 
@@ -41,7 +43,7 @@ final class SecurityController
         $items = [];
         foreach ($vulnerable as $artifact) {
             $key = $artifact->getEcosystem()->value.'|'.$artifact->getName().'|'.$artifact->getVersion();
-            $items[$key] ??= Presenter::artifact($artifact, true) + [
+            $items[$key] ??= Presenter::artifact($artifact, true, $this->blacklist->find($artifact->getEcosystem(), $artifact->getName(), $artifact->getVersion())) + [
                 'lists' => array_values(array_unique($artifact->getLists()->map(static fn ($l) => ['id' => $l->getId(), 'name' => $l->getName()])->toArray(), \SORT_REGULAR)),
             ];
         }
@@ -53,7 +55,8 @@ final class SecurityController
         $active = $this->jobs->findOneBy(['type' => 'audit', 'status' => [Job::QUEUED, Job::RUNNING]]);
 
         return new JsonResponse([
-            'counts' => self::counts(array_values($items)),
+            // Les versions de la liste noire ne sont plus exportées : elles ne comptent plus dans les alertes
+            'counts' => self::counts(array_values(array_filter($items, static fn (array $i) => null === $i['blacklisted']))),
             'auditable' => (int) ($stats['total'] ?? 0),
             'audited' => (int) ($stats['audited'] ?? 0),
             'oldestAudit' => isset($stats['oldest']) ? (new \DateTimeImmutable($stats['oldest']))->format(\DATE_ATOM) : null,

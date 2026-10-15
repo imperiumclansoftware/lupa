@@ -3,6 +3,7 @@
 namespace App\Controller;
 
 use App\Entity\Package;
+use App\Quarantine\Quarantine;
 use App\Registry\Files;
 use App\Repository\PackageRepository;
 use Doctrine\DBAL\Connection;
@@ -25,6 +26,7 @@ final class PypiRegistryController
         private readonly PackageRepository $packages,
         private readonly Connection $db,
         private readonly Files $files,
+        private readonly Quarantine $quarantine,
     ) {
     }
 
@@ -54,6 +56,8 @@ final class PypiRegistryController
         if ([] === $files) {
             return new Response('Projet absent du miroir hors ligne.', 404, ['Content-Type' => 'text/plain; charset=utf-8']);
         }
+        // Versions en quarantaine : leurs fichiers ne sont plus proposés à pip
+        $files = array_values(array_filter($files, fn (Package $p) => null === $this->quarantine->forPackage($p)));
         usort($files, static fn (Package $a, Package $b) => version_compare($a->getVersion(), $b->getVersion()) ?: strcmp((string) $a->getFilename(), (string) $b->getFilename()));
 
         $base = $this->files->baseUrl($request);
@@ -92,6 +96,10 @@ final class PypiRegistryController
     #[Route('/pypi/files/{sha256}/{filename}', methods: ['GET', 'HEAD'], requirements: ['sha256' => '[a-f0-9]{64}', 'filename' => '[^/]+'])]
     public function file(string $sha256): Response
     {
+        if ($entry = $this->quarantine->blob(Ecosystem::Pypi, $sha256)) {
+            return new Response(sprintf("%s %s est en quarantaine (liste noire)%s\n", $entry->getName(), $entry->getVersion(), '' !== $entry->getReason() ? ' : '.$entry->getReason() : ''), 403, ['Content-Type' => 'text/plain; charset=utf-8']);
+        }
+
         return $this->files->serve($sha256);
     }
 

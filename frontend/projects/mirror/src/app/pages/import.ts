@@ -89,6 +89,7 @@ interface Upload {
                     {{ r.artifactCount | plural: 'paquet' }} ({{ summary(item) }}) · {{ r.size | bytes }}
                     · de <strong>{{ r.collector.name }}</strong>, {{ r.createdAt | relative }}
                     @if (item.parts.length > 1) { · {{ item.parts.length }} parties }
+                    @if (r.blacklist; as b) { · liste noire révision {{ b.revision }} ({{ b.entries | plural: 'version' }}) }
                   </p>
                   @if (item.missingParts.length) {
                     <div class="alert alert-danger">Partie(s) manquante(s) : {{ partList(item) }}. Copiez tous les fichiers {{ item.name }}.tar.*</div>

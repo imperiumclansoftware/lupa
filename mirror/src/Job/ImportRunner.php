@@ -8,6 +8,7 @@ use App\Entity\OciManifest;
 use App\Entity\Package;
 use App\Import\BundleInspector;
 use App\Import\Inbox;
+use App\Quarantine\Quarantine;
 use App\Repository\ImportedBundleRepository;
 use App\Repository\OciManifestRepository;
 use App\Repository\PackageRepository;
@@ -29,6 +30,7 @@ final readonly class ImportRunner implements JobRunner
         private PackageRepository $packages,
         private ImportedBundleRepository $bundles,
         private OciManifestRepository $manifests,
+        private Quarantine $quarantine,
     ) {
     }
 
@@ -112,12 +114,27 @@ final readonly class ImportRunner implements JobRunner
         }
         $this->em->flush();
 
+        // Liste noire du collecteur : les versions interdites passent en quarantaine
+        $quarantined = '';
+        if (null !== $manifest->blacklist) {
+            $result = $this->quarantine->apply($manifest->collectorId, $manifest->collectorName, $manifest->blacklist);
+            if (null === $result) {
+                $context->log(sprintf('Liste noire révision %d : déjà appliquée (ou plus récente déjà connue).', $manifest->blacklist['revision']));
+            } else {
+                $context->log(sprintf('Liste noire révision %d appliquée : %d version(s) interdite(s) (%d ajoutée(s), %d retirée(s)) ; %d version(s) présente(s) en quarantaine.',
+                    $manifest->blacklist['revision'], $result['entries'], $result['added'], $result['removed'], $result['affected']));
+                foreach ($this->quarantine->quarantinedPackages() as $p) {
+                    $context->log(sprintf('QUARANTAINE %s %s%s', $p['name'], $p['version'], '' !== $p['entry']->getReason() ? ' : '.$p['entry']->getReason() : ''));
+                }
+                $quarantined = sprintf(' ; liste noire : %d version(s) en quarantaine', $result['affected']);
+            }
+        }
         if ('upload' === $bundle['source'] && ($payload['deleteAfter'] ?? true)) {
             foreach ($bundle['parts'] as $part) {
                 @unlink($part);
             }
         }
 
-        return sprintf('Bundle n° %d importé : %d paquet(s), %d nouveau(x) fichier(s)', $manifest->sequence, \count($manifest->artifacts), $newBlobs);
+        return sprintf('Bundle n° %d importé : %d paquet(s), %d nouveau(x) fichier(s)', $manifest->sequence, \count($manifest->artifacts), $newBlobs).$quarantined;
     }
 }

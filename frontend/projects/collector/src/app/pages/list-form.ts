@@ -399,7 +399,8 @@ export default class ListForm implements OnInit {
 
   protected addTarget(): void {
     const last = this.targets().at(-1);
-    this.targets.update((t) => [...t, { python: last?.python ?? '3.12', platform: 'windows-amd64' }]);
+    // Cible par défaut : Linux amd64 (x86_64)
+    this.targets.update((t) => [...t, { python: last?.python ?? '3.12', platform: 'linux-x86_64' }]);
   }
 
   protected removeTarget(index: number): void {
@@ -441,10 +442,8 @@ export default class ListForm implements OnInit {
   }
 
   protected async save(resolve: boolean): Promise<void> {
-    if (this.ecosystem() === 'docker' && this.platforms().length === 0) {
-      this.error.set('Choisissez au moins une plateforme.');
-      return;
-    }
+    // Aucune plateforme cochée : Linux amd64 par défaut
+    if (this.ecosystem() === 'docker' && this.platforms().length === 0) this.platforms.set(['linux/amd64']);
     const input: ListInput = {
       name: this.name.trim(),
       ecosystem: this.ecosystem(),

@@ -2,6 +2,7 @@
 
 namespace App\Http;
 
+use App\Source\Sources;
 use Sas\Bundle\BlobStore;
 use Sas\Bundle\IntegrityException;
 use Symfony\Contracts\HttpClient\Exception\ExceptionInterface;
@@ -15,6 +16,7 @@ final readonly class Downloader
     public function __construct(
         private HttpClientInterface $http,
         private BlobStore $store,
+        private ?Sources $sources = null,
     ) {
     }
 
@@ -36,7 +38,7 @@ final readonly class Downloader
         }
 
         try {
-            $response = $this->http->request('GET', $url, $options + ['timeout' => 60, 'max_duration' => 0]);
+            $response = $this->http->request('GET', $url, $this->withAuth($url, $options) + ['timeout' => 60, 'max_duration' => 0]);
             if (200 !== $status = $response->getStatusCode()) {
                 throw new DownloadException(sprintf('HTTP %d pour %s', $status, self::redact($url)));
             }
@@ -82,7 +84,7 @@ final readonly class Downloader
     public function json(string $url, array $options = []): array
     {
         try {
-            $response = $this->http->request('GET', $url, $options + ['timeout' => 60]);
+            $response = $this->http->request('GET', $url, $this->withAuth($url, $options) + ['timeout' => 60]);
             if (200 !== $status = $response->getStatusCode()) {
                 throw new DownloadException(sprintf('HTTP %d pour %s', $status, self::redact($url)), $status);
             }
@@ -93,6 +95,22 @@ final readonly class Downloader
         } catch (ExceptionInterface $e) {
             throw new DownloadException(sprintf('Requête impossible vers %s : %s', self::redact($url), $e->getMessage()), previous: $e);
         }
+    }
+
+    /**
+     * Identifiants du dépôt privé qui sert cette adresse, sauf si l'appelant fournit déjà les siens.
+     *
+     * @param array<string, mixed> $options
+     *
+     * @return array<string, mixed>
+     */
+    private function withAuth(string $url, array $options): array
+    {
+        if (null === $this->sources || isset($options['auth_basic']) || isset($options['auth_bearer']) || isset($options['headers']['Authorization'])) {
+            return $options;
+        }
+
+        return $options + $this->sources->httpOptions($url);
     }
 
     /** Retire d'éventuels identifiants d'une URL avant de l'afficher. */

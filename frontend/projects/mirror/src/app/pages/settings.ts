@@ -1,18 +1,18 @@
 import { ChangeDetectionStrategy, Component, OnInit, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { DateTimePipe, Dialog, Icon, Toasts, errorMessage } from '@sas/shared';
-import { MirrorApi, TrustedKey } from '../api';
+import { DateTimePipe, Dialog, Eco, EcosystemPipe, Icon, Toasts, errorMessage } from '@sas/shared';
+import { MirrorApi, Quarantine, TrustedKey } from '../api';
 import { viewChild } from '@angular/core';
 
 @Component({
-  imports: [FormsModule, Icon, Dialog, DateTimePipe],
+  imports: [FormsModule, Icon, Dialog, DateTimePipe, Eco, EcosystemPipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="page">
       <header class="page-header">
         <div>
           <h1>Réglages</h1>
-          <p>Collecteurs dont les bundles sont acceptés. Un bundle signé par une autre clé est refusé.</p>
+          <p>Collecteurs dont les bundles sont acceptés, et liste noire qu’ils transmettent.</p>
         </div>
       </header>
 
@@ -52,6 +52,41 @@ import { viewChild } from '@angular/core';
         </div>
         <div><button class="btn btn-primary" type="submit" [disabled]="!publicKey.trim()"><sas-icon name="plus" />Ajouter</button></div>
       </form>
+
+      <section class="card" id="quarantaine">
+        <header class="card-header">
+          <div>
+            <div class="row"><sas-icon name="lock" /><h2>Liste noire et quarantaine</h2></div>
+            <p class="subtle">Reçue avec les bundles ; elle se modifie dans Rémus (Réglages › Liste noire). Les versions présentes ne sont plus servies.</p>
+          </div>
+        </header>
+        @if (quarantine(); as q) {
+          @if (q.collectors.length) {
+            <p class="card-body subtle sync">
+              @for (c of q.collectors; track c.id; let last = $last) { {{ c.collectorName }} : révision {{ c.revision }}, du {{ c.updatedAt | datetime }}{{ last ? '' : ' · ' }} }
+            </p>
+          }
+          @if (q.items.length === 0) {
+            <div class="empty"><sas-icon name="lock" [size]="28" /><h3>Aucune version interdite</h3><p>Aucune liste noire reçue, ou elle est vide.</p></div>
+          } @else {
+            <div class="table-wrap">
+              <table class="table">
+                <thead><tr><th>Paquet</th><th>Version</th><th>Motif</th><th>Dans le miroir</th></tr></thead>
+                <tbody>
+                  @for (e of q.items; track e.id) {
+                    <tr>
+                      <td><span class="row"><sas-eco [ecosystem]="e.ecosystem" [size]="22" /><span><strong>{{ e.name }}</strong><br><span class="subtle">{{ e.ecosystem | ecosystem }}</span></span></span></td>
+                      <td class="mono">{{ e.version }}</td>
+                      <td>{{ e.reason || '—' }}</td>
+                      <td>@if (e.present.length) { <span class="badge badge-danger">en quarantaine</span> } @else { <span class="subtle">absente</span> }</td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          }
+        }
+      </section>
     </div>
 
     <sas-dialog heading="Retirer ce collecteur ?">
@@ -63,6 +98,8 @@ import { viewChild } from '@angular/core';
     </sas-dialog>
   `,
   styles: `
+    .card-header p { margin: 4px 0 0; }
+    .sync { padding-bottom: 0; }
     .keys { list-style: none; margin: 0; padding: 0; }
     .keys li { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 14px 20px; border-bottom: 1px solid var(--border); }
     .keys li:last-child { border-bottom: none; }
@@ -74,6 +111,7 @@ export default class Settings implements OnInit {
   private readonly toasts = inject(Toasts);
   protected readonly dialog = viewChild.required(Dialog);
   protected readonly keys = signal<TrustedKey[]>([]);
+  protected readonly quarantine = signal<Quarantine | null>(null);
   protected readonly removing = signal<TrustedKey | null>(null);
   protected readonly error = signal('');
   protected label = '';
@@ -85,7 +123,9 @@ export default class Settings implements OnInit {
 
   private async load(): Promise<void> {
     try {
-      this.keys.set(await this.api.keys());
+      const [keys, quarantine] = await Promise.all([this.api.keys(), this.api.quarantine()]);
+      this.keys.set(keys);
+      this.quarantine.set(quarantine);
       this.error.set('');
     } catch (e) {
       this.error.set(errorMessage(e));

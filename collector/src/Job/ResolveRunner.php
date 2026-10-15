@@ -2,6 +2,7 @@
 
 namespace App\Job;
 
+use App\Blacklist\Blacklist;
 use App\Entity\Job;
 use App\Resolver\Resolver;
 use App\Audit\Auditor;
@@ -20,6 +21,7 @@ final readonly class ResolveRunner implements JobRunner
         private EntityManagerInterface $em,
         private PatternExpander $expander,
         private Auditor $auditor,
+        private Blacklist $blacklist,
     ) {
     }
 
@@ -60,6 +62,7 @@ final readonly class ResolveRunner implements JobRunner
             }
             $list->useExpandedSpecs($expanded['lines']);
         }
+        $this->blacklist->takeBlocked();
         $artifacts = [];
         foreach ($resolver->resolve($list, $context) as $artifact) {
             $artifacts[spl_object_id($artifact)] = $artifact;
@@ -82,6 +85,12 @@ final readonly class ResolveRunner implements JobRunner
         $pending = \count(array_filter($artifacts, static fn ($a) => null === $a->getExport()));
         $size = array_sum(array_map(static fn ($a) => $a->getSize(), $artifacts));
 
-        return sprintf('%d paquet(s), %s ; %d à exporter', \count($artifacts), Bytes::format($size), $pending).$security;
+        $blocked = $this->blacklist->takeBlocked();
+        if ($blocked) {
+            $context->log(sprintf('Liste noire : %d version(s) non téléchargée(s) : %s.', \count($blocked), implode(', ', $blocked)));
+        }
+
+        return sprintf('%d paquet(s), %s ; %d à exporter', \count($artifacts), Bytes::format($size), $pending)
+            .($blocked ? sprintf(' ; %d bloqué(s) par la liste noire', \count($blocked)) : '').$security;
     }
 }

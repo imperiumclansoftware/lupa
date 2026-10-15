@@ -46,6 +46,14 @@ Images Docker : [`iemperor/remus`](https://hub.docker.com/r/iemperor/remus) et [
   développés au moment de la mise à jour (`PatternExpander`). Les paquets sans version compatible sont
   écartés avec les règles exactes de chaque écosystème (`VersionFilter` : semver de npm, composer/semver,
   packaging de pip).
+- **Liste noire** (`collector/src/Blacklist/`) : versions précises refusées par les résolveurs et exclues
+  des exports ; liste complète et révision dans le manifeste signé (`Manifest::$blacklist`). Romulus
+  l'applique à l'import (`mirror/src/Quarantine/`) et ses registres filtrent les versions en quarantaine.
+  Identité commune des versions : `shared/src/PackageKey.php` (noms PEP 503, `v1.2.0` = `1.2.0`, `nginx` =
+  `library/nginx`…).
+- **Dépôts sources privés** (`collector/src/Source/`) : `.npmrc` par portée, options d'index de pip,
+  `repositories` et `COMPOSER_AUTH` de Composer, identifiants Docker par registre ; le `Downloader` ajoute
+  l'authentification d'après l'hôte. Secrets chiffrés par `SecretBox`.
 - **Sécurité** : analyse OSV.dev après chaque mise à jour et à la demande (`collector/src/Audit/`), page
   Sécurité dans Rémus, alertes copiées dans les bundles et affichées par Romulus.
 
@@ -168,3 +176,8 @@ développement, `make up` fait de même avec le `.env` du projet.
   autre que celle du collecteur ; l'option « sources (sdist) » ajoute les sources des versions retenues.
 - npm : yarn.lock et pnpm-lock.yaml ne sont pas lus (utiliser les noms de paquets ou un package-lock.json).
 - Docker : les couches « non redistribuables » (images Windows) sont ignorées.
+- Liste noire : une version interdite n'est pas remplacée automatiquement. Si npm, pip ou Composer
+  l'avaient retenue comme dépendance, elle manque simplement (le journal la signale) ; fixez une autre
+  version dans la liste. La quarantaine bloque les manifestes Docker, pas les couches partagées.
+- Dépôts privés : la recherche et les motifs (`*`) interrogent les registres publics (sauf les versions
+  npm d'une portée privée). Saisissez les paquets privés par leur nom exact.

@@ -3,6 +3,8 @@
 namespace App\Controller;
 
 use App\Entity\Artifact;
+use App\Entity\BlacklistEntry;
+use App\Entity\Source;
 use App\Entity\Export;
 use App\Entity\Job;
 use App\Entity\PackageList;
@@ -38,7 +40,7 @@ final class Presenter
     }
 
     /** @return array<string, mixed> */
-    public static function artifact(Artifact $artifact, bool $withVulnerabilities = false): array
+    public static function artifact(Artifact $artifact, bool $withVulnerabilities = false, ?BlacklistEntry $blacklisted = null): array
     {
         $metadata = $artifact->getMetadata();
 
@@ -60,6 +62,38 @@ final class Presenter
             'vulnerabilityCount' => \count($artifact->getVulnerabilities()),
             'auditedAt' => $artifact->getAuditedAt()?->format(\DATE_ATOM),
             'updatedAt' => $artifact->getUpdatedAt()->format(\DATE_ATOM),
+            'blacklisted' => $blacklisted ? self::blacklistEntry($blacklisted) : null,
+        ];
+    }
+
+    /** @return array<string, mixed> */
+    public static function blacklistEntry(BlacklistEntry $entry): array
+    {
+        return [
+            'id' => $entry->getId(),
+            'ecosystem' => $entry->getEcosystem()->value,
+            'name' => $entry->getName(),
+            'version' => $entry->getVersion(),
+            'reason' => $entry->getReason(),
+            'createdAt' => $entry->getCreatedAt()->format(\DATE_ATOM),
+        ];
+    }
+
+    /** @return array<string, mixed> dépôt source, sans son secret */
+    public static function source(Source $source): array
+    {
+        return [
+            'id' => $source->getId(),
+            'ecosystem' => $source->getEcosystem()->value,
+            'label' => $source->getLabel(),
+            'url' => $source->getUrl(),
+            'scope' => $source->getScope(),
+            'authType' => $source->getAuthType(),
+            'username' => $source->getUsername(),
+            'hasSecret' => null !== $source->getSecret(),
+            'replacesDefault' => $source->replacesDefault(),
+            'enabled' => $source->isEnabled(),
+            'createdAt' => $source->getCreatedAt()->format(\DATE_ATOM),
         ];
     }
 

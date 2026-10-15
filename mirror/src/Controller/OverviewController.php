@@ -4,6 +4,7 @@ namespace App\Controller;
 
 use App\Entity\Job;
 use App\Entity\TrustedKey;
+use App\Quarantine\Quarantine;
 use App\Repository\ImportedBundleRepository;
 use App\Repository\JobRepository;
 use App\Repository\TrustedKeyRepository;
@@ -28,6 +29,7 @@ final class OverviewController
         private readonly TrustedKeyRepository $keys,
         private readonly EntityManagerInterface $em,
         private readonly CacheInterface $cache,
+        private readonly Quarantine $quarantine,
         private readonly string $storageDir,
         private readonly string $publicUrl,
     ) {
@@ -54,6 +56,7 @@ final class OverviewController
             'lastImport' => $last ? Presenter::bundle($last) : null,
             'trustedKeys' => \count($this->keys->findAll()),
             'security' => $this->securityCounts(),
+            'quarantine' => ['entries' => \count($this->quarantine->all()), 'present' => \count($this->quarantine->quarantinedPackages())],
             'activeJobs' => array_map(Presenter::job(...), $this->jobs->findBy(['status' => [Job::QUEUED, Job::RUNNING]], ['id' => 'ASC'])),
             'recentJobs' => array_map(Presenter::job(...), $this->jobs->findBy([], ['id' => 'DESC'], 8)),
         ]);

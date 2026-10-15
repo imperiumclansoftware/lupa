@@ -3,6 +3,7 @@
 namespace App\Controller;
 
 use App\Entity\Package;
+use App\Quarantine\Quarantine;
 use App\Registry\Files;
 use App\Repository\PackageRepository;
 use Doctrine\DBAL\Connection;
@@ -24,6 +25,7 @@ final class ComposerRegistryController
         private readonly PackageRepository $packages,
         private readonly Connection $db,
         private readonly Files $files,
+        private readonly Quarantine $quarantine,
     ) {
     }
 
@@ -51,7 +53,8 @@ final class ComposerRegistryController
         /** @var Package $p */
         foreach ($this->packages->findBy(['ecosystem' => Ecosystem::Composer, 'name' => $name]) as $p) {
             $isDev = str_starts_with($p->getVersion(), 'dev-') || str_ends_with($p->getVersion(), '-dev');
-            if ($isDev !== $dev) {
+            // Versions en quarantaine : invisibles pour Composer, qui en choisit une autre
+            if ($isDev !== $dev || $this->quarantine->forPackage($p)) {
                 continue;
             }
             $data = $p->getMetadata();
@@ -79,6 +82,10 @@ final class ComposerRegistryController
     #[Route('/composer/dist/{sha256}/{filename}', methods: ['GET', 'HEAD'], requirements: ['sha256' => '[a-f0-9]{64}', 'filename' => '[^/]+'])]
     public function dist(string $sha256): Response
     {
+        if ($entry = $this->quarantine->blob(Ecosystem::Composer, $sha256)) {
+            return new JsonResponse(['error' => sprintf('%s %s est en quarantaine (liste noire)%s', $entry->getName(), $entry->getVersion(), '' !== $entry->getReason() ? ' : '.$entry->getReason() : '')], 403);
+        }
+
         return $this->files->serve($sha256);
     }
 }

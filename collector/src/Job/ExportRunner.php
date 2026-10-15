@@ -2,6 +2,7 @@
 
 namespace App\Job;
 
+use App\Blacklist\Blacklist;
 use App\Entity\Artifact;
 use App\Entity\Blob;
 use App\Entity\Job;
@@ -29,6 +30,7 @@ final readonly class ExportRunner implements JobRunner
         private EntityManagerInterface $em,
         private BlobStore $store,
         private CollectorIdentity $identity,
+        private Blacklist $blacklist,
         private string $exportDir,
     ) {
     }
@@ -58,8 +60,19 @@ final readonly class ExportRunner implements JobRunner
         $artifacts = $export->isFull()
             ? $this->artifacts->findBy([], ['ecosystem' => 'ASC', 'name' => 'ASC'])
             : $this->artifacts->findBy(['export' => null], ['ecosystem' => 'ASC', 'name' => 'ASC']);
-        if ([] === $artifacts) {
+        // Versions de la liste noire déjà collectées : elles restent au collecteur
+        $banned = array_filter($artifacts, fn (Artifact $a) => null !== $this->blacklist->find($a->getEcosystem(), $a->getName(), $a->getVersion()));
+        if ($banned) {
+            $artifacts = array_values(array_filter($artifacts, static fn (Artifact $a) => !\in_array($a, $banned, true)));
+            $context->log(sprintf('%d artefact(s) de la liste noire écarté(s).', \count($banned)));
+        }
+        $blacklist = $this->blacklist->toManifest();
+        $blacklistChanged = $this->blacklist->pendingExport();
+        if ([] === $artifacts && !$blacklistChanged && !$export->isFull()) {
             throw new \RuntimeException('Rien de nouveau à exporter : tout a déjà été transporté. Lancez la mise à jour d\'une liste ou faites un export complet.');
+        }
+        if ([] === $artifacts && null === $blacklist) {
+            throw new \RuntimeException('Le collecteur est vide.');
         }
 
         /** @var list<Blob> $blobs */
@@ -103,7 +116,11 @@ final readonly class ExportRunner implements JobRunner
             $export->isFull(),
             array_map(static fn (Artifact $a) => $a->toManifest(), $artifacts),
             array_map(static fn (Blob $b) => ['sha256' => $b->getSha256(), 'size' => $b->getSize()], $blobs),
+            $blacklist,
         );
+        if (null !== $blacklist) {
+            $context->log(sprintf('Liste noire, révision %d : %d version(s) interdite(s)%s.', $blacklist['revision'], \count($blacklist['entries']), $blacklistChanged ? ' (modifiée depuis le dernier bundle)' : ''));
+        }
 
         $baseName = BundleFiles::baseName($this->identity->name(), $export->getSequence());
         $files = BundleWriter::write(
@@ -121,6 +138,9 @@ final readonly class ExportRunner implements JobRunner
         }
         foreach ($blobs as $blob) {
             $blob->getExport() ?? $blob->setExport($export);
+        }
+        if (null !== $blacklist) {
+            $this->blacklist->markExported($blacklist['revision']);
         }
         $export->complete($baseName, array_map(basename(...), $files), $size, \count($artifacts), \count($blobs), $summary);
         $this->em->flush();

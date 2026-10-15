@@ -4,6 +4,7 @@ namespace App\Resolver\Docker;
 
 use App\Http\DownloadException;
 use App\Http\Downloader;
+use App\Source\Sources;
 use Sas\Bundle\BlobStore;
 use Sas\Bundle\IntegrityException;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
@@ -33,6 +34,7 @@ final class RegistryClient
         private readonly string $dockerhubUsername,
         #[Autowire('%env(DOCKERHUB_TOKEN)%')]
         private readonly string $dockerhubToken,
+        private readonly ?Sources $sources = null,
     ) {
     }
 
@@ -43,7 +45,7 @@ final class RegistryClient
      */
     public function manifest(ImageReference $image, string $reference): array
     {
-        $url = sprintf('%s/v2/%s/manifests/%s', $image->endpoint(), $image->repository, $reference);
+        $url = sprintf('%s/v2/%s/manifests/%s', $this->endpoint($image), $image->repository, $reference);
         $response = $this->request($image, $url, ['Accept' => implode(', ', self::MANIFEST_TYPES)]);
         $status = $response->getStatusCode();
         if (404 === $status) {
@@ -84,7 +86,7 @@ final class RegistryClient
     public function tags(ImageReference $image, int $max = 2000): array
     {
         $tags = [];
-        $url = sprintf('%s/v2/%s/tags/list?n=1000', $image->endpoint(), $image->repository);
+        $url = sprintf('%s/v2/%s/tags/list?n=1000', $this->endpoint($image), $image->repository);
         while (null !== $url && \count($tags) < $max) {
             $response = $this->request($image, $url, ['Accept' => 'application/json']);
             if (200 !== $response->getStatusCode()) {
@@ -93,7 +95,7 @@ final class RegistryClient
             array_push($tags, ...array_map('strval', $response->toArray()['tags'] ?? []));
             // Lien « next » de l'en-tête Link (RFC 5988)
             $link = $response->getHeaders()['link'][0] ?? '';
-            $url = preg_match('/<([^>]+)>;\s*rel="next"/', $link, $m) ? (str_starts_with($m[1], 'http') ? $m[1] : $image->endpoint().$m[1]) : null;
+            $url = preg_match('/<([^>]+)>;\s*rel="next"/', $link, $m) ? (str_starts_with($m[1], 'http') ? $m[1] : $this->endpoint($image).$m[1]) : null;
         }
 
         return $tags;
@@ -108,11 +110,17 @@ final class RegistryClient
         if ($this->store->has($m[1])) {
             return ['sha256' => $m[1], 'size' => $this->store->size($m[1])];
         }
-        $url = sprintf('%s/v2/%s/blobs/%s', $image->endpoint(), $image->repository, $digest);
+        $url = sprintf('%s/v2/%s/blobs/%s', $this->endpoint($image), $image->repository, $digest);
         // Jeton obtenu au préalable (le manifeste est toujours lu avant les blobs)
         $token = $this->tokens[$image->registry.'/'.$image->repository] ?? null;
 
         return $this->downloader->fetch($url, $token ? ['headers' => ['Authorization' => $token]] : [], sha256: $m[1]);
+    }
+
+    /** Adresse de l'API : un miroir de Docker Hub configuré dans les dépôts sources le remplace. */
+    private function endpoint(ImageReference $image): string
+    {
+        return 'docker.io' === $image->registry ? ($this->sources?->dockerHubMirror() ?? $image->endpoint()) : $image->endpoint();
     }
 
     /** @param array<string, string> $headers */
@@ -141,8 +149,8 @@ final class RegistryClient
 
     private function authenticate(ImageReference $image, string $challenge): string
     {
-        $credentials = 'docker.io' === $image->registry && '' !== $this->dockerhubUsername
-            ? [$this->dockerhubUsername, $this->dockerhubToken] : null;
+        $credentials = $this->sources?->dockerCredentials($image->registry)
+            ?? ('docker.io' === $image->registry && '' !== $this->dockerhubUsername ? [$this->dockerhubUsername, $this->dockerhubToken] : null);
 
         if (str_starts_with(strtolower($challenge), 'basic')) {
             if (!$credentials) {

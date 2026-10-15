@@ -2,10 +2,12 @@
 
 namespace App\Resolver;
 
+use App\Blacklist\Blacklist;
 use App\Entity\Artifact;
 use App\Entity\PackageList;
 use App\Http\Downloader;
 use App\Job\JobContext;
+use App\Source\Sources;
 use App\Template\TemplateCatalog;
 use App\Template\TemplateGenerator;
 use Sas\Bundle\Ecosystem;
@@ -25,6 +27,8 @@ final readonly class ComposerResolver implements Resolver
         private ArtifactCatalog $catalog,
         private TemplateGenerator $templates,
         private FlexRecipes $flex,
+        private Blacklist $blacklist,
+        private Sources $sources,
         #[Autowire('%env(GITHUB_TOKEN)%')]
         private string $githubToken,
     ) {
@@ -131,8 +135,12 @@ final readonly class ComposerResolver implements Resolver
 
         $artifacts = [];
         $done = 0;
-        foreach ($packages as $package) {
+        foreach ($packages as $key => $package) {
             ++$done;
+            if ($this->blacklist->blocks(Ecosystem::Composer, $package['name'], $package['version'], $context)) {
+                unset($packages[$key]);
+                continue;
+            }
             $artifact = $this->catalog->complete(Ecosystem::Composer, $package['name'], $package['version']);
             if (!$artifact) {
                 $context->report(sprintf('Téléchargement %s %s', $package['name'], $package['version']), (int) ($done * 100 / \count($packages)));
@@ -182,6 +190,9 @@ final readonly class ComposerResolver implements Resolver
     {
         $php = $list->getOptions()['php'] ?? null;
         $config = ['allow-plugins' => false, 'audit' => ['block-insecure' => false]];
+        if ($this->sources->composerInsecure()) {
+            $config['secure-http'] = false;
+        }
         if ($php) {
             $config['platform'] = ['php' => $php];
         }
@@ -194,14 +205,15 @@ final readonly class ComposerResolver implements Resolver
                 'minimum-stability' => $stability,
                 'prefer-stable' => true,
                 'config' => $config,
-            ], \JSON_PRETTY_PRINT | \JSON_UNESCAPED_SLASHES));
+            ] + (($repositories = $this->sources->composerRepositories()) ? ['repositories' => $repositories] : []), \JSON_PRETTY_PRINT | \JSON_UNESCAPED_SLASHES));
 
             $command = ['composer', 'update', '--no-install', '--no-scripts', '--no-plugins', '--no-interaction', '--no-progress', '--no-audit'];
             // Avec une version de PHP cible, seules les extensions sont ignorées ; sinon toute la plateforme
             array_push($command, ...($php ? ['--ignore-platform-req=ext-*', '--ignore-platform-req=lib-*'] : ['--ignore-platform-reqs']));
             $env = ['COMPOSER_NO_INTERACTION' => '1'];
-            if ('' !== $this->githubToken) {
-                $env['COMPOSER_AUTH'] = json_encode(['github-oauth' => ['github.com' => $this->githubToken]]);
+            $auth = $this->sources->composerAuth('' !== $this->githubToken ? ['github-oauth' => ['github.com' => $this->githubToken]] : []);
+            if ([] !== $auth) {
+                $env['COMPOSER_AUTH'] = (string) json_encode($auth, \JSON_UNESCAPED_SLASHES);
             }
             Tool::run($command, $dir, $context, $env);
 

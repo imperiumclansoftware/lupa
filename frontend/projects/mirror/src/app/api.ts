@@ -26,6 +26,7 @@ export interface Overview {
   lastImport: ImportedBundle | null;
   trustedKeys: number;
   security: SecurityCounts;
+  quarantine: { entries: number; present: number };
   activeJobs: Job[];
   recentJobs: Job[];
 }
@@ -41,6 +42,7 @@ export interface BundleReport {
   blobCount: number;
   size: number;
   summary: Partial<Record<EcosystemId, number>>;
+  blacklist: { revision: number; entries: number } | null;
   lastImportedSequence: number | null;
   missingSequences: number[];
   missingArtifacts: string[];
@@ -75,6 +77,23 @@ export interface PackageSummary {
   size: number;
   updatedAt: string;
   severity: Severity | null;
+  quarantined: number;
+}
+
+export interface QuarantineEntry {
+  id: number;
+  ecosystem: EcosystemId;
+  name: string;
+  version: string;
+  reason: string;
+  collectorName: string;
+  revision: number;
+  createdAt: string;
+}
+
+export interface Quarantine {
+  collectors: { id: string; revision: number; updatedAt: string; collectorName: string }[];
+  items: (QuarantineEntry & { present: { version: string; files: number }[] })[];
 }
 
 export interface PackageVersion {
@@ -88,6 +107,7 @@ export interface PackageVersion {
   severity: Severity | null;
   vulnerabilities: Vulnerability[];
   auditedAt: string | null;
+  quarantine: QuarantineEntry | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -167,6 +187,10 @@ export class MirrorApi {
   }
 
   /** Envoi par morceaux de 16 Mio, avec reprise ; progress reçoit les octets envoyés. */
+  quarantine(): Promise<Quarantine> {
+    return firstValueFrom(this.http.get<Quarantine>('/api/packages/-/quarantine'));
+  }
+
   async upload(file: File, progress: (sent: number) => void, signal: AbortSignal): Promise<void> {
     const chunk = 16 * 2 ** 20;
     const start = await firstValueFrom(this.http.post<{ id: string; received: number }>('/api/uploads', { filename: file.name, size: file.size }));

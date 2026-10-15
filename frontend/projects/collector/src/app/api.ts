@@ -85,6 +85,62 @@ export interface Artifact {
   auditedAt: string | null;
   vulnerabilities?: Vulnerability[];
   updatedAt: string;
+  blacklisted: BlacklistEntry | null;
+}
+
+export interface BlacklistEntry {
+  id: number;
+  ecosystem: EcosystemId;
+  name: string;
+  version: string;
+  reason: string;
+  createdAt: string;
+  collected?: number;
+}
+
+export interface BlacklistInput {
+  ecosystem: EcosystemId;
+  name: string;
+  version: string;
+  reason: string;
+}
+
+export interface Blacklist {
+  revision: number;
+  exportedRevision: number;
+  pending: boolean;
+  updatedAt: string | null;
+  items: BlacklistEntry[];
+}
+
+export type AuthType = 'none' | 'basic' | 'token';
+
+export interface Source {
+  id: number;
+  ecosystem: EcosystemId;
+  label: string;
+  url: string;
+  scope: string | null;
+  authType: AuthType;
+  username: string | null;
+  hasSecret: boolean;
+  replacesDefault: boolean;
+  enabled: boolean;
+  createdAt: string;
+}
+
+export interface SourceInput {
+  id?: number;
+  ecosystem: EcosystemId;
+  label: string;
+  url: string;
+  scope: string | null;
+  authType: AuthType;
+  username: string | null;
+  /** vide = inchangé */
+  secret: string | null;
+  replacesDefault: boolean;
+  enabled: boolean;
 }
 
 export interface SecurityItem extends Artifact {
@@ -148,6 +204,7 @@ export interface Exports {
   freeSpace: number | null;
   pending: Pending;
   full: Pending;
+  blacklist: { revision: number; pending: boolean; entries: number };
   items: Export[];
 }
 
@@ -267,5 +324,33 @@ export class CollectorApi {
 
   saveSettings(name: string): Promise<{ identity: Identity; exportDir: string; storageDir: string }> {
     return firstValueFrom(this.http.put<{ identity: Identity; exportDir: string; storageDir: string }>('/api/settings', { name }));
+  }
+
+  blacklist(): Promise<Blacklist> {
+    return firstValueFrom(this.http.get<Blacklist>('/api/blacklist'));
+  }
+
+  addBlacklist(input: BlacklistInput): Promise<BlacklistEntry> {
+    return firstValueFrom(this.http.post<BlacklistEntry>('/api/blacklist', input));
+  }
+
+  removeBlacklist(id: number): Promise<unknown> {
+    return firstValueFrom(this.http.delete(`/api/blacklist/${id}`));
+  }
+
+  sources(): Promise<Source[]> {
+    return firstValueFrom(this.http.get<Source[]>('/api/sources'));
+  }
+
+  saveSource(input: SourceInput): Promise<Source> {
+    return firstValueFrom(input.id ? this.http.put<Source>(`/api/sources/${input.id}`, input) : this.http.post<Source>('/api/sources', input));
+  }
+
+  deleteSource(id: number): Promise<unknown> {
+    return firstValueFrom(this.http.delete(`/api/sources/${id}`));
+  }
+
+  testSource(input: SourceInput): Promise<{ ok: boolean; message: string }> {
+    return firstValueFrom(this.http.post<{ ok: boolean; message: string }>('/api/sources/test', input));
   }
 }

@@ -2,16 +2,18 @@ import { ChangeDetectionStrategy, Component, OnInit, inject, signal } from '@ang
 import { FormsModule } from '@angular/forms';
 import { CopyButton, Icon, Toasts, errorMessage } from '@sas/shared';
 import { CollectorApi, Identity } from '../api';
+import { SettingsBlacklist } from './settings-blacklist';
+import { SettingsSources } from './settings-sources';
 
 @Component({
-  imports: [FormsModule, CopyButton, Icon],
+  imports: [FormsModule, CopyButton, Icon, SettingsBlacklist, SettingsSources],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="page">
       <header class="page-header">
         <div>
           <h1>Réglages</h1>
-          <p>Identité du collecteur et clé qui signe les bundles.</p>
+          <p>Identité du collecteur, liste noire, dépôts sources et clé qui signe les bundles.</p>
         </div>
       </header>
 
@@ -28,6 +30,9 @@ import { CollectorApi, Identity } from '../api';
             </div>
           </div>
         </form>
+
+        <sas-settings-blacklist />
+        <sas-settings-sources />
 
         <section class="card card-body stack">
           <div class="row"><sas-icon name="shield" /><h2>Signature des bundles</h2></div>

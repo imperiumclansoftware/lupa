@@ -13,6 +13,10 @@ namespace Sas\Bundle;
  *
  * Forme d'un artefact :
  *   { ecosystem, name, version, filename?, blobs: [sha256…], metadata: {…} }
+ *
+ * Liste noire (facultative) : versions interdites, que le miroir met en quarantaine. Le miroir
+ * applique la révision la plus récente reçue ; un bundle peut ne transporter qu'elle.
+ *   { revision, updatedAt, entries: [{ ecosystem, name, version, reason }] }
  */
 final readonly class Manifest
 {
@@ -21,6 +25,7 @@ final readonly class Manifest
     /**
      * @param list<array{ecosystem: string, name: string, version: string, filename?: string|null, blobs: list<string>, metadata?: array<string, mixed>}> $artifacts
      * @param list<array{sha256: string, size: int}>                                                                                                $blobs
+     * @param array{revision: int, updatedAt: string, entries: list<array{ecosystem: string, name: string, version: string, reason: string}>}|null $blacklist
      */
     public function __construct(
         public string $id,
@@ -32,6 +37,7 @@ final readonly class Manifest
         public bool $full,
         public array $artifacts,
         public array $blobs,
+        public ?array $blacklist = null,
     ) {
     }
 
@@ -46,7 +52,7 @@ final readonly class Manifest
             'full' => $this->full,
             'artifacts' => $this->artifacts,
             'blobs' => $this->blobs,
-        ], \JSON_THROW_ON_ERROR | \JSON_UNESCAPED_SLASHES | \JSON_UNESCAPED_UNICODE | \JSON_PRESERVE_ZERO_FRACTION);
+        ] + (null === $this->blacklist ? [] : ['blacklist' => $this->blacklist]), \JSON_THROW_ON_ERROR | \JSON_UNESCAPED_SLASHES | \JSON_UNESCAPED_UNICODE | \JSON_PRESERVE_ZERO_FRACTION);
     }
 
     public static function fromJson(string $json): self
@@ -82,6 +88,22 @@ final readonly class Manifest
             $blobs[] = ['sha256' => $b['sha256'], 'size' => $b['size']];
         }
 
+        $blacklist = null;
+        if (isset($data['blacklist'])) {
+            $list = $data['blacklist'];
+            if (!\is_array($list) || !\is_int($list['revision'] ?? null) || !\is_array($list['entries'] ?? null)) {
+                throw new IntegrityException('Liste noire du manifeste invalide.');
+            }
+            $entries = [];
+            foreach ($list['entries'] as $e) {
+                if (!\is_array($e) || null === Ecosystem::tryFrom((string) ($e['ecosystem'] ?? '')) || !\is_string($e['name'] ?? null) || !\is_string($e['version'] ?? null) || '' === $e['version']) {
+                    throw new IntegrityException('Entrée de liste noire invalide dans le manifeste.');
+                }
+                $entries[] = ['ecosystem' => $e['ecosystem'], 'name' => $e['name'], 'version' => $e['version'], 'reason' => (string) ($e['reason'] ?? '')];
+            }
+            $blacklist = ['revision' => $list['revision'], 'updatedAt' => (string) ($list['updatedAt'] ?? ''), 'entries' => $entries];
+        }
+
         return new self(
             (string) ($data['id'] ?? ''),
             (string) ($data['collector']['id'] ?? ''),
@@ -92,6 +114,7 @@ final readonly class Manifest
             (bool) ($data['full'] ?? false),
             $artifacts,
             $blobs,
+            $blacklist,
         );
     }
 

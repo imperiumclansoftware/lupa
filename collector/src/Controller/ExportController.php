@@ -2,6 +2,7 @@
 
 namespace App\Controller;
 
+use App\Blacklist\Blacklist;
 use App\Dto\ExportInput;
 use App\Entity\Export;
 use App\Entity\Job;
@@ -29,6 +30,7 @@ final class ExportController
         private readonly EntityManagerInterface $em,
         private readonly JobLauncher $launcher,
         private readonly Connection $db,
+        private readonly Blacklist $blacklist,
         private readonly string $exportDir,
     ) {
     }
@@ -43,6 +45,7 @@ final class ExportController
             'freeSpace' => is_dir($this->exportDir) ? @disk_free_space($this->exportDir) ?: null : null,
             'pending' => $this->pending(false),
             'full' => $this->pending(true),
+            'blacklist' => ['revision' => $this->blacklist->revision(), 'pending' => $this->blacklist->pendingExport(), 'entries' => \count($this->blacklist->all())],
             'items' => array_map(fn (Export $e) => Presenter::export($e, $this->exportDir), $this->exports->findBy([], ['sequence' => 'DESC'])),
         ]);
     }
@@ -54,7 +57,7 @@ final class ExportController
         if ($running) {
             return new JsonResponse(['error' => 'Un export est déjà en cours.'], Response::HTTP_CONFLICT);
         }
-        if (0 === $this->pending($input->full)['artifacts']) {
+        if (0 === $this->pending($input->full)['artifacts'] && !$this->blacklist->pendingExport() && !($input->full && $this->blacklist->revision() > 0)) {
             return new JsonResponse(['error' => $input->full ? 'Le collecteur est vide.' : 'Rien de nouveau à exporter.'], Response::HTTP_UNPROCESSABLE_ENTITY);
         }
 
@@ -104,7 +107,7 @@ final class ExportController
     private function pending(bool $full): array
     {
         $where = $full ? '' : ' WHERE export_id IS NULL';
-        $artifacts = (int) $this->db->fetchOne('SELECT COUNT(*) FROM artifact'.$where);
+        $artifacts = (int) $this->db->fetchOne('SELECT COUNT(*) FROM artifact'.$where) - \count($this->blacklist->collected(!$full));
         $blobs = $this->db->fetchAssociative('SELECT COUNT(*) AS n, COALESCE(SUM(size), 0) AS size FROM blob'.$where) ?: ['n' => 0, 'size' => 0];
 
         return ['artifacts' => $artifacts, 'blobs' => (int) $blobs['n'], 'size' => (int) $blobs['size']];

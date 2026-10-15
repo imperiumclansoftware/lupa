@@ -52,6 +52,11 @@ import { KeyValuePipe } from '@angular/common';
               <span class="hint">Une clé FAT32 refuse les fichiers de plus de 4 Go. Les parties sont réassemblées à l’import.</span>
             </div>
 
+            @if (d.blacklist.pending) {
+              <div class="alert alert-info"><sas-icon name="lock" /><span>Liste noire modifiée (révision {{ d.blacklist.revision }}) : elle partira dans ce bundle et Romulus mettra en quarantaine les versions interdites.@if (d.pending.artifacts === 0 && !full()) { Aucun nouveau paquet : le bundle ne contiendra que la liste. }</span></div>
+            } @else if (d.blacklist.entries > 0) {
+              <p class="subtle">La liste noire ({{ d.blacklist.entries | plural: 'version' }}) est incluse dans chaque bundle ; ces versions ne sont jamais exportées.</p>
+            }
             @if (d.problem) {
               <div class="alert alert-danger" role="alert"><sas-icon name="alert" /><span>{{ d.problem }}</span></div>
             }
@@ -61,7 +66,7 @@ import { KeyValuePipe } from '@angular/common';
 
             <div class="row footer">
               <span class="subtle">Destination : <code>{{ d.exportDir }}</code> · {{ d.freeSpace | bytes }} libres</span>
-              <button type="button" class="btn btn-primary" (click)="create()" [disabled]="busy() || !!activeJob() || selectedCount() === 0 || !!d.problem">
+              <button type="button" class="btn btn-primary" (click)="create()" [disabled]="busy() || !!activeJob() || (selectedCount() === 0 && !d.blacklist.pending) || !!d.problem">
                 <sas-icon name="usb" />Créer le bundle
               </button>
             </div>

@@ -6,6 +6,7 @@ use App\Http\DownloadException;
 use App\Resolver\Docker\ImageReference;
 use App\Resolver\Docker\RegistryClient;
 use App\Resolver\PypiResolver;
+use App\Source\Sources;
 use Sas\Bundle\Ecosystem;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
@@ -30,6 +31,7 @@ final class PackageSearch
         private readonly string $pypiIndex,
         #[Autowire('%kernel.cache_dir%')]
         private readonly string $cacheDir,
+        private readonly ?Sources $sources = null,
     ) {
     }
 
@@ -98,12 +100,12 @@ final class PackageSearch
             $responses = [];
             foreach ($chunk as $name) {
                 [$url, $headers] = match ($ecosystem) {
-                    Ecosystem::Npm => [sprintf('%s/%s', rtrim($this->npmRegistry, '/'), $name), ['Accept' => 'application/vnd.npm.install-v1+json']],
+                    Ecosystem::Npm => [sprintf('%s/%s', $this->npmRegistry($name), $name), ['Accept' => 'application/vnd.npm.install-v1+json']],
                     Ecosystem::Composer => [sprintf('https://repo.packagist.org/p2/%s.json', strtolower($name)), []],
                     Ecosystem::Pypi => [sprintf('%s/pypi/%s/json', rtrim($this->pypiIndex, '/'), rawurlencode($name)), []],
                     Ecosystem::Docker => throw new \LogicException('Sans objet pour Docker.'),
                 };
-                $responses[$name] = $this->http->request('GET', $url, ['headers' => $headers, 'timeout' => 60]);
+                $responses[$name] = $this->http->request('GET', $url, ($this->sources?->httpOptions($url) ?? []) + ['headers' => $headers, 'timeout' => 60]);
             }
             foreach ($responses as $name => $response) {
                 try {
@@ -154,7 +156,7 @@ final class PackageSearch
     /** @return array{versions: list<string>, latest: string|null} */
     private function npmVersions(string $name): array
     {
-        $data = $this->json(sprintf('%s/%s', rtrim($this->npmRegistry, '/'), $name), [], ['Accept' => 'application/vnd.npm.install-v1+json']);
+        $data = $this->json(sprintf('%s/%s', $this->npmRegistry($name), $name), [], ['Accept' => 'application/vnd.npm.install-v1+json']);
         $versions = array_map('strval', array_keys($data['versions'] ?? []));
         usort($versions, static fn (string $a, string $b) => self::compareVersions($b, $a));
 
@@ -407,14 +409,21 @@ final class PackageSearch
      *
      * @return array<mixed>
      */
+    /** Registre npm d'un paquet : celui de sa portée privée, ou le public */
+    private function npmRegistry(string $name): string
+    {
+        return $this->sources?->npmRegistry($name, $this->npmRegistry) ?? rtrim($this->npmRegistry, '/');
+    }
+
     private function json(string $url, array $query = [], array $headers = []): array
     {
+        $auth = $this->sources?->httpOptions($url) ?? [];
         try {
-            $response = $this->http->request('GET', $url, ['query' => $query, 'headers' => $headers + ['Accept' => 'application/json'], 'timeout' => 30]);
+            $response = $this->http->request('GET', $url, $auth + ['query' => $query, 'headers' => $headers + ['Accept' => 'application/json'], 'timeout' => 30]);
             $status = $response->getStatusCode();
             if (429 === $status) {
                 sleep(min(10, max(2, (int) ($response->getHeaders(false)['retry-after'][0] ?? 3))));
-                $response = $this->http->request('GET', $url, ['query' => $query, 'headers' => $headers + ['Accept' => 'application/json'], 'timeout' => 30]);
+                $response = $this->http->request('GET', $url, $auth + ['query' => $query, 'headers' => $headers + ['Accept' => 'application/json'], 'timeout' => 30]);
                 $status = $response->getStatusCode();
             }
             if (429 === $status) {

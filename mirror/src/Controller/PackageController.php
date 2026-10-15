@@ -3,6 +3,7 @@
 namespace App\Controller;
 
 use App\Entity\Package;
+use App\Quarantine\Quarantine;
 use App\Repository\PackageRepository;
 use Doctrine\DBAL\Connection;
 use Sas\Bundle\Ecosystem;
@@ -23,6 +24,7 @@ final class PackageController
     public function __construct(
         private readonly Connection $db,
         private readonly PackageRepository $packages,
+        private readonly Quarantine $quarantine,
     ) {
     }
 
@@ -52,6 +54,11 @@ final class PackageController
             $params,
         );
 
+        $quarantined = [];
+        foreach ($this->quarantine->quarantinedPackages() as $q) {
+            $quarantined[$q['ecosystem'].'|'.$q['name']] = ($quarantined[$q['ecosystem'].'|'.$q['name']] ?? 0) + 1;
+        }
+
         return new JsonResponse([
             'items' => array_map(static fn (array $r) => [
                 'ecosystem' => $r['ecosystem'],
@@ -61,6 +68,7 @@ final class PackageController
                 'size' => (int) $r['size'],
                 'updatedAt' => (new \DateTimeImmutable($r['updated_at']))->format(\DATE_ATOM),
                 'severity' => self::SEVERITIES[(int) $r['severity']] ?? null,
+                'quarantined' => $quarantined[$r['ecosystem'].'|'.$r['name']] ?? 0,
             ], $rows),
             'total' => $total,
             'page' => $page,
@@ -83,7 +91,26 @@ final class PackageController
             'ecosystem' => $eco->value,
             'name' => $name,
             'description' => \is_string($first['description'] ?? null) ? $first['description'] : null,
-            'items' => array_map(Presenter::package(...), $items),
+            'items' => array_map(fn (Package $p) => Presenter::package($p, $this->quarantine->forPackage($p)), $items),
+        ]);
+    }
+
+    /** Liste noire reçue des collecteurs (lecture seule : elle se règle dans Rémus). */
+    #[Route('/-/quarantine', methods: ['GET'], priority: 10)]
+    public function quarantine(): JsonResponse
+    {
+        $present = [];
+        foreach ($this->quarantine->quarantinedPackages() as $q) {
+            $present[$q['entry']->getId()][] = ['version' => $q['version'], 'files' => $q['files']];
+        }
+        $collectors = [];
+        foreach ($this->db->fetchAllAssociative("SELECT name, value FROM setting WHERE name LIKE 'blacklist.%'") as $row) {
+            $collectors[] = ['id' => substr((string) $row['name'], 10)] + (json_decode((string) $row['value'], true) ?: []);
+        }
+
+        return new JsonResponse([
+            'collectors' => $collectors,
+            'items' => array_map(static fn ($e) => Presenter::quarantine($e) + ['present' => $present[$e->getId()] ?? []], $this->quarantine->all()),
         ]);
     }
 }

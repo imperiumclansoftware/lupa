@@ -10,7 +10,7 @@ ifdef DOCKER_CONTEXT
 endif
 
 DC := docker compose
-VERSION ?= 1.1.0
+VERSION ?= 1.2.0
 app ?= collector
 
 .DEFAULT_GOAL := help

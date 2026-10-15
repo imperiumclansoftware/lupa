@@ -2,6 +2,7 @@
 
 namespace App\Resolver;
 
+use App\Blacklist\Blacklist;
 use App\Entity\Artifact;
 use App\Entity\PackageList;
 use App\Job\JobContext;
@@ -40,6 +41,7 @@ final readonly class DockerResolver implements Resolver
         private RegistryClient $registry,
         private ArtifactCatalog $catalog,
         private BlobStore $store,
+        private Blacklist $blacklist,
     ) {
     }
 
@@ -92,6 +94,9 @@ final readonly class DockerResolver implements Resolver
         $artifacts = [];
         foreach ($lines as $i => $line) {
             $image = ImageReference::parse($line);
+            if ($this->blacklist->blocks(Ecosystem::Docker, $image->mirrorName(), $image->reference, $context)) {
+                continue;
+            }
             $context->report(sprintf('Image %s', $image), (int) ($i * 100 / \count($lines)));
             $artifacts[] = $this->pull($image, $platforms, $context);
             $this->catalog->flush();

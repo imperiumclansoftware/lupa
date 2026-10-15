@@ -74,6 +74,7 @@ final readonly class BundleInspector
             'blobCount' => \count($manifest->blobs),
             'size' => $manifest->totalSize(),
             'summary' => (object) $summary,
+            'blacklist' => null === $manifest->blacklist ? null : ['revision' => $manifest->blacklist['revision'], 'entries' => \count($manifest->blacklist['entries'])],
             'lastImportedSequence' => $lastSequence,
             'missingSequences' => $gap,
             'missingArtifacts' => \array_slice(array_keys($missing), 0, 50),

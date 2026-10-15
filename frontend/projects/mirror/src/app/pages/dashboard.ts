@@ -66,6 +66,14 @@ import { MirrorApi, Overview } from '../api';
           </a>
         }
 
+        @if (d.quarantine.present) {
+          <a class="card security critical" routerLink="/reglages" fragment="quarantaine">
+            <sas-icon name="lock" [size]="22" />
+            <span class="grow"><strong>{{ d.quarantine.present | plural: 'version' }} en quarantaine</strong>
+              <span class="muted">Interdites par la liste noire de Rémus : présentes dans le stockage mais plus servies par les registres.</span></span>
+          </a>
+        }
+
         <div class="columns">
           <section class="card">
             <header class="card-header"><h2>Dernier import</h2><a routerLink="/import" class="subtle">Import</a></header>

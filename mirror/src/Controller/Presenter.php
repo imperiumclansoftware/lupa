@@ -5,6 +5,7 @@ namespace App\Controller;
 use App\Entity\ImportedBundle;
 use App\Entity\Job;
 use App\Entity\Package;
+use App\Entity\QuarantineEntry;
 use App\Entity\TrustedKey;
 
 /** Représentation JSON des entités pour le front. */
@@ -66,7 +67,7 @@ final class Presenter
     }
 
     /** @return array<string, mixed> */
-    public static function package(Package $package): array
+    public static function package(Package $package, ?QuarantineEntry $quarantine = null): array
     {
         $metadata = $package->getMetadata();
 
@@ -85,9 +86,25 @@ final class Presenter
             'severity' => $metadata['security']['severity'] ?? null,
             'vulnerabilities' => $metadata['security']['vulnerabilities'] ?? [],
             'auditedAt' => $metadata['security']['auditedAt'] ?? null,
+            'quarantine' => $quarantine ? self::quarantine($quarantine) : null,
             'bundleSequence' => $package->getBundle()?->getSequence(),
             'createdAt' => $package->getCreatedAt()->format(\DATE_ATOM),
             'updatedAt' => $package->getUpdatedAt()->format(\DATE_ATOM),
+        ];
+    }
+
+    /** @return array<string, mixed> */
+    public static function quarantine(QuarantineEntry $entry): array
+    {
+        return [
+            'id' => $entry->getId(),
+            'ecosystem' => $entry->getEcosystem()->value,
+            'name' => $entry->getName(),
+            'version' => $entry->getVersion(),
+            'reason' => $entry->getReason(),
+            'collectorName' => $entry->getCollectorName(),
+            'revision' => $entry->getRevision(),
+            'createdAt' => $entry->getCreatedAt()->format(\DATE_ATOM),
         ];
     }
 }
