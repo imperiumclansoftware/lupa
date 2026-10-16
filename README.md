@@ -7,7 +7,9 @@ Ansible Galaxy, providers et modules Terraform. Deux applications web jumelles, 
 - **Rémus**, le collecteur : il franchit la limite et rapporte les paquets d'Internet ;
 - **Romulus**, le miroir : il garde l'enceinte du réseau isolé et ne laisse entrer que ce qui est signé.
 
-Images Docker : [`iemperor/remus`](https://hub.docker.com/r/iemperor/remus) et [`iemperor/romulus`](https://hub.docker.com/r/iemperor/romulus) (le nom technique du dépôt reste `sas`).
+Images Docker : [`iemperor/remus`](https://hub.docker.com/r/iemperor/remus) et [`iemperor/romulus`](https://hub.docker.com/r/iemperor/romulus).
+Sources : [github.com/imperiumclansoftware/lupa](https://github.com/imperiumclansoftware/lupa), licence [MIT](LICENSE)
+(le nom technique interne reste `sas` : bundle partagé `sas/bundle`, préfixe des fichiers exportés).
 
 ```
  INTERNET                               CLÉ USB                       RÉSEAU ISOLÉ

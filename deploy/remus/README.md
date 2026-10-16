@@ -97,7 +97,7 @@ les fichiers sont dans le volume `/data`.
 | `1.1.0` | Recherche dans les registres, motifs de noms, alertes de sécurité OSV.dev, prise en charge de Docker rootless (`SAS_UID`) |
 | `1.0.0` | Première version : npm, PyPI, Composer, Docker, modèles de framework, bundles signés |
 
-Plateforme : `linux/amd64`. Image associée : [`iemperor/romulus`](https://hub.docker.com/r/iemperor/romulus)
+Plateforme : `linux/amd64`. Sources : [GitHub](https://github.com/imperiumclansoftware/lupa) (licence MIT). Image associée : [`iemperor/romulus`](https://hub.docker.com/r/iemperor/romulus)
 (même version recommandée).
 
 ---
