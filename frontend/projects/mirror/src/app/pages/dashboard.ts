@@ -16,7 +16,7 @@ import { MirrorApi, Overview } from '../api';
           <div>
             <span class="eyebrow">Romulus · miroir hors ligne</span>
             <h1>Dépôts du réseau isolé</h1>
-            <p>Sert npm, Python, Composer et Docker aux postes du réseau, à partir des bundles signés apportés par clé USB depuis Rémus.</p>
+            <p>Sert npm, Python, Composer, Docker, apt, dnf, Ansible Galaxy et Terraform aux postes du réseau, à partir des bundles signés apportés par clé USB depuis Rémus.</p>
           </div>
           <div class="hero-stats">
             <div><strong>{{ totalPackages().toLocaleString('fr-FR') }}</strong><span>paquets servis</span></div>

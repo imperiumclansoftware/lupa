@@ -131,7 +131,7 @@ export class SettingsSources implements OnInit {
   private readonly api = inject(CollectorApi);
   private readonly toasts = inject(Toasts);
   private readonly dialog = viewChild.required<Dialog>('dialog');
-  /** Dépôts privés : npm, Python, Composer, Docker (pas encore Debian ni RPM) */
+  /** Dépôts privés : npm, Python, Composer, Docker (pas encore Debian, RPM, Ansible ni Terraform) */
   protected readonly ecosystems = ECOSYSTEMS.filter((e) => e.id in HINTS);
   protected readonly items = signal<Source[]>([]);
   protected readonly error = signal('');

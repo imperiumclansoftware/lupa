@@ -28,7 +28,7 @@ import { CollectorApi, PackageList } from '../api';
           <div class="empty">
             <sas-icon name="list" [size]="28" />
             <h3>Aucune liste</h3>
-            <p>Créez une liste de paquets npm, Python, Composer ou d’images Docker.</p>
+            <p>Créez une liste de paquets npm, Python, Composer, Debian, RPM, Ansible, Terraform ou d’images Docker.</p>
             <a class="btn btn-primary" routerLink="/listes/nouvelle"><sas-icon name="plus" />Nouvelle liste</a>
           </div>
         } @else {

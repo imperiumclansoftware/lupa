@@ -16,7 +16,7 @@ import { inject } from '@angular/core';
           <section class="card card-body onboarding">
             <h2>Pour commencer</h2>
             <ol>
-              <li><strong>Créez une liste</strong> de paquets (npm, Python, Composer ou Docker), ou importez un fichier de verrouillage.</li>
+              <li><strong>Créez une liste</strong> de paquets (npm, Python, Composer, Docker, Debian, RPM, Ansible, Terraform), ou importez un fichier de verrouillage.</li>
               <li><strong>Mettez-la à jour</strong> : le collecteur résout les dépendances et télécharge tout.</li>
               <li><strong>Exportez</strong> un bundle vers la clé USB, puis importez-le dans Romulus.</li>
             </ol>
