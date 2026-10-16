@@ -1,5 +1,13 @@
 # Lupa — Rémus & Romulus
 
+<p align="center">
+  <a href="https://github.com/imperiumclansoftware/lupa/releases/download/v1.3.0/lupa-presentation.mp4">
+    <img src="docs/lupa-teaser.webp" width="860" alt="Lupa en animation : Rémus collecte sur Internet, un bundle signé traverse la clé USB, Romulus sert huit écosystèmes sur le réseau isolé">
+  </a>
+  <br>
+  <sub>▶ <a href="https://github.com/imperiumclansoftware/lupa/releases/download/v1.3.0/lupa-presentation.mp4">Vidéo de présentation complète</a> (1 min, 1080p)</sub>
+</p>
+
 Dépôts de paquets **hors ligne** pour un réseau isolé d'Internet : npm, Python (PyPI), Composer,
 images Docker, paquets système Debian (apt) et RPM (AlmaLinux, CentOS : dnf, yum), collections et rôles
 Ansible Galaxy, providers et modules Terraform. Deux applications web jumelles, reliées par une clé USB :
