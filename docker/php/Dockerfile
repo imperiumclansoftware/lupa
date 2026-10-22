@@ -1,4 +1,4 @@
-ARG PHP_VERSION=8.4
+ARG PHP_VERSION=8.4.27
 FROM php:${PHP_VERSION}-fpm-alpine
 
 # UID/GID de l'utilisateur qui exécute PHP dans le conteneur.

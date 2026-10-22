@@ -92,7 +92,8 @@ les fichiers sont dans le volume `/data`.
 
 | Tag | Contenu |
 |---|---|
-| `1.3.0`, `latest` | Paquets Debian et RPM (AlmaLinux, CentOS), Ansible Galaxy, Terraform |
+| `1.3.1`, `latest` | Sécurité : PHP 8.4.27 (CVE-2026-109618 et CVE-2026-109619, critiques), FrankenPHP 1.13.2 |
+| `1.3.0` | Paquets Debian et RPM (AlmaLinux, CentOS), Ansible Galaxy, Terraform |
 | `1.2.0` | Liste noire, dépôts sources privés, cible par défaut Linux amd64 |
 | `1.1.0` | Recherche dans les registres, motifs de noms, alertes de sécurité OSV.dev, prise en charge de Docker rootless (`SAS_UID`) |
 | `1.0.0` | Première version : npm, PyPI, Composer, Docker, modèles de framework, bundles signés |
@@ -111,7 +112,7 @@ docker run -d --name remus --restart unless-stopped \
   -p 127.0.0.1:8080:8080 \
   -v remus-data:/data \
   -v "$PWD/exports:/exports" \
-  iemperor/remus:1.3.0
+  iemperor/remus:1.3.1
 docker logs remus 2>&1 | grep "Code d'installation"
 ```
 
@@ -193,7 +194,7 @@ Toutes les valeurs ont un défaut : ce fichier ne sert qu'à les changer.
 
 ```bash
 # Version de l'image
-REMUS_IMAGE=iemperor/remus:1.3.0
+REMUS_IMAGE=iemperor/remus:1.3.1
 
 # UID des conteneurs : 0 en Docker rootless, votre UID (id -u) sinon ; ./configure.sh le détecte
 SAS_UID=0

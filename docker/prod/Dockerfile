@@ -6,7 +6,9 @@
 # (ou : make images VERSION=1.0.0)
 # Chaque image contient le front Angular, l'API Symfony et son worker (FrankenPHP = Caddy + PHP).
 
-ARG PHP_VERSION=8.4
+# Versions figées : une mise à jour de sécurité se fait ici, puis on reconstruit (make images)
+ARG FRANKENPHP_VERSION=1.13.2
+ARG PHP_VERSION=8.4.27
 ARG NODE_VERSION=24
 
 # ---------- 1. Fronts Angular (fichiers statiques) ----------
@@ -19,8 +21,10 @@ RUN npx ng build collector --configuration production \
  && npx ng build mirror --configuration production
 
 # ---------- 2. Socle PHP ----------
-FROM dunglas/frankenphp:1-php${PHP_VERSION}-alpine AS base
-RUN apk add --no-cache icu-data-full libcap \
+FROM dunglas/frankenphp:${FRANKENPHP_VERSION}-php${PHP_VERSION}-alpine AS base
+# apk upgrade : correctifs Alpine publiés depuis la construction de l'image de base
+RUN apk upgrade --no-cache \
+ && apk add --no-cache icu-data-full libcap \
  && install-php-extensions intl opcache zip apcu pdo_sqlite \
  && mv "$PHP_INI_DIR/php.ini-production" "$PHP_INI_DIR/php.ini"
 COPY docker/prod/php.ini $PHP_INI_DIR/conf.d/zz-sas.ini

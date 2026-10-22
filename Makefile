@@ -10,7 +10,7 @@ ifdef DOCKER_CONTEXT
 endif
 
 DC := docker compose
-VERSION ?= 1.3.0
+VERSION ?= 1.3.1
 app ?= collector
 
 .DEFAULT_GOAL := help
@@ -89,8 +89,8 @@ REMUS_IMAGE := docker.io/$(DOCKERHUB_USER)/remus
 ROMULUS_IMAGE := docker.io/$(DOCKERHUB_USER)/romulus
 
 images: ## Construit les deux images (make images VERSION=1.0.0)
-	docker build -f docker/prod/Dockerfile --target collector --build-arg APP_VERSION=$(VERSION) -t $(REMUS_IMAGE):$(VERSION) -t $(REMUS_IMAGE):latest .
-	docker build -f docker/prod/Dockerfile --target mirror --build-arg APP_VERSION=$(VERSION) -t $(ROMULUS_IMAGE):$(VERSION) -t $(ROMULUS_IMAGE):latest .
+	docker build --pull -f docker/prod/Dockerfile --target collector --build-arg APP_VERSION=$(VERSION) -t $(REMUS_IMAGE):$(VERSION) -t $(REMUS_IMAGE):latest .
+	docker build --pull -f docker/prod/Dockerfile --target mirror --build-arg APP_VERSION=$(VERSION) -t $(ROMULUS_IMAGE):$(VERSION) -t $(ROMULUS_IMAGE):latest .
 
 push: images ## Publie les deux images sur Docker Hub (après « docker login »)
 	docker push $(REMUS_IMAGE):$(VERSION)

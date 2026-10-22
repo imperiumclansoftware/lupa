@@ -67,7 +67,8 @@ d'aucun service externe : la base SQLite et les paquets sont dans le volume `/da
 
 | Tag | Contenu |
 |---|---|
-| `1.3.0`, `latest` | Dépôts apt (index signés par la clé de Romulus) et dnf/yum ; serveur Ansible Galaxy (API v3) ; miroir Terraform (providers en miroir réseau ou archive locale, modules, binaire) ; quarantaine étendue à ces dépôts |
+| `1.3.1`, `latest` | Sécurité : PHP 8.4.27 (CVE-2026-109618 et CVE-2026-109619, critiques), FrankenPHP 1.13.2 |
+| `1.3.0` | Dépôts apt (index signés par la clé de Romulus) et dnf/yum ; serveur Ansible Galaxy (API v3) ; miroir Terraform (providers en miroir réseau ou archive locale, modules, binaire) ; quarantaine étendue à ces dépôts |
 | `1.2.0` | Quarantaine des versions de la liste noire reçue de Rémus (plus servies par les registres npm, Python, Composer et Docker ; badges, tableau de bord, liste consultable dans Réglages) |
 | `1.1.0` | Alertes de sécurité transportées par les bundles (tableau de bord, paquets, détail des failles et versions corrigées), dossiers de clés illisibles signalés, détection de Docker rootless, tâches interrompues débloquées automatiquement ; docker rootless : le conteneur tourne sous l'UID de l'hôte (`SAS_UID`, détecté par `configure.sh`), clés USB lisibles quels que soient leurs droits de montage ; messages d'aide sur les droits |
 | `1.0.0` | Première version : npm, PyPI, Composer, Symfony Flex, Docker, import signé depuis clé USB ou navigateur |
@@ -93,19 +94,19 @@ Le serveur n'a pas Internet : l'image voyage elle aussi par clé USB.
 `configure.sh`, ce guide et des sommes de contrôle :
 
 ```bash
-tar -xf romulus-1.3.0.tar && cd romulus-1.3.0
+tar -xf romulus-1.3.1.tar && cd romulus-1.3.1
 sha256sum -c SHA256SUMS                  # la copie sur la clé n'a rien abîmé
-docker load -i romulus-1.3.0.tar.gz
+docker load -i romulus-1.3.1.tar.gz
 ./configure.sh                           # crée .env ; à relire
 ```
 
 **Ou depuis Docker Hub**, sur une machine connectée :
 
 ```bash
-docker pull iemperor/romulus:1.3.0
-docker save iemperor/romulus:1.3.0 | gzip > romulus-1.3.0.tar.gz
+docker pull iemperor/romulus:1.3.1
+docker save iemperor/romulus:1.3.1 | gzip > romulus-1.3.1.tar.gz
 # … clé USB …
-docker load -i romulus-1.3.0.tar.gz      # sur le serveur isolé
+docker load -i romulus-1.3.1.tar.gz      # sur le serveur isolé
 ```
 
 ### 2. Créer `compose.yaml`
@@ -160,7 +161,7 @@ volumes:
 ### 3. Le fichier `.env` (facultatif)
 
 ```bash
-ROMULUS_IMAGE=iemperor/romulus:1.3.0
+ROMULUS_IMAGE=iemperor/romulus:1.3.1
 
 # UID des conteneurs : 0 en Docker rootless, votre UID (id -u) sinon ; ./configure.sh le détecte
 SAS_UID=0
@@ -422,9 +423,9 @@ aucune clé secrète : il ne fait que vérifier les signatures.
 Copiez le nouveau package **dans le même dossier** que le précédent. Votre `.env` est conservé.
 
 ```bash
-tar -xf romulus-1.3.0.tar --strip-components=1
+tar -xf romulus-1.3.1.tar --strip-components=1
 sha256sum -c SHA256SUMS
-docker load -i romulus-1.3.0.tar.gz
+docker load -i romulus-1.3.1.tar.gz
 ./configure.sh          # ajoute les nouvelles variables et passe à la nouvelle image ; vos réglages ne changent pas
 docker compose up -d    # migrations appliquées au démarrage ; secrets, paquets et collecteurs approuvés conservés
 ```
