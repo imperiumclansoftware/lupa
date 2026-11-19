@@ -56,6 +56,8 @@ final class RolesTest extends WebTestCase
             ['PUT', '/api/settings', ['name' => 'Rémus test'], 403, 403, 200],
             ['GET', '/api/users', null, 403, 403, 200],
             ['GET', '/api/account', null, 200, 200, 200],
+            ['GET', '/api/documents/conditions-utilisation', null, 200, 200, 200],
+            ['GET', '/api/documents/securite-detaillee', null, 403, 403, 200],
         ];
         foreach ([[Role::Reader, 3], [Role::Operator, 4], [Role::Admin, 5]] as [$role, $column]) {
             $this->loginAs($role);

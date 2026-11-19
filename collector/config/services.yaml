@@ -1,6 +1,8 @@
 parameters:
     # Nom du cookie de session : préfixe __Host- derrière un proxy HTTPS (entrypoint de production, ADR 0002)
     env(SESSION_NAME): 'sas_collector'
+    # Documents PDF (conditions, confidentialité, politiques de sécurité) : dépôt en développement, image en production
+    env(DOCUMENTS_DIR): '%kernel.project_dir%/../docs/legal'
     env(TOTP_ISSUER): 'Lupa Rémus'
     env(SETUP_TOKEN_FILE): '%kernel.project_dir%/var/setup.code'
     env(SESSION_DIR): '%kernel.project_dir%/var/sessions/%kernel.environment%'

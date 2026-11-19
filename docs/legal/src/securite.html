@@ -1,0 +1,215 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>Politique de sécurité de Lupa</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<section class="cover">
+  <div class="kicker">Lupa · Rémus &amp; Romulus · diffusion restreinte aux administrateurs</div>
+  <h1>Politique de sécurité</h1>
+  <p class="lead">Principes, rôles, règles d'exploitation et conduite à tenir en cas d'incident pour un
+  déploiement de Lupa. Les mécanismes techniques et les risques résiduels sont détaillés dans la politique de
+  sécurité détaillée.</p>
+  <dl>
+    <dt>Version du document</dt><dd class="version">Version 1.0 — 19 novembre 2026</dd>
+    <dt>S'applique à</dt><dd>Lupa 1.4.0 et versions suivantes</dd>
+    <dt>Éditeur</dt><dd>Imperium Clan Software</dd>
+    <dt>Public</dt><dd>Administrateurs de Rémus et de Romulus, responsable de la sécurité de l'organisation</dd>
+    <dt>Révision</dt><dd>Annuelle, et à chaque version majeure de Lupa</dd>
+  </dl>
+</section>
+
+<nav class="toc">
+  <h2>Sommaire</h2>
+  <ol>
+    <li><a href="#objet">1. Objet et périmètre</a></li>
+    <li><a href="#principes">2. Principes</a></li>
+    <li><a href="#confiance">3. La chaîne de confiance</a></li>
+    <li><a href="#roles">4. Rôles et responsabilités</a></li>
+    <li><a href="#regles">5. Règles d'exploitation</a></li>
+    <li><a href="#incidents">6. Gestion des incidents</a></li>
+    <li><a href="#signalement">7. Signalement des vulnérabilités</a></li>
+  </ol>
+</nav>
+
+<h2 id="objet">1. Objet et périmètre</h2>
+<p>Lupa fait entrer des logiciels venus d'Internet dans un réseau isolé. C'est précisément ce que l'isolement
+cherche à empêcher : Lupa doit donc offrir une porte <strong>étroite, contrôlée et traçable</strong>. Cette
+politique s'applique à Rémus (zone Internet), à Romulus (zone isolée), aux supports de transport et aux
+personnes qui les administrent. Elle ne couvre pas la sécurité des postes clients ni celle des paquets eux-mêmes,
+qui relèvent des politiques générales de l'organisation.</p>
+
+<h2 id="principes">2. Principes</h2>
+<table>
+  <tr><th style="width:30%">Principe</th><th>Application dans Lupa</th></tr>
+  <tr><td><strong>Séparation des zones</strong></td><td>Aucune connexion réseau entre Rémus et Romulus ; le seul lien est un support amovible. Romulus n'a aucun accès sortant.</td></tr>
+  <tr><td><strong>Confiance par la cryptographie</strong></td><td>Romulus n'accepte que des bundles signés (Ed25519) par un collecteur approuvé, dont l'empreinte a été comparée à l'œil ; chaque fichier est vérifié par son empreinte SHA-256.</td></tr>
+  <tr><td><strong>Vérifier à la source</strong></td><td>Rémus contrôle chaque téléchargement avec la somme ou la signature publiée par le registre (npm, PyPI, Debian, RPM, Terraform, Open VSX, Marketplace…).</td></tr>
+  <tr><td><strong>Refus par défaut et moindre privilège</strong></td><td>Toute action exige un compte ; trois rôles (lecteur, opérateur, administrateur) ; conteneurs sans privilège, système de fichiers en lecture seule.</td></tr>
+  <tr><td><strong>Défense en profondeur</strong></td><td>Plusieurs barrières indépendantes : signature, empreintes, liste noire et quarantaine, contrôles d'accès, en-têtes de sécurité du navigateur.</td></tr>
+  <tr><td><strong>Traçabilité</strong></td><td>Journal d'audit (connexions, refus, comptes, approbations de collecteur) ; historique des exports et des imports avec leurs numéros de séquence.</td></tr>
+</table>
+
+<h2 id="confiance">3. La chaîne de confiance</h2>
+<figure>
+<svg viewBox="0 0 760 300" xmlns="http://www.w3.org/2000/svg" font-family="DejaVu Sans, sans-serif" font-size="11">
+  <defs><marker id="a" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto"><path d="M0 0L10 4L0 8z" fill="#2b2420"/></marker></defs>
+  <rect x="5" y="5" width="300" height="200" rx="10" fill="#fdf1e8" stroke="#b4532a"/>
+  <text x="17" y="25" font-weight="bold" fill="#b4532a">ZONE INTERNET — Rémus</text>
+  <rect x="455" y="5" width="300" height="200" rx="10" fill="#eef3f6" stroke="#4a6a80"/>
+  <text x="467" y="25" font-weight="bold" fill="#4a6a80">ZONE ISOLÉE — Romulus</text>
+  <!-- étapes Rémus -->
+  <g font-size="10.5">
+    <rect x="20" y="40" width="270" height="32" rx="6" fill="#fff" stroke="#2b2420"/>
+    <text x="30" y="60"><tspan font-weight="bold">1.</tspan> Registre : somme ou signature publiée</text>
+    <rect x="20" y="82" width="270" height="32" rx="6" fill="#fff" stroke="#2b2420"/>
+    <text x="30" y="102"><tspan font-weight="bold">2.</tspan> Liste noire : version interdite écartée</text>
+    <rect x="20" y="124" width="270" height="32" rx="6" fill="#fff" stroke="#2b2420"/>
+    <text x="30" y="144"><tspan font-weight="bold">3.</tspan> Alertes OSV.dev jointes aux paquets</text>
+    <rect x="20" y="166" width="270" height="32" rx="6" fill="#fff" stroke="#b4532a" stroke-width="2"/>
+    <text x="30" y="186"><tspan font-weight="bold">4.</tspan> Manifeste signé Ed25519 (clé de Rémus)</text>
+  </g>
+  <!-- USB -->
+  <rect x="320" y="150" width="120" height="55" rx="8" fill="#fff" stroke="#2b2420" stroke-dasharray="5 3"/>
+  <text x="380" y="173" text-anchor="middle" font-weight="bold">Clé USB</text>
+  <text x="380" y="190" text-anchor="middle" font-size="9.5">aucun réseau</text>
+  <line x1="290" y1="182" x2="318" y2="182" stroke="#2b2420" stroke-width="1.5" marker-end="url(#a)"/>
+  <line x1="440" y1="182" x2="468" y2="182" stroke="#2b2420" stroke-width="1.5" marker-end="url(#a)"/>
+  <!-- étapes Romulus -->
+  <g font-size="10.5">
+    <rect x="470" y="166" width="270" height="32" rx="6" fill="#fff" stroke="#4a6a80" stroke-width="2"/>
+    <text x="480" y="186"><tspan font-weight="bold">5.</tspan> Collecteur approuvé ? Signature valide ?</text>
+    <rect x="470" y="124" width="270" height="32" rx="6" fill="#fff" stroke="#2b2420"/>
+    <text x="480" y="144"><tspan font-weight="bold">6.</tspan> SHA-256 de chaque fichier, avant écriture</text>
+    <rect x="470" y="82" width="270" height="32" rx="6" fill="#fff" stroke="#2b2420"/>
+    <text x="480" y="102"><tspan font-weight="bold">7.</tspan> Quarantaine : liste noire plus récente</text>
+    <rect x="470" y="40" width="270" height="32" rx="6" fill="#fff" stroke="#2b2420"/>
+    <text x="480" y="60"><tspan font-weight="bold">8.</tspan> Dépôts servis aux postes</text>
+  </g>
+  <line x1="155" y1="72" x2="155" y2="80" stroke="#2b2420" marker-end="url(#a)"/>
+  <line x1="155" y1="114" x2="155" y2="122" stroke="#2b2420" marker-end="url(#a)"/>
+  <line x1="155" y1="156" x2="155" y2="164" stroke="#2b2420" marker-end="url(#a)"/>
+  <line x1="605" y1="166" x2="605" y2="158" stroke="#2b2420" marker-end="url(#a)"/>
+  <line x1="605" y1="124" x2="605" y2="116" stroke="#2b2420" marker-end="url(#a)"/>
+  <line x1="605" y1="82" x2="605" y2="74" stroke="#2b2420" marker-end="url(#a)"/>
+  <!-- légende rejet -->
+  <rect x="5" y="225" width="750" height="65" rx="8" fill="#fff" stroke="#a3241b"/>
+  <text x="17" y="245" font-weight="bold" fill="#a3241b">Points de rejet</text>
+  <text x="17" y="263" font-size="10">Somme incorrecte au téléchargement (1), clé inconnue ou signature invalide (5), empreinte d'un fichier incorrecte (6) :</text>
+  <text x="17" y="279" font-size="10">l'opération s'arrête, rien n'est écrit, l'événement est journalisé. Une version interdite n'est ni collectée (2) ni servie (7).</text>
+</svg>
+<figcaption><strong>Figure 1 — Chaîne de confiance d'un paquet.</strong> Chaque étape ajoute une garantie et peut
+arrêter le traitement. Côté Internet, Rémus vérifie ce qu'il télécharge, écarte les versions interdites, joint les
+alertes de sécurité connues, puis signe le manifeste du bundle avec sa clé privée. Côté isolé, Romulus vérifie
+d'abord que le bundle vient d'un collecteur qu'un administrateur a approuvé et qu'il n'a pas été modifié, puis
+contrôle chaque fichier, applique la liste noire et seulement ensuite publie les paquets. La sécurité de toute la
+chaîne repose donc sur deux secrets : la <strong>clé privée de Rémus</strong> et l'<strong>approbation des
+collecteurs</strong> sur Romulus.</figcaption>
+</figure>
+
+<h2 id="roles">4. Rôles et responsabilités</h2>
+<table>
+  <tr><th style="width:22%">Rôle</th><th style="width:38%">Droits dans Lupa</th><th>Responsabilités</th></tr>
+  <tr><td>Lecteur</td><td>Consulte listes, paquets, alertes, historique</td><td>Signale tout paquet ou comportement suspect</td></tr>
+  <tr><td>Opérateur</td><td>En plus : listes, mises à jour, analyses, exports (Rémus) ; imports de collecteurs déjà approuvés (Romulus)</td><td>Transporte les bundles selon la procédure ; vérifie le résultat des imports</td></tr>
+  <tr><td>Administrateur</td><td>En plus : comptes, réglages, liste noire, dépôts sources, clés de confiance, approbation d'un nouveau collecteur</td><td>Applique cette politique ; revoit comptes et journaux ; active la double authentification sur son compte</td></tr>
+  <tr><td>Exploitant (hors application)</td><td>Accès aux serveurs, volumes et sauvegardes</td><td>Mises à jour, HTTPS, sauvegarde de la clé de signature, collecte et conservation des journaux</td></tr>
+</table>
+<div class="note"><p>Séparer les rôles réduit l'impact d'un compte compromis : un opérateur ne peut ni approuver un
+nouveau collecteur, ni lever une interdiction, ni créer de compte. Les deux applications ont des comptes
+distincts ; une même personne peut être opératrice sur Rémus et lectrice sur Romulus.</p></div>
+
+<h2 id="regles">5. Règles d'exploitation</h2>
+<h3>5.1 Comptes et authentification</h3>
+<ul>
+  <li>Comptes nominatifs uniquement ; le compte initial est créé avec le code d'installation à usage unique,
+  lisible seulement sur le serveur.</li>
+  <li>Mots de passe de 12 caractères au moins, robustes, jamais réutilisés (Rémus refuse en plus ceux présents
+  dans des fuites connues).</li>
+  <li><strong>Double authentification activée par tous les administrateurs</strong> partout où un téléphone ou une
+  clé TOTP matérielle est admis ; codes de secours rangés hors ligne.</li>
+  <li>Revue des comptes et des rôles au moins tous les trois mois, et au départ de chaque personne.</li>
+</ul>
+<h3>5.2 Clé de signature et approbation des collecteurs</h3>
+<ul>
+  <li>La clé privée de Rémus (<code>identity/secret.key</code>) est sauvegardée chiffrée, hors ligne, avec un
+  accès limité ; elle ne quitte jamais la zone Internet autrement que dans cette sauvegarde.</li>
+  <li>Avant d'approuver un collecteur, l'administrateur de Romulus compare l'empreinte affichée à l'import avec
+  celle de Rémus (Réglages › Signature des bundles), par un canal indépendant de la clé USB.</li>
+  <li>Un collecteur retiré du service est retiré des clés de confiance de Romulus.</li>
+</ul>
+<h3>5.3 Transport</h3>
+<ul>
+  <li>Supports dédiés au transport des bundles, identifiés, et contrôlés selon la procédure de l'organisation à
+  l'entrée de la zone isolée.</li>
+  <li>Un bundle peut contenir des paquets de dépôts privés de l'organisation : le support est traité comme une
+  information interne.</li>
+  <li>Les numéros de séquence des bundles se suivent : un numéro manquant signalé par Romulus est vérifié avant
+  de poursuivre.</li>
+</ul>
+<h3>5.4 Contenu</h3>
+<ul>
+  <li>Ne collecter que ce dont les équipes ont besoin ; préférer des versions précises pour les projets critiques.</li>
+  <li>Consulter la page Sécurité de Rémus avant chaque export ; interdire (liste noire) les versions critiques ou
+  suspectes, puis exporter pour propager la quarantaine.</li>
+  <li>Garder à l'esprit que les alertes ne couvrent que npm, Python et Composer, et qu'aucun antivirus n'analyse
+  les paquets.</li>
+</ul>
+<h3>5.5 Exploitation technique</h3>
+<ul>
+  <li>Mettre à jour Rémus et Romulus à chaque version corrective de sécurité ; Rémus en premier, Romulus avant
+  d'importer un bundle produit par une version plus récente.</li>
+  <li>Servir les interfaces en HTTPS derrière un reverse proxy, avec <code>PUBLIC_URL</code> et
+  <code>TRUSTED_PROXIES</code> renseignés ; à défaut, limiter l'accès réseau aux postes autorisés.</li>
+  <li>Collecter les journaux (sortie standard des conteneurs) vers la solution centrale de l'organisation et les
+  conserver au moins six mois ; alerter sur les refus répétés et les approbations de collecteur.</li>
+  <li>Sauvegarder les volumes avant chaque mise à jour.</li>
+</ul>
+
+<h2 id="incidents">6. Gestion des incidents</h2>
+<figure>
+<svg viewBox="0 0 760 130" xmlns="http://www.w3.org/2000/svg" font-family="DejaVu Sans, sans-serif" font-size="11">
+  <defs><marker id="b" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto"><path d="M0 0L10 4L0 8z" fill="#2b2420"/></marker></defs>
+  <g text-anchor="middle">
+    <rect x="5" y="20" width="135" height="80" rx="8" fill="#fdf1e8" stroke="#b4532a"/>
+    <text x="72" y="45" font-weight="bold">Détecter</text><text x="72" y="64" font-size="9.5">journaux, alertes,</text><text x="72" y="78" font-size="9.5">signalement</text>
+    <rect x="160" y="20" width="135" height="80" rx="8" fill="#fdf1e8" stroke="#b4532a"/>
+    <text x="227" y="45" font-weight="bold">Contenir</text><text x="227" y="64" font-size="9.5">liste noire, compte</text><text x="227" y="78" font-size="9.5">ou clé retirés</text>
+    <rect x="315" y="20" width="135" height="80" rx="8" fill="#fdf1e8" stroke="#b4532a"/>
+    <text x="382" y="45" font-weight="bold">Éradiquer</text><text x="382" y="64" font-size="9.5">nouvelle clé, mot de</text><text x="382" y="78" font-size="9.5">passe, réinstallation</text>
+    <rect x="470" y="20" width="135" height="80" rx="8" fill="#fdf1e8" stroke="#b4532a"/>
+    <text x="537" y="45" font-weight="bold">Rétablir</text><text x="537" y="64" font-size="9.5">export complet,</text><text x="537" y="78" font-size="9.5">vérification</text>
+    <rect x="625" y="20" width="130" height="80" rx="8" fill="#fdf1e8" stroke="#b4532a"/>
+    <text x="690" y="45" font-weight="bold">Retour</text><text x="690" y="64" font-size="9.5">d'expérience,</text><text x="690" y="78" font-size="9.5">politique révisée</text>
+  </g>
+  <line x1="140" y1="60" x2="158" y2="60" stroke="#2b2420" stroke-width="1.5" marker-end="url(#b)"/>
+  <line x1="295" y1="60" x2="313" y2="60" stroke="#2b2420" stroke-width="1.5" marker-end="url(#b)"/>
+  <line x1="450" y1="60" x2="468" y2="60" stroke="#2b2420" stroke-width="1.5" marker-end="url(#b)"/>
+  <line x1="605" y1="60" x2="623" y2="60" stroke="#2b2420" stroke-width="1.5" marker-end="url(#b)"/>
+</svg>
+<figcaption><strong>Figure 2 — Étapes de traitement d'un incident.</strong> Toute anomalie suit les mêmes
+étapes : la détecter (journal d'audit, alerte, signalement d'un utilisateur), la contenir rapidement avec les
+moyens prévus par Lupa, en supprimer la cause, rétablir un service sain, puis en tirer les leçons. Les cas
+ci-dessous précisent les actions propres à Lupa.</figcaption>
+</figure>
+<table>
+  <tr><th style="width:24%">Situation</th><th>Conduite à tenir</th></tr>
+  <tr><td>Paquet malveillant ou vulnérabilité critique découverte</td><td>Interdire la version dans la liste noire de Rémus ; exporter (un bundle sans paquet suffit) ; importer sur Romulus : la version passe en quarantaine et n'est plus servie. Rechercher les postes qui l'ont installée.</td></tr>
+  <tr><td>Compte compromis ou soupçonné</td><td>Un administrateur change le mot de passe du compte et réinitialise sa double authentification, ou supprime le compte ; examiner le journal d'audit (adresses, actions) depuis la date présumée.</td></tr>
+  <tr><td>Serveur Rémus compromis</td><td>Considérer la clé de signature comme connue de l'attaquant. Sur Romulus, retirer la clé de ce collecteur des clés de confiance : plus aucun bundle signé avec elle n'est accepté. Réinstaller Rémus sur un système sain avec une <strong>nouvelle</strong> clé, faire un export complet, l'approuver sur Romulus après comparaison de l'empreinte, et vérifier les bundles importés depuis la date présumée de compromission.</td></tr>
+  <tr><td>Serveur Romulus compromis</td><td>Isoler le serveur, réinstaller, restaurer la configuration, réimporter un export complet ; vérifier les paquets installés par les postes depuis la date présumée.</td></tr>
+  <tr><td>Perte d'un support de transport</td><td>Le contenu est signé et ne peut pas être modifié sans détection ; il peut toutefois contenir des paquets internes. Évaluer la sensibilité des listes exportées et en informer le responsable de la sécurité.</td></tr>
+</table>
+
+<h2 id="signalement">7. Signalement des vulnérabilités</h2>
+<p>Une faille du logiciel Lupa se signale de façon <strong>confidentielle</strong> à l'éditeur, par les « Security
+advisories » du dépôt GitHub (github.com/imperiumclansoftware/lupa), jamais par un ticket public. Le signalement
+décrit la version concernée, le scénario et son impact. L'éditeur s'efforce d'accuser réception, de publier un
+correctif puis un avis, et remercie les auteurs qui le souhaitent. L'exploitant suit les notes de version et
+applique les correctifs selon la section 5.5.</p>
+
+</body>
+</html>

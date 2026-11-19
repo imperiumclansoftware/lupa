@@ -2,6 +2,7 @@ import { Routes } from '@angular/router';
 import {
   AccountPage,
   authGuard,
+  DocumentsPage,
   JobsPage,
   loginGuard,
   LoginPage,
@@ -76,6 +77,7 @@ export const routes: Routes = [
         loadComponent: () => import('./pages/settings'),
         title: 'Réglages · Romulus',
       },
+      { path: 'documents', component: DocumentsPage, title: 'Documents · Romulus' },
       { path: 'compte', component: AccountPage, title: 'Mon compte · Romulus' },
       {
         path: 'comptes',

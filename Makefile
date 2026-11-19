@@ -14,7 +14,7 @@ VERSION ?= 1.3.1
 app ?= collector
 
 .DEFAULT_GOAL := help
-.PHONY: help init up down restart workers ps logs sh setup-code user console composer npm ng test test-back test-front build-front lint fix images push remus-kit romulus-kit kits reset
+.PHONY: help init up down restart workers ps logs sh setup-code user console composer npm ng test test-back test-front build-front lint fix docs images push remus-kit romulus-kit kits reset
 
 help: ## Affiche cette aide
 	@grep -E '^[a-zA-Z_-]+:.*?## ' $(MAKEFILE_LIST) | awk 'BEGIN {FS=":.*?## "}; {printf "  \033[36m%-14s\033[0m %s\n", $$1, $$2}'
@@ -72,6 +72,9 @@ lint: ## Analyse statique et style (PHPStan, PHP-CS-Fixer, ESLint, Prettier), co
 	$(DC) exec -T collector sh -c 'vendor/bin/phpstan analyse --no-progress --memory-limit=2G && vendor/bin/php-cs-fixer fix --dry-run --diff'
 	$(DC) exec -T mirror sh -c 'vendor/bin/phpstan analyse --no-progress --memory-limit=2G && vendor/bin/php-cs-fixer fix --dry-run --diff'
 	$(DC) exec -T node-collector sh -c 'npm run lint && npx prettier --check "projects/**/*.{ts,html,css}"'
+
+docs: ## Génère les PDF de docs/legal (conditions, confidentialité, politiques de sécurité)
+	DOCKER_CONTEXT=$${DOCKER_CONTEXT:-} sh scripts/build-docs.sh
 
 fix: ## Corrige le style (PHP-CS-Fixer, Prettier)
 	$(DC) exec -T collector vendor/bin/php-cs-fixer fix

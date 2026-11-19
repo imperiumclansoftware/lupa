@@ -64,9 +64,12 @@ ENV APP_ENV=prod \
     SESSION_DIR=/data/sessions \
     SETUP_TOKEN_FILE=/data/setup.code \
     TRUSTED_PROXIES=127.0.0.1 \
+    DOCUMENTS_DIR=/srv/documents \
     XDG_DATA_HOME=/data/caddy \
     XDG_CONFIG_HOME=/config
 COPY docker/prod/Caddyfile /etc/frankenphp/Caddyfile
+# Documents réservés aux comptes connectés (servis par l'API, hors du dossier public)
+COPY docs/legal/*.pdf /srv/documents/
 COPY --chmod=755 docker/prod/entrypoint.sh /usr/local/bin/sas-entrypoint
 RUN adduser -D -H -h /data/home -u 1000 app \
  && setcap -r /usr/local/bin/frankenphp

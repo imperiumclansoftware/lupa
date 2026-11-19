@@ -1,0 +1,490 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>Politique de sécurité détaillée de Lupa</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<section class="cover">
+  <div class="kicker">Lupa · Rémus &amp; Romulus · diffusion restreinte aux administrateurs</div>
+  <h1>Politique de sécurité détaillée</h1>
+  <p class="lead">Pile logicielle, mécanismes de sécurité mis en œuvre dans le code, et failles ou risques
+  résiduels classés par criticité, avec les risques encourus et les mesures recommandées.</p>
+  <dl>
+    <dt>Version du document</dt><dd class="version">Version 1.0 — 19 novembre 2026</dd>
+    <dt>État du code</dt><dd>Lupa 1.4.0 (Symfony 8.1.11, PHP 8.4.27, Angular 22.2)</dd>
+    <dt>Éditeur</dt><dd>Imperium Clan Software</dd>
+    <dt>Public</dt><dd>Administrateurs, responsable de la sécurité, auditeurs</dd>
+    <dt>Documents liés</dt><dd>Politique de sécurité ; décisions d'architecture (docs/adr du dépôt)</dd>
+  </dl>
+</section>
+
+<nav class="toc">
+  <h2>Sommaire</h2>
+  <ol>
+    <li><a href="#pile">1. Pile logicielle</a></li>
+    <li><a href="#auth">2. Authentification et sessions</a></li>
+    <li><a href="#acces">3. Autorisations</a></li>
+    <li><a href="#api">4. Entrées, sorties et navigateur</a></li>
+    <li><a href="#chaine">5. Intégrité de la chaîne d'approvisionnement</a></li>
+    <li><a href="#secrets">6. Secrets, clés et données</a></li>
+    <li><a href="#exploitation">7. Journalisation, conteneurs et développement</a></li>
+    <li><a href="#risques">8. Failles et risques résiduels</a></li>
+    <li><a href="#synthese">9. Synthèse des recommandations</a></li>
+  </ol>
+</nav>
+
+<h2 id="pile">1. Pile logicielle</h2>
+<figure>
+<svg viewBox="0 0 760 330" xmlns="http://www.w3.org/2000/svg" font-family="DejaVu Sans, sans-serif" font-size="11">
+  <defs><marker id="a" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto"><path d="M0 0L10 4L0 8z" fill="#2b2420"/></marker></defs>
+  <rect x="5" y="40" width="120" height="70" rx="8" fill="#fff" stroke="#2b2420"/>
+  <text x="65" y="66" text-anchor="middle" font-weight="bold">Navigateur</text>
+  <text x="65" y="84" text-anchor="middle" font-size="9.5">interface Angular</text>
+  <text x="65" y="98" text-anchor="middle" font-size="9.5">(HTTPS conseillé)</text>
+  <rect x="5" y="140" width="120" height="60" rx="8" fill="#fff" stroke="#2b2420"/>
+  <text x="65" y="164" text-anchor="middle" font-weight="bold">Postes</text>
+  <text x="65" y="182" text-anchor="middle" font-size="9.5">npm, pip, docker, apt…</text>
+  <!-- conteneur -->
+  <rect x="150" y="10" width="460" height="310" rx="12" fill="#f7f1ec" stroke="#b4532a" stroke-width="1.5"/>
+  <text x="162" y="30" font-weight="bold" fill="#b4532a">Conteneur Rémus ou Romulus (Alpine, sans privilège, lecture seule)</text>
+  <rect x="170" y="45" width="190" height="80" rx="8" fill="#fff" stroke="#2b2420"/>
+  <text x="265" y="66" text-anchor="middle" font-weight="bold">FrankenPHP 1.13.5</text>
+  <text x="265" y="83" text-anchor="middle" font-size="9.5">serveur Caddy intégré :</text>
+  <text x="265" y="97" text-anchor="middle" font-size="9.5">en-têtes de sécurité, CSP,</text>
+  <text x="265" y="111" text-anchor="middle" font-size="9.5">fichiers statiques, journaux</text>
+  <rect x="380" y="45" width="210" height="80" rx="8" fill="#fff" stroke="#2b2420"/>
+  <text x="485" y="66" text-anchor="middle" font-weight="bold">Interface Angular 22.2</text>
+  <text x="485" y="83" text-anchor="middle" font-size="9.5">compilée au build, servie</text>
+  <text x="485" y="97" text-anchor="middle" font-size="9.5">en fichiers statiques ;</text>
+  <text x="485" y="111" text-anchor="middle" font-size="9.5">Trusted Types</text>
+  <rect x="170" y="140" width="420" height="70" rx="8" fill="#fff" stroke="#2b2420"/>
+  <text x="380" y="161" text-anchor="middle" font-weight="bold">API Symfony 8.1.11 — PHP 8.4.27</text>
+  <text x="380" y="178" text-anchor="middle" font-size="9.5">SecurityBundle, scheb/2fa 8.7, Validator, Messenger, Lock, RateLimiter,</text>
+  <text x="380" y="192" text-anchor="middle" font-size="9.5">Doctrine ORM 3.8 / DBAL 4.6, libsodium (Argon2id, Ed25519, XSalsa20-Poly1305)</text>
+  <rect x="170" y="225" width="200" height="80" rx="8" fill="#fff" stroke="#2b2420"/>
+  <text x="270" y="246" text-anchor="middle" font-weight="bold">Volume /data</text>
+  <text x="270" y="263" text-anchor="middle" font-size="9.5">SQLite, fichiers par SHA-256,</text>
+  <text x="270" y="277" text-anchor="middle" font-size="9.5">clés (identity/), sessions,</text>
+  <text x="270" y="291" text-anchor="middle" font-size="9.5">secret de l'application</text>
+  <rect x="390" y="225" width="200" height="80" rx="8" fill="#fff" stroke="#2b2420"/>
+  <text x="490" y="246" text-anchor="middle" font-weight="bold">Worker Messenger</text>
+  <text x="490" y="263" text-anchor="middle" font-size="9.5">tâches de fond : résolution,</text>
+  <text x="490" y="277" text-anchor="middle" font-size="9.5">export (Rémus), import</text>
+  <text x="490" y="291" text-anchor="middle" font-size="9.5">(Romulus)</text>
+  <!-- Internet -->
+  <rect x="635" y="45" width="120" height="165" rx="8" fill="#fdf1e8" stroke="#b4532a"/>
+  <text x="695" y="70" text-anchor="middle" font-weight="bold" fill="#b4532a">Rémus</text>
+  <text x="695" y="87" text-anchor="middle" font-size="9.5">seulement :</text>
+  <text x="695" y="105" text-anchor="middle" font-size="9.5">npm, pip 26.3,</text>
+  <text x="695" y="119" text-anchor="middle" font-size="9.5">composer 2, git,</text>
+  <text x="695" y="133" text-anchor="middle" font-size="9.5">gpgv, Node 24</text>
+  <text x="695" y="155" text-anchor="middle" font-size="9.5">→ registres</text>
+  <text x="695" y="169" text-anchor="middle" font-size="9.5">Internet</text>
+  <line x1="125" y1="75" x2="168" y2="80" stroke="#2b2420" stroke-width="1.5" marker-end="url(#a)"/>
+  <line x1="125" y1="170" x2="168" y2="170" stroke="#2b2420" stroke-width="1.5" marker-end="url(#a)"/>
+  <line x1="265" y1="125" x2="265" y2="138" stroke="#2b2420" marker-end="url(#a)"/>
+  <line x1="270" y1="210" x2="270" y2="223" stroke="#2b2420" marker-end="url(#a)"/>
+  <line x1="490" y1="210" x2="490" y2="223" stroke="#2b2420" marker-end="url(#a)"/>
+  <line x1="590" y1="265" x2="633" y2="150" stroke="#b4532a" stroke-width="1.5" stroke-dasharray="5 3" marker-end="url(#a)"/>
+</svg>
+<figcaption><strong>Figure 1 — Architecture technique.</strong> Rémus et Romulus partagent la même base : une
+image Alpine qui exécute FrankenPHP. Son serveur Caddy intégré reçoit les requêtes, ajoute les en-têtes de
+sécurité, sert l'interface Angular précompilée et passe les appels <code>/api</code> et les registres à
+l'application Symfony. Les données vivent dans un seul volume : base SQLite, fichiers rangés par empreinte, clés
+et sessions. Un worker exécute les tâches longues. Seule l'image de Rémus embarque les outils des écosystèmes
+(npm, pip, Composer, gpgv) et accède à Internet ; celle de Romulus n'en contient aucun.</figcaption>
+</figure>
+<table>
+  <tr><th style="width:30%">Composant</th><th style="width:18%">Version</th><th>Rôle</th></tr>
+  <tr><td>PHP / FrankenPHP (Caddy)</td><td>8.4.27 / 1.13.5</td><td>Exécution de l'application, serveur HTTP, en-têtes</td></tr>
+  <tr><td>Symfony (FrameworkBundle, SecurityBundle, Messenger, HttpClient, Lock, RateLimiter)</td><td>8.1.11</td><td>Cadre applicatif, authentification, tâches de fond, verrous, limitation</td></tr>
+  <tr><td>Doctrine ORM / DBAL / Migrations</td><td>3.8.0 / 4.6.0 / 4.0</td><td>Persistance SQLite, requêtes paramétrées, migrations de schéma</td></tr>
+  <tr><td>scheb/2fa-bundle, -totp, -backup-code ; spomky-labs/otphp</td><td>8.7.0 ; 11.5.1</td><td>Double authentification TOTP et codes de secours</td></tr>
+  <tr><td>libsodium (extension PHP)</td><td>intégrée à PHP</td><td>Argon2id, Ed25519, XSalsa20-Poly1305, BLAKE2b</td></tr>
+  <tr><td>composer/semver ; bacon/bacon-qr-code ; Monolog</td><td>3.6 ; 3.1 ; 3.13</td><td>Contraintes de versions ; QR code ; journaux</td></tr>
+  <tr><td>Angular, TypeScript, RxJS</td><td>22.2, 6.0, 7.8</td><td>Interface (mode zoneless, signaux)</td></tr>
+  <tr><td>Outils de Rémus</td><td>Node 24 (npm), pip 26.3, Composer 2, gpgv</td><td>Résolution des dépendances, vérification GPG des dépôts</td></tr>
+  <tr><td>Outillage qualité (CI)</td><td>PHPStan 2.3, PHPUnit 13.4, PHP-CS-Fixer 3.95, ESLint 10, Semgrep, gitleaks, Trivy</td><td>Analyse statique, tests, style, SAST, secrets, images</td></tr>
+</table>
+
+<h2 id="auth">2. Authentification et sessions</h2>
+<figure>
+<svg viewBox="0 0 760 175" xmlns="http://www.w3.org/2000/svg" font-family="DejaVu Sans, sans-serif" font-size="10.5">
+  <defs><marker id="b" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto"><path d="M0 0L10 4L0 8z" fill="#2b2420"/></marker></defs>
+  <g text-anchor="middle">
+    <rect x="5" y="25" width="135" height="85" rx="8" fill="#fff" stroke="#2b2420"/>
+    <text x="72" y="47" font-weight="bold">Mot de passe</text>
+    <text x="72" y="65" font-size="9.5">POST /api/login</text>
+    <text x="72" y="79" font-size="9.5">+ jeton anti-CSRF</text>
+    <text x="72" y="93" font-size="9.5">5 essais / 15 min</text>
+    <rect x="160" y="25" width="135" height="85" rx="8" fill="#fff" stroke="#2b2420"/>
+    <text x="227" y="47" font-weight="bold">Argon2id</text>
+    <text x="227" y="65" font-size="9.5">même réponse et même</text>
+    <text x="227" y="79" font-size="9.5">durée si l'identifiant</text>
+    <text x="227" y="93" font-size="9.5">n'existe pas</text>
+    <rect x="315" y="25" width="135" height="85" rx="8" fill="#fdf1e8" stroke="#b4532a"/>
+    <text x="382" y="47" font-weight="bold">Code TOTP</text>
+    <text x="382" y="65" font-size="9.5">si activé : API fermée</text>
+    <text x="382" y="79" font-size="9.5">jusqu'au code ; 5 codes</text>
+    <text x="382" y="93" font-size="9.5">faux = session fermée</text>
+    <rect x="470" y="25" width="135" height="85" rx="8" fill="#fff" stroke="#2b2420"/>
+    <text x="537" y="47" font-weight="bold">Session</text>
+    <text x="537" y="65" font-size="9.5">nouvel identifiant,</text>
+    <text x="537" y="79" font-size="9.5">HttpOnly, SameSite=Strict,</text>
+    <text x="537" y="93" font-size="9.5">__Host- en HTTPS</text>
+    <rect x="625" y="25" width="130" height="85" rx="8" fill="#fff" stroke="#2b2420"/>
+    <text x="690" y="47" font-weight="bold">Chaque requête</text>
+    <text x="690" y="65" font-size="9.5">rôle vérifié ;</text>
+    <text x="690" y="79" font-size="9.5">écritures : jeton</text>
+    <text x="690" y="93" font-size="9.5">anti-CSRF exigé</text>
+  </g>
+  <line x1="140" y1="67" x2="158" y2="67" stroke="#2b2420" stroke-width="1.5" marker-end="url(#b)"/>
+  <line x1="295" y1="67" x2="313" y2="67" stroke="#2b2420" stroke-width="1.5" marker-end="url(#b)"/>
+  <line x1="450" y1="67" x2="468" y2="67" stroke="#2b2420" stroke-width="1.5" marker-end="url(#b)"/>
+  <line x1="605" y1="67" x2="623" y2="67" stroke="#2b2420" stroke-width="1.5" marker-end="url(#b)"/>
+  <text x="5" y="140" font-size="10">Chaque étape est journalisée sur le canal « audit » : connexion réussie ou refusée (avec le motif « trop de tentatives »),</text>
+  <text x="5" y="156" font-size="10">mot de passe accepté en attente du code, code refusé, double authentification réussie, déconnexion, accès refusé sans session.</text>
+</svg>
+<figcaption><strong>Figure 2 — Parcours de connexion.</strong> Le mot de passe est vérifié avec Argon2id ; un
+identifiant inconnu donne la même réponse dans un temps comparable (un hachage factice est calculé), pour ne pas
+révéler quels comptes existent. Si la double authentification est active, la session reste dans un état
+intermédiaire où aucune donnée n'est accessible tant que le code n'est pas fourni. Une fois connecté, l'identifiant
+de session est renouvelé et chaque requête d'écriture doit présenter le jeton anti-CSRF lié à la session.</figcaption>
+</figure>
+<table>
+  <tr><th style="width:30%">Mécanisme</th><th>Mise en œuvre</th></tr>
+  <tr><td>Hachage des mots de passe</td><td>Argon2id (<code>algorithm: sodium</code>), rehachage automatique des anciens bcrypt (<code>PasswordUpgraderInterface</code>).</td></tr>
+  <tr><td>Politique des mots de passe</td><td>12 à 4096 caractères, robustesse « moyenne » au moins (<code>PasswordStrength</code>), refus des mots de passe divulgués sur Rémus (<code>NotCompromisedPassword</code>, k-anonymat) ; <code>Security/PasswordPolicy.php</code>.</td></tr>
+  <tr><td>Limitation des tentatives</td><td><code>login_throttling</code> : 5 essais par 15 minutes (par identifiant et adresse IP, et par adresse IP) ; les codes de double authentification faux sont comptés.</td></tr>
+  <tr><td>Adresse IP fiable</td><td>Aucun proxy cru par défaut (<code>TRUSTED_PROXIES=127.0.0.1</code>) : un client ne peut pas falsifier <code>X-Forwarded-For</code> pour contourner la limitation.</td></tr>
+  <tr><td>Double authentification</td><td>TOTP (30 s, 6 chiffres), activation confirmée par un code et mot de passe redemandé ; 10 codes de secours de 50 bits, conservés en SHA-256, à usage unique ; 5 codes faux ferment la session (<code>Security/TwoFactorHandler.php</code>).</td></tr>
+  <tr><td>Sessions</td><td>Cookie HttpOnly, SameSite=Strict, Secure et préfixe <code>__Host-</code> derrière un proxy HTTPS déclaré ; <code>use_strict_mode</code> ; identifiant renouvelé à la connexion ; fichiers de session dans le volume.</td></tr>
+  <tr><td>Anti-CSRF</td><td>Jeton aléatoire de 256 bits en session, renvoyé par l'interface dans l'en-tête <code>X-XSRF-TOKEN</code> et comparé en temps constant (<code>Security/CsrfSubscriber.php</code>).</td></tr>
+  <tr><td>Installation</td><td>Code d'installation de 12 caractères aléatoires, affiché dans les journaux du serveur, conservé en SHA-256, à usage unique, valable tant qu'aucun compte n'existe.</td></tr>
+</table>
+
+<h2 id="acces">3. Autorisations</h2>
+<ul>
+  <li><strong>Refus par défaut</strong> : <code>access_control</code> exige un rôle sur toute l'API ; seules la
+  connexion, la session et l'installation sont publiques.</li>
+  <li><strong>Hiérarchie</strong> : lecteur &lt; opérateur &lt; administrateur. Toute écriture sur l'API exige au
+  moins le rôle opérateur ; les comptes, réglages, liste noire, dépôts sources, suppression de listes, clés de
+  confiance et l'approbation d'un collecteur exigent le rôle administrateur (<code>#[IsGranted]</code>).</li>
+  <li><strong>Garde-fous</strong> : un administrateur ne modifie ni son propre rôle ni ne supprime son compte ; il
+  reste toujours au moins un administrateur.</li>
+  <li><strong>Tests</strong> : chaque action d'écriture est essayée avec les trois rôles dans les tests fonctionnels.</li>
+  <li><strong>Registres de Romulus</strong> : en lecture seule et sans authentification (décision ADR 0001) ;
+  <code>docker push</code> est refusé.</li>
+</ul>
+
+<h2 id="api">4. Entrées, sorties et navigateur</h2>
+<table>
+  <tr><th style="width:30%">Mécanisme</th><th>Mise en œuvre</th></tr>
+  <tr><td>Validation des entrées</td><td>Objets de transfert immuables (<code>readonly</code>) liés par <code>#[MapRequestPayload]</code> et <code>#[MapQueryString]</code>, contraintes du Validator ; erreur 422 lisible en cas d'entrée invalide.</td></tr>
+  <tr><td>Requêtes SQL</td><td>Doctrine avec paramètres liés ; aucune requête construite par concaténation de données utilisateur ; identifiants UUID v7 stockés en binaire.</td></tr>
+  <tr><td>Volumétrie</td><td>Listes paginées (100 éléments au plus) ; envoi de bundles par morceaux avec taille annoncée et nom contrôlé.</td></tr>
+  <tr><td>Concurrence</td><td>Verrous <code>symfony/lock</code> au lancement des exports, imports et mises à jour de liste.</td></tr>
+  <tr><td>Erreurs</td><td>Réponses JSON génériques, sans trace ni détail interne en production (<code>APP_DEBUG=0</code>).</td></tr>
+  <tr><td>En-têtes HTTP</td><td>CSP stricte de l'interface (<code>script-src 'self'</code>, <code>require-trusted-types-for 'script'</code>, <code>frame-ancestors 'none'</code>) ; CSP fermée sur l'API (<code>default-src 'none'</code>) ; HSTS, <code>X-Content-Type-Options: nosniff</code>, <code>Referrer-Policy</code>, <code>Permissions-Policy</code>, <code>Cross-Origin-Opener-Policy</code>.</td></tr>
+  <tr><td>Interface Angular</td><td>Aucun <code>innerHTML</code>, <code>bypassSecurityTrust*</code>, <code>eval</code> ni stockage local (règles ESLint bloquantes) ; QR code dessiné en SVG sans URL <code>data:</code>.</td></tr>
+  <tr><td>Fichiers d'extensions VS Code</td><td>Servis avec une CSP <code>sandbox</code> qui interdit l'exécution de scripts dans l'origine du miroir.</td></tr>
+</table>
+
+<h2 id="chaine">5. Intégrité de la chaîne d'approvisionnement</h2>
+<h3>5.1 Au téléchargement (Rémus)</h3>
+<table>
+  <tr><th style="width:26%">Source</th><th>Contrôle</th></tr>
+  <tr><td>npm</td><td>Empreinte <code>integrity</code> (SHA-512) publiée par le registre</td></tr>
+  <tr><td>PyPI</td><td>SHA-256 publié ; roues binaires seulement (<code>--only-binary</code>), sources téléchargées sans être construites</td></tr>
+  <tr><td>Composer</td><td><code>shasum</code> quand Packagist le fournit</td></tr>
+  <tr><td>Docker / OCI</td><td>Digest SHA-256 de chaque manifeste et couche</td></tr>
+  <tr><td>Debian, AlmaLinux, CentOS</td><td>Index acceptés seulement avec une signature valide (gpgv, clés livrées avec l'image) ; SHA-256 de chaque paquet</td></tr>
+  <tr><td>Terraform</td><td>SHA256SUMS signé, vérifié avec gpgv (clé HashiCorp livrée, sinon clé publiée par le registre)</td></tr>
+  <tr><td>Ansible Galaxy</td><td>SHA-256 des collections ; rôles : archive GitHub en HTTPS, sans somme publiée</td></tr>
+  <tr><td>VS Code</td><td>SHA-256 publié (propriété du Marketplace, fichier <code>.sha256</code> d'Open VSX) ; absent : HTTPS seul, signalé au journal</td></tr>
+</table>
+<p>Les outils tiers ne lancent aucun script d'installation : npm avec <code>--ignore-scripts</code>, Composer avec
+<code>--no-scripts --no-plugins</code>. Exception : les <strong>modèles de framework</strong> exécutent le générateur
+officiel (Angular CLI, Nest CLI), voir le risque R4.</p>
+
+<h3>5.2 À l'import (Romulus)</h3>
+<figure>
+<svg viewBox="0 0 760 120" xmlns="http://www.w3.org/2000/svg" font-family="DejaVu Sans, sans-serif" font-size="10.5">
+  <defs><marker id="c" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto"><path d="M0 0L10 4L0 8z" fill="#2b2420"/></marker></defs>
+  <g text-anchor="middle">
+    <rect x="5" y="15" width="140" height="70" rx="8" fill="#fff" stroke="#2b2420"/>
+    <text x="75" y="38" font-weight="bold">Lecture</text><text x="75" y="55" font-size="9.5">manifeste et</text><text x="75" y="69" font-size="9.5">parties de l'archive</text>
+    <rect x="160" y="15" width="140" height="70" rx="8" fill="#fdf1e8" stroke="#b4532a"/>
+    <text x="230" y="38" font-weight="bold">Clé approuvée ?</text><text x="230" y="55" font-size="9.5">sinon : refus, demande</text><text x="230" y="69" font-size="9.5">d'approbation (admin)</text>
+    <rect x="315" y="15" width="140" height="70" rx="8" fill="#fdf1e8" stroke="#b4532a"/>
+    <text x="385" y="38" font-weight="bold">Signature Ed25519</text><text x="385" y="55" font-size="9.5">du manifeste exact ;</text><text x="385" y="69" font-size="9.5">invalide : refus</text>
+    <rect x="470" y="15" width="140" height="70" rx="8" fill="#fdf1e8" stroke="#b4532a"/>
+    <text x="540" y="38" font-weight="bold">SHA-256</text><text x="540" y="55" font-size="9.5">de chaque fichier</text><text x="540" y="69" font-size="9.5">avant rangement</text>
+    <rect x="625" y="15" width="130" height="70" rx="8" fill="#fff" stroke="#2b2420"/>
+    <text x="690" y="38" font-weight="bold">Publication</text><text x="690" y="55" font-size="9.5">puis liste noire</text><text x="690" y="69" font-size="9.5">si plus récente</text>
+  </g>
+  <line x1="145" y1="50" x2="158" y2="50" stroke="#2b2420" stroke-width="1.5" marker-end="url(#c)"/>
+  <line x1="300" y1="50" x2="313" y2="50" stroke="#2b2420" stroke-width="1.5" marker-end="url(#c)"/>
+  <line x1="455" y1="50" x2="468" y2="50" stroke="#2b2420" stroke-width="1.5" marker-end="url(#c)"/>
+  <line x1="610" y1="50" x2="623" y2="50" stroke="#2b2420" stroke-width="1.5" marker-end="url(#c)"/>
+  <text x="5" y="110" font-size="9.5">Encadrés orangés : points de refus. Un refus n'écrit rien dans le stockage ni dans la base et laisse le bundle sur le support.</text>
+</svg>
+<figcaption><strong>Figure 3 — Vérification d'un bundle à l'import.</strong> Romulus lit d'abord le manifeste
+pour savoir de quel collecteur il vient. Il refuse le bundle si la clé de ce collecteur n'a pas été approuvée par
+un administrateur, puis si la signature du manifeste ne correspond pas à son contenu exact. Il vérifie ensuite
+l'empreinte de chaque fichier en le copiant ; un seul écart arrête l'import. Ce n'est qu'après ces contrôles que
+les paquets sont publiés et que la liste noire du bundle est appliquée, à condition que sa révision soit plus
+récente que celle déjà connue.</figcaption>
+</figure>
+<p>La liste noire voyage dans le manifeste signé ; elle met en quarantaine les versions interdites, même importées
+auparavant, sur tous les registres de Romulus. Un contrat de format, testé en continu, garantit que Romulus relit
+exactement ce que Rémus produit.</p>
+
+<h2 id="secrets">6. Secrets, clés et données</h2>
+<table>
+  <tr><th style="width:30%">Élément</th><th>Protection</th></tr>
+  <tr><td>Clé de signature de Rémus</td><td>Ed25519, créée au premier démarrage, fichier <code>identity/secret.key</code> écrit avec un masque 077 dans le volume ; réinstallation possible avec <code>REMUS_SIGNING_KEY</code>.</td></tr>
+  <tr><td>Clé de signature des dépôts apt de Romulus</td><td>OpenPGP Ed25519 générée par Romulus, fichier en mode 0600 ; les postes vérifient les index avec la clé publique.</td></tr>
+  <tr><td>Identifiants des dépôts privés</td><td>Chiffrés avec <code>sodium_crypto_secretbox</code> (XSalsa20-Poly1305), clé dérivée par BLAKE2b de la clé de Rémus ; jamais renvoyés par l'API.</td></tr>
+  <tr><td>Secret de l'application</td><td>Généré au premier démarrage et conservé dans le volume, ou fourni par fichier (Docker secrets).</td></tr>
+  <tr><td>Secrets TOTP</td><td>En base, non chiffrés (voir R8).</td></tr>
+  <tr><td>Dépôt de code</td><td>Aucun secret versionné (gitleaks bloquant en CI) ; fichiers <code>.env</code> limités aux valeurs par défaut.</td></tr>
+</table>
+
+<h2 id="exploitation">7. Journalisation, conteneurs et développement</h2>
+<ul>
+  <li><strong>Audit</strong> : canal dédié, au format JSON sur la sortie d'erreur ; un processeur Monolog masque
+  mots de passe, jetons, cookies, en-têtes <code>Authorization</code> et identifiants dans les URL avant écriture.
+  Les dépréciations techniques ne sont pas journalisées en production.</li>
+  <li><strong>Conteneurs</strong> : utilisateur sans privilège (UID de l'hôte, ou root sans privilège de Docker
+  rootless), toutes les capabilities retirées sauf <code>CHOWN</code>, <code>DAC_OVERRIDE</code>,
+  <code>FOWNER</code> (effectives seulement en rootless), <code>no-new-privileges</code>, système de fichiers en
+  lecture seule, clés USB montées en lecture seule sur Romulus.</li>
+  <li><strong>Mises à jour</strong> : images Alpine mises à jour à la construction (<code>apk upgrade</code>) ;
+  Dependabot hebdomadaire avec délai de sept jours pour les nouvelles versions.</li>
+  <li><strong>Intégration continue</strong> (bloquante) : PHPStan au niveau maximal avec ligne de base, PHP-CS-Fixer,
+  PHPUnit (≈ 200 tests dont contrôle d'accès par rôle, contrat du bundle, rollback d'export), ESLint avec règles de
+  sécurité, Prettier, <code>composer audit</code>, <code>npm audit</code>, Semgrep (PHP, TypeScript, OWASP Top 10),
+  gitleaks, Trivy sur les images (HIGH et CRITICAL corrigibles) ; actions GitHub épinglées par empreinte de commit.</li>
+  <li><strong>Décisions</strong> : chaque écart assumé aux règles de sécurité est documenté dans un ADR (docs/adr).</li>
+</ul>
+
+<h2 id="risques">8. Failles et risques résiduels</h2>
+<p>Aucune vulnérabilité connue et exploitable n'est ouverte à la date du document. Les éléments ci-dessous sont des
+<strong>risques résiduels</strong> : limites de conception, choix assumés ou dépendances à la configuration de
+l'exploitant. La criticité combine l'impact et la probabilité dans un déploiement conforme à la documentation.</p>
+<table>
+  <tr><th style="width:18%">Niveau</th><th>Signification</th></tr>
+  <tr><td><span class="lvl critique">Critique</span></td><td>Compromission probable du réseau isolé ; à traiter avant toute mise en service (aucun risque de ce niveau à ce jour).</td></tr>
+  <tr><td><span class="lvl elevee">Élevée</span></td><td>Impact grave et probabilité réelle ; mesures compensatoires attendues de l'exploitant.</td></tr>
+  <tr><td><span class="lvl moyenne">Moyenne</span></td><td>Impact important mais conditions d'exploitation restrictives, ou impact limité et probable.</td></tr>
+  <tr><td><span class="lvl faible">Faible</span></td><td>Impact limité ou exploitation peu vraisemblable ; à suivre.</td></tr>
+</table>
+
+<figure>
+<svg viewBox="0 0 760 300" xmlns="http://www.w3.org/2000/svg" font-family="DejaVu Sans, sans-serif" font-size="11">
+  <text x="20" y="150" transform="rotate(-90 20 150)" text-anchor="middle" font-weight="bold">Impact</text>
+  <text x="330" y="292" text-anchor="middle" font-weight="bold">Probabilité</text>
+  <!-- grille 3 colonnes (faible, moyenne, forte) x 4 lignes (critique, grave, important, limité) -->
+  <g font-size="9.5" fill="#6f655d">
+    <text x="105" y="52" text-anchor="end">critique</text>
+    <text x="105" y="117" text-anchor="end">grave</text>
+    <text x="105" y="182" text-anchor="end">important</text>
+    <text x="105" y="247" text-anchor="end">limité</text>
+    <text x="210" y="275" text-anchor="middle">faible</text>
+    <text x="420" y="275" text-anchor="middle">moyenne</text>
+    <text x="630" y="275" text-anchor="middle">forte</text>
+  </g>
+  <rect x="115" y="20" width="200" height="65" fill="#d0621b"/>
+  <rect x="315" y="20" width="210" height="65" fill="#d0621b"/>
+  <rect x="525" y="20" width="220" height="65" fill="#a3241b"/>
+  <rect x="115" y="85" width="200" height="65" fill="#f2d48a"/>
+  <rect x="315" y="85" width="210" height="65" fill="#f2d48a"/>
+  <rect x="525" y="85" width="220" height="65" fill="#d0621b"/>
+  <rect x="115" y="150" width="200" height="65" fill="#dfe3e6"/>
+  <rect x="315" y="150" width="210" height="65" fill="#f2d48a"/>
+  <rect x="525" y="150" width="220" height="65" fill="#f2d48a"/>
+  <rect x="115" y="215" width="200" height="45" fill="#dfe3e6"/>
+  <rect x="315" y="215" width="210" height="45" fill="#dfe3e6"/>
+  <rect x="525" y="215" width="220" height="45" fill="#f2d48a"/>
+  <g font-weight="bold" font-size="12">
+    <text x="210" y="57" text-anchor="middle" fill="#fff">R3</text>
+    <text x="420" y="57" text-anchor="middle" fill="#fff">R1 · R2</text>
+    <text x="420" y="122" text-anchor="middle">R4 · R5</text>
+    <text x="210" y="122" text-anchor="middle">R6</text>
+    <text x="420" y="187" text-anchor="middle">R7</text>
+    <text x="210" y="187" text-anchor="middle">R8 · R10 · R11 · R16</text>
+    <text x="420" y="242" text-anchor="middle">R9 · R12 · R17</text>
+    <text x="210" y="242" text-anchor="middle">R13 · R14 · R15</text>
+  </g>
+  <rect x="115" y="20" width="630" height="240" fill="none" stroke="#2b2420"/>
+  <g font-size="9.5"><rect x="490" y="278" width="10" height="10" fill="#a3241b"/><text x="504" y="287">critique</text>
+  <rect x="555" y="278" width="10" height="10" fill="#d0621b"/><text x="569" y="287">élevée</text>
+  <rect x="612" y="278" width="10" height="10" fill="#f2d48a"/><text x="626" y="287">moyenne</text>
+  <rect x="680" y="278" width="10" height="10" fill="#dfe3e6"/><text x="694" y="287">faible</text></g>
+</svg>
+<figcaption><strong>Figure 4 — Matrice des risques résiduels.</strong> Chaque risque est placé selon la gravité de
+ses conséquences (verticale) et sa probabilité dans un déploiement documenté (horizontale) ; la couleur de la case
+donne la criticité. Les deux risques les plus importants (R1, R2) ne tiennent pas à un défaut du code mais à la
+nature de la fonction (faire entrer des logiciels tiers) et à la configuration réseau par défaut ; R3, d'impact
+maximal, reste peu probable si le serveur Rémus est protégé. Les fiches suivantes détaillent chaque risque.</figcaption>
+</figure>
+
+<div class="risk"><h3>R1 — Paquet malveillant ou compromis collecté et servi <span class="lvl elevee">Élevée</span></h3>
+<p class="meta">Impact critique · probabilité moyenne · nature de la fonction</p>
+<p><strong>Description.</strong> Lupa garantit que Romulus sert exactement les fichiers publiés par les registres,
+mais pas qu'ils sont sains. Aucun antivirus ni analyse comportementale n'est appliqué ; les alertes OSV.dev ne
+couvrent que les vulnérabilités connues de npm, Python et Composer.</p>
+<p><strong>Scénario.</strong> Un attaquant publie une version piégée d'un paquet populaire (compte de mainteneur
+volé, typosquattage, dépendance confuse). Une liste en contrainte large la collecte ; elle est exportée et installée
+par les postes du réseau isolé, où son code s'exécute (scripts d'installation npm, setup.py, conteneur Docker…).</p>
+<p><strong>Risques encourus.</strong> Exécution de code sur les postes ou serveurs du réseau isolé, vol de données,
+porte dérobée persistante : exactement ce que l'isolement devait empêcher.</p>
+<p><strong>En place.</strong> Sommes et signatures des registres, liste noire et quarantaine propagées par bundle,
+alertes OSV, historique des exports. <strong>Recommandé.</strong> Versions précises pour les projets sensibles,
+délai avant de collecter une version toute récente, revue de la page Sécurité avant export, analyse antivirale et
+scanner d'images (Trivy, Grype) sur les bundles à l'entrée de la zone isolée.</p></div>
+
+<div class="risk"><h3>R2 — Interfaces et registres servis en HTTP par défaut <span class="lvl elevee">Élevée</span></h3>
+<p class="meta">Impact critique · probabilité moyenne · configuration (ADR 0002)</p>
+<p><strong>Description.</strong> Les images écoutent en HTTP ; le HTTPS est assuré par un reverse proxy que
+l'exploitant met en place. Sans lui, mots de passe, cookies de session et paquets circulent en clair.</p>
+<p><strong>Scénario.</strong> Un attaquant présent sur le réseau (poste compromis, usurpation ARP) intercepte une
+connexion à l'administration ou modifie à la volée un paquet servi par Romulus à un poste ; pip, apt et Docker ne
+vérifient pas tous une empreinte de bout en bout.</p>
+<p><strong>Risques encourus.</strong> Vol de session ou de mot de passe administrateur ; installation d'un paquet
+modifié sur un poste.</p>
+<p><strong>En place.</strong> Cookies <code>__Host-</code> et Secure dès qu'un proxy HTTPS est déclaré, HSTS, index
+apt et RPM signés par Romulus, digests Docker. <strong>Recommandé.</strong> Reverse proxy HTTPS avec certificat de la
+PKI interne, <code>PUBLIC_URL</code> et <code>TRUSTED_PROXIES</code> renseignés ; à défaut, filtrer l'accès réseau
+aux seuls postes autorisés.</p></div>
+
+<div class="risk"><h3>R3 — Compromission du serveur Rémus et de sa clé de signature <span class="lvl elevee">Élevée</span></h3>
+<p class="meta">Impact critique · probabilité faible · conception</p>
+<p><strong>Description.</strong> Toute la confiance de Romulus repose sur la clé privée de Rémus, stockée en clair
+(fichier protégé par les droits système) dans le volume du serveur connecté à Internet.</p>
+<p><strong>Scénario.</strong> Un attaquant obtient l'accès au serveur Rémus (faille du système, du conteneur, ou R4)
+et copie la clé ; il fabrique un bundle signé contenant des paquets piégés, accepté par Romulus.</p>
+<p><strong>Risques encourus.</strong> Introduction arbitraire de logiciels dans le réseau isolé, sans alerte.</p>
+<p><strong>En place.</strong> Conteneur sans privilège, en lecture seule ; empreinte comparée à l'approbation ;
+numéros de séquence ; révocation par retrait de la clé sur Romulus. <strong>Recommandé.</strong> Serveur Rémus
+dédié, durci et surveillé ; sauvegarde chiffrée de la clé ; contrôle des numéros de séquence importés ; procédure
+de révocation testée (politique de sécurité, section 6).</p></div>
+
+<div class="risk"><h3>R4 — Exécution des générateurs de framework sur Rémus <span class="lvl moyenne">Moyenne</span></h3>
+<p class="meta">Impact grave · probabilité moyenne · fonctionnalité « modèles de framework »</p>
+<p><strong>Description.</strong> Pour reproduire exactement un projet Angular ou NestJS, Rémus exécute le
+générateur officiel (<code>npx @angular/cli new</code>, <code>npx @nestjs/cli new</code>) : du code téléchargé
+s'exécute dans le conteneur de Rémus, qui a accès au volume et donc à la clé de signature.</p>
+<p><strong>Scénario.</strong> Une version compromise d'un générateur est publiée ; une liste utilisant ce modèle la
+télécharge et l'exécute.</p>
+<p><strong>Risques encourus.</strong> Vol de la clé de signature (voir R3), des identifiants de dépôts privés,
+altération du stockage.</p>
+<p><strong>En place.</strong> Scripts d'installation désactivés pour toutes les autres résolutions ; conteneur sans
+privilège ; versions de générateur choisies par l'utilisateur. <strong>Recommandé.</strong> N'utiliser les modèles
+qu'avec des versions précises et éprouvées ; à terme, exécuter les générateurs dans un conteneur jetable sans accès
+au volume (évolution prévue).</p></div>
+
+<div class="risk"><h3>R5 — Registres de Romulus accessibles sans authentification <span class="lvl moyenne">Moyenne</span></h3>
+<p class="meta">Impact grave · probabilité moyenne · choix assumé (ADR 0001)</p>
+<p><strong>Description.</strong> Comme un dépôt interne classique, npm, PyPI, Docker, apt, VS Code… sont lisibles par
+toute machine qui atteint Romulus, sans compte.</p>
+<p><strong>Risques encourus.</strong> Lecture de paquets issus des dépôts privés de l'organisation par toute
+personne du réseau isolé ; inventaire des logiciels utilisés.</p>
+<p><strong>Recommandé.</strong> Restreindre l'accès réseau à Romulus (pare-feu, VLAN) ; ne collecter de paquets
+privés que si leur diffusion à tout le réseau isolé est acceptable.</p></div>
+
+<div class="risk"><h3>R6 — Double authentification facultative <span class="lvl moyenne">Moyenne</span></h3>
+<p class="meta">Impact grave · probabilité faible · choix assumé (ADR 0009)</p>
+<p><strong>Description.</strong> Les comptes, administrateurs compris, peuvent n'utiliser que le mot de passe, car
+les téléphones sont souvent interdits en zone isolée. <strong>Risques encourus.</strong> Un mot de passe
+administrateur deviné ou volé suffit à approuver un collecteur ou lever une interdiction.
+<strong>Recommandé.</strong> Activer la double authentification sur tous les comptes administrateurs (application
+ou clé TOTP matérielle), mots de passe longs et uniques.</p></div>
+
+<div class="risk"><h3>R7 — Alertes de sécurité partielles et figées à l'export <span class="lvl moyenne">Moyenne</span></h3>
+<p class="meta">Impact important · probabilité moyenne · limite fonctionnelle</p>
+<p><strong>Description.</strong> Les alertes ne concernent ni Docker, ni Debian/RPM, ni Ansible, Terraform ou VS Code ;
+un paquet déjà exporté garde sur Romulus les alertes connues au moment de son export.
+<strong>Risques encourus.</strong> Fausse impression de sûreté ; une faille publiée après l'export n'apparaît pas
+sur Romulus. <strong>Recommandé.</strong> Export complet périodique ; consulter Rémus, à jour, avant de décider ;
+scanner dédié pour les images et paquets système. Une transmission incrémentale des alertes est à l'étude.</p></div>
+
+<div class="risk"><h3>R8 — Données au repos non chiffrées <span class="lvl faible">Faible</span></h3>
+<p class="meta">Impact important · probabilité faible</p>
+<p>Base SQLite (dont les secrets TOTP), clés et fichiers sont en clair dans le volume, protégés par les droits du
+système. Quiconque lit le disque ou une sauvegarde obtient ces éléments (pas les mots de passe, hachés).
+<strong>Recommandé.</strong> Chiffrement du disque et des sauvegardes.</p></div>
+
+<div class="risk"><h3>R9 — Journaux non conservés par l'application <span class="lvl faible">Faible</span></h3>
+<p class="meta">Impact limité · probabilité moyenne</p>
+<p>Le journal d'audit est écrit sur la sortie du conteneur ; sans collecte, il disparaît avec le conteneur et n'est
+pas protégé contre la modification. <strong>Recommandé.</strong> Collecte centralisée, conservation d'au moins six mois,
+alertes sur les refus répétés et les approbations de collecteur.</p></div>
+
+<div class="risk"><h3>R10 — Lecture d'un contenu non vérifié avant la signature <span class="lvl faible">Faible</span></h3>
+<p class="meta">Impact important · probabilité faible</p>
+<p>Pour afficher un bundle présent sur la clé USB, Romulus lit son manifeste JSON et les en-têtes de l'archive
+avant de pouvoir vérifier la signature. Un fichier forgé exploitant un défaut de cet analyseur pourrait affecter
+Romulus : écrit en PHP, sans gestion manuelle de la mémoire, il peut au pire échouer ou mal lire le fichier (déni de service). Le code d'analyse est restreint et testé ; rien n'est écrit avant vérification.
+<strong>Recommandé.</strong> Supports de transport contrôlés (voir politique de sécurité, 5.3).</p></div>
+
+<div class="risk"><h3>R11 — Sources sans empreinte publiée <span class="lvl faible">Faible</span></h3>
+<p class="meta">Impact important · probabilité faible</p>
+<p>Les rôles Ansible (archives GitHub) et certaines extensions VS Code n'ont pas de somme publiée : seule la
+connexion HTTPS garantit leur origine ; une fois collectés, leur empreinte est figée dans le bundle signé.</p></div>
+
+<div class="risk"><h3>R12 — Blocage ciblé d'une connexion <span class="lvl faible">Faible</span></h3>
+<p class="meta">Impact limité · probabilité moyenne</p>
+<p>La limitation des tentatives peut être déclenchée volontairement contre un identifiant depuis la même adresse
+IP (postes derrière un même NAT), bloquant sa connexion 15 minutes. Contournement : attendre, ou connexion
+depuis une autre adresse.</p></div>
+
+<div class="risk"><h3>R13 — Styles en ligne autorisés par la CSP <span class="lvl faible">Faible</span></h3>
+<p class="meta">Impact limité · probabilité faible</p>
+<p>La CSP de l'interface autorise <code>style-src 'unsafe-inline'</code>, nécessaire aux styles des composants
+Angular. Une injection de balisage, déjà bloquée par Angular et Trusted Types pour les scripts, ne pourrait modifier
+que l'apparence.</p></div>
+
+<div class="risk"><h3>R14 — Conteneur root en Docker rootless <span class="lvl faible">Faible</span></h3>
+<p class="meta">Impact limité · probabilité faible</p>
+<p>En Docker rootless, le conteneur tourne avec l'UID 0, qui correspond à l'utilisateur sans privilège de l'hôte ;
+les capabilities <code>CHOWN</code>, <code>DAC_OVERRIDE</code> et <code>FOWNER</code> y sont effectives pour lire
+les volumes. Une évasion du conteneur donne les droits de cet utilisateur, pas ceux de root.</p></div>
+
+<div class="risk"><h3>R15 — Composant vulnérable connu non exploitable <span class="lvl faible">Faible</span></h3>
+<p class="meta">Impact limité · probabilité faible</p>
+<p>pip 26.3 embarque une copie de setuptools concernée par CVE-2025-47273 ; la fonction vulnérable n'est pas
+présente dans cette copie (exception documentée pour Trivy). Une ligne de base PHPStan masque des imprécisions de
+typage anciennes, sans faille connue ; elle ne peut que décroître (ADR 0008).</p></div>
+
+<div class="risk"><h3>R16 — Code d'installation dans les journaux <span class="lvl faible">Faible</span></h3>
+<p class="meta">Impact important · probabilité faible</p>
+<p>Tant qu'aucun compte n'existe, le code d'installation affiché dans les journaux permet de créer le premier
+administrateur. Une personne lisant les journaux à ce moment pourrait s'en emparer.
+<strong>Recommandé.</strong> Terminer l'installation aussitôt après le premier démarrage.</p></div>
+
+<div class="risk"><h3>R17 — Configuration de VS Code par modification de son installation <span class="lvl faible">Faible</span></h3>
+<p class="meta">Impact limité · probabilité moyenne</p>
+<p>VS Code de Microsoft ne se branche sur Romulus qu'en modifiant son <code>product.json</code>, ce que
+l'éditeur signale comme une installation modifiée et qu'une mise à jour annule. Les postes peuvent alors revenir
+vers la galerie publique, inaccessible depuis le réseau isolé. <strong>Recommandé.</strong> Préférer VSCodium ou
+code-server, configurés par variables d'environnement, ou automatiser la modification.</p></div>
+
+<h2 id="synthese">9. Synthèse des recommandations</h2>
+<table>
+  <tr><th style="width:8%">Priorité</th><th>Mesure</th><th style="width:18%">Risques</th></tr>
+  <tr><td>1</td><td>HTTPS devant Rémus et Romulus (PKI interne), <code>PUBLIC_URL</code>, <code>TRUSTED_PROXIES</code></td><td>R2</td></tr>
+  <tr><td>2</td><td>Analyse antivirale et scanner d'images des bundles à l'entrée de la zone isolée ; versions précises pour les projets sensibles</td><td>R1, R7</td></tr>
+  <tr><td>3</td><td>Serveur Rémus dédié et durci ; sauvegarde chiffrée de la clé ; procédure de révocation testée</td><td>R3, R4</td></tr>
+  <tr><td>4</td><td>Double authentification pour tous les administrateurs</td><td>R6</td></tr>
+  <tr><td>5</td><td>Filtrage réseau de l'accès à Romulus</td><td>R5, R2</td></tr>
+  <tr><td>6</td><td>Collecte et conservation des journaux, alertes</td><td>R9</td></tr>
+  <tr><td>7</td><td>Chiffrement des disques et des sauvegardes</td><td>R8</td></tr>
+</table>
+
+</body>
+</html>

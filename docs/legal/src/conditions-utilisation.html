@@ -1,0 +1,196 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>Conditions d'utilisation de Lupa</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<section class="cover">
+  <div class="kicker">Lupa · Rémus &amp; Romulus</div>
+  <h1>Conditions d'utilisation</h1>
+  <p class="lead">Règles d'usage du logiciel Lupa, de son collecteur Rémus et de son miroir hors ligne Romulus,
+  et partage des responsabilités entre l'éditeur, l'organisation qui l'exploite et ses utilisateurs.</p>
+  <dl>
+    <dt>Version du document</dt><dd class="version">Version 1.0 — 19 novembre 2026</dd>
+    <dt>S'applique à</dt><dd>Lupa 1.4.0 et versions suivantes</dd>
+    <dt>Éditeur</dt><dd>Imperium Clan Software</dd>
+    <dt>Code source</dt><dd>github.com/imperiumclansoftware/lupa (licence MIT)</dd>
+    <dt>Contact</dt><dd>Tickets du dépôt GitHub ; failles de sécurité : « Security advisories » du dépôt</dd>
+  </dl>
+</section>
+
+<nav class="toc">
+  <h2>Sommaire</h2>
+  <ol>
+    <li><a href="#objet">1. Objet et définitions</a></li>
+    <li><a href="#licence">2. Licence et absence de garantie</a></li>
+    <li><a href="#roles">3. Qui fait quoi</a></li>
+    <li><a href="#exploitant">4. Engagements de l'organisation exploitante</a></li>
+    <li><a href="#utilisateurs">5. Règles d'usage pour les utilisateurs</a></li>
+    <li><a href="#tiers">6. Contenus et services tiers</a></li>
+    <li><a href="#securite">7. Sécurité des paquets collectés</a></li>
+    <li><a href="#support">8. Support, signalement et évolution</a></li>
+    <li><a href="#droit">9. Modification des conditions et droit applicable</a></li>
+  </ol>
+</nav>
+
+<h2 id="objet">1. Objet et définitions</h2>
+<p>Les présentes conditions encadrent l'utilisation de <strong>Lupa</strong>, un ensemble de deux applications web
+qui permettent d'installer des logiciels sur un réseau isolé d'Internet.</p>
+<ul>
+  <li><strong>Rémus</strong> : le collecteur, installé sur une machine connectée à Internet. Il télécharge des
+  paquets (npm, Python, Composer, Docker, Debian, RPM, Ansible, Terraform, extensions VS Code) et leurs dépendances,
+  puis produit des <em>bundles</em> signés.</li>
+  <li><strong>Romulus</strong> : le miroir hors ligne, installé sur le réseau isolé. Il importe les bundles et sert
+  ces paquets aux postes de travail.</li>
+  <li><strong>Bundle</strong> : archive signée, transportée sur un support amovible (clé USB) de Rémus vers Romulus.</li>
+  <li><strong>Éditeur</strong> : Imperium Clan Software, qui publie le code source et les images Docker de Lupa.</li>
+  <li><strong>Organisation exploitante</strong> (ci-après « l'exploitant ») : l'entité qui installe et administre
+  Rémus et/ou Romulus sur son infrastructure.</li>
+  <li><strong>Utilisateur</strong> : toute personne disposant d'un compte sur Rémus ou Romulus (administrateur,
+  opérateur ou lecteur), ou utilisant les dépôts servis par Romulus depuis un poste.</li>
+</ul>
+
+<h2 id="licence">2. Licence et absence de garantie</h2>
+<p>Lupa est un logiciel libre distribué sous <strong>licence MIT</strong>. Chacun peut l'utiliser, le copier, le
+modifier et le redistribuer, à condition de conserver la mention de droit d'auteur et le texte de la licence.</p>
+<div class="warn">
+  <p>Conformément à la licence, le logiciel est fourni <strong>« en l'état », sans garantie d'aucune sorte</strong>,
+  expresse ou implicite, notamment de qualité marchande, d'adéquation à un usage particulier ou d'absence de
+  contrefaçon. L'éditeur ne peut être tenu responsable d'aucun dommage résultant de son utilisation.</p>
+</div>
+<p>Lupa est auto-hébergé : l'éditeur ne fournit aucun service en ligne, n'exploite aucune instance pour le compte
+de tiers et ne reçoit aucune donnée des installations (voir la politique de confidentialité).</p>
+
+<h2 id="roles">3. Qui fait quoi</h2>
+<figure>
+<svg viewBox="0 0 760 330" xmlns="http://www.w3.org/2000/svg" font-family="DejaVu Sans, sans-serif" font-size="12">
+  <defs><marker id="a" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto"><path d="M0 0L10 4L0 8z" fill="#2b2420"/></marker></defs>
+  <!-- Zones -->
+  <rect x="10" y="10" width="250" height="160" rx="10" fill="#fdf1e8" stroke="#b4532a"/>
+  <text x="22" y="32" font-weight="bold" fill="#b4532a">INTERNET</text>
+  <rect x="500" y="10" width="250" height="160" rx="10" fill="#eef3f6" stroke="#4a6a80"/>
+  <text x="512" y="32" font-weight="bold" fill="#4a6a80">RÉSEAU ISOLÉ</text>
+  <!-- Rémus -->
+  <rect x="40" y="55" width="190" height="90" rx="8" fill="#fff" stroke="#2b2420"/>
+  <text x="135" y="80" text-anchor="middle" font-weight="bold">Rémus</text>
+  <text x="135" y="100" text-anchor="middle" font-size="10.5">collecte les paquets</text>
+  <text x="135" y="116" text-anchor="middle" font-size="10.5">et leurs dépendances,</text>
+  <text x="135" y="132" text-anchor="middle" font-size="10.5">signe les bundles</text>
+  <!-- USB -->
+  <rect x="300" y="75" width="160" height="50" rx="8" fill="#fff" stroke="#2b2420" stroke-dasharray="5 3"/>
+  <text x="380" y="97" text-anchor="middle" font-weight="bold">Clé USB</text>
+  <text x="380" y="113" text-anchor="middle" font-size="10.5">bundle signé</text>
+  <line x1="230" y1="100" x2="298" y2="100" stroke="#2b2420" stroke-width="1.5" marker-end="url(#a)"/>
+  <line x1="460" y1="100" x2="528" y2="100" stroke="#2b2420" stroke-width="1.5" marker-end="url(#a)"/>
+  <!-- Romulus -->
+  <rect x="530" y="55" width="190" height="90" rx="8" fill="#fff" stroke="#2b2420"/>
+  <text x="625" y="80" text-anchor="middle" font-weight="bold">Romulus</text>
+  <text x="625" y="100" text-anchor="middle" font-size="10.5">vérifie la signature,</text>
+  <text x="625" y="116" text-anchor="middle" font-size="10.5">sert npm, PyPI, Docker,</text>
+  <text x="625" y="132" text-anchor="middle" font-size="10.5">apt, VS Code… aux postes</text>
+  <!-- Responsabilités -->
+  <rect x="10" y="195" width="235" height="125" rx="8" fill="#fff" stroke="#b4532a"/>
+  <text x="127" y="217" text-anchor="middle" font-weight="bold" fill="#b4532a">Éditeur</text>
+  <text x="22" y="240" font-size="10.5">• publie le code et les images</text>
+  <text x="22" y="258" font-size="10.5">• corrige les failles signalées</text>
+  <text x="22" y="276" font-size="10.5">• documente l'installation</text>
+  <text x="22" y="294" font-size="10.5">• aucune donnée reçue</text>
+  <rect x="262" y="195" width="236" height="125" rx="8" fill="#fff" stroke="#2b2420"/>
+  <text x="380" y="217" text-anchor="middle" font-weight="bold">Organisation exploitante</text>
+  <text x="274" y="240" font-size="10.5">• installe, met à jour, sauvegarde</text>
+  <text x="274" y="258" font-size="10.5">• crée les comptes et les rôles</text>
+  <text x="274" y="276" font-size="10.5">• choisit ce qui est collecté</text>
+  <text x="274" y="294" font-size="10.5">• responsable des données</text>
+  <rect x="515" y="195" width="235" height="125" rx="8" fill="#fff" stroke="#4a6a80"/>
+  <text x="632" y="217" text-anchor="middle" font-weight="bold" fill="#4a6a80">Utilisateurs</text>
+  <text x="527" y="240" font-size="10.5">• compte nominatif, non partagé</text>
+  <text x="527" y="258" font-size="10.5">• agissent dans leur rôle</text>
+  <text x="527" y="276" font-size="10.5">• respectent les licences</text>
+  <text x="527" y="294" font-size="10.5">• signalent les anomalies</text>
+</svg>
+<figcaption><strong>Figure 1 — Fonctionnement et partage des responsabilités.</strong> Rémus télécharge sur
+Internet les paquets demandés, les vérifie et les regroupe dans un bundle signé. Le bundle traverse la frontière
+sur une clé USB, sans aucune connexion réseau entre les deux zones. Romulus refuse tout bundle dont la signature
+n'est pas celle d'un collecteur approuvé, puis sert les paquets aux postes du réseau isolé. L'éditeur fournit le
+logiciel ; l'organisation exploitante décide de son installation, de son contenu et de ses accès ; les
+utilisateurs s'en servent dans les limites de leur rôle.</figcaption>
+</figure>
+
+<h2 id="exploitant">4. Engagements de l'organisation exploitante</h2>
+<p>En installant Lupa, l'exploitant accepte d'en assumer l'exploitation. En particulier, il :</p>
+<ul>
+  <li>installe les mises à jour de sécurité publiées par l'éditeur dans un délai adapté à leur criticité ;</li>
+  <li>sauvegarde les volumes de données, et conserve en lieu sûr la <strong>clé de signature</strong> de Rémus,
+  qui atteste l'origine des bundles ;</li>
+  <li>attribue des comptes <strong>nominatifs</strong> avec le rôle le plus restreint suffisant (lecteur, opérateur,
+  administrateur), et retire les comptes des personnes qui n'en ont plus besoin ;</li>
+  <li>vérifie, avant d'approuver un collecteur sur Romulus, que l'empreinte affichée est identique à celle de
+  Rémus ;</li>
+  <li>décide des paquets collectés et s'assure que leur usage respecte leurs licences et les conditions des
+  registres dont ils proviennent (section 6) ;</li>
+  <li>place Rémus et Romulus derrière un accès HTTPS dès que le réseau n'est pas entièrement maîtrisé ;</li>
+  <li>informe ses utilisateurs du traitement de leurs données (politique de confidentialité) et applique la
+  politique de sécurité.</li>
+</ul>
+
+<h2 id="utilisateurs">5. Règles d'usage pour les utilisateurs</h2>
+<ul>
+  <li>Un compte est personnel : ni prêt, ni partage du mot de passe ou des codes de double authentification.</li>
+  <li>Il est interdit de chercher à contourner les contrôles de Lupa : signature des bundles, liste noire et
+  quarantaine, rôles, limitation des tentatives de connexion.</li>
+  <li>Seul un administrateur approuve un nouveau collecteur ; il compare pour cela l'empreinte de sa clé.</li>
+  <li>Un paquet suspect (comportement anormal, alerte de sécurité) est signalé à un administrateur, qui peut
+  l'interdire par la liste noire de Rémus ; la version est alors mise en quarantaine sur Romulus au bundle suivant.</li>
+  <li>Les supports amovibles servent au transport des bundles et suivent les règles de l'organisation (support dédié,
+  contrôle antiviral à la frontière le cas échéant).</li>
+</ul>
+
+<h2 id="tiers">6. Contenus et services tiers</h2>
+<p>Lupa ne crée aucun paquet : il recopie des logiciels publiés par des tiers, qui restent soumis à
+<strong>leurs propres licences</strong> et aux conditions des registres qui les distribuent. Lupa ne modifie ni
+ces licences ni ces conditions, et ne confère aucun droit sur ces contenus.</p>
+<table>
+  <tr><th style="width:32%">Source</th><th>Points d'attention</th></tr>
+  <tr><td>npm, PyPI, Packagist, Ansible Galaxy, Open VSX</td><td>Chaque paquet conserve sa licence (MIT, Apache, GPL…). Les registres peuvent limiter le débit des téléchargements.</td></tr>
+  <tr><td>Docker Hub et registres OCI</td><td>Limites de débit des comptes anonymes ; certaines images ont des conditions propres (images commerciales, couches « non redistribuables » de Windows, ignorées par Rémus).</td></tr>
+  <tr><td>Debian, AlmaLinux, CentOS</td><td>Paquets libres sous leurs licences respectives ; les index ne sont acceptés qu'avec une signature valide de la distribution.</td></tr>
+  <tr><td>Registre Terraform, HashiCorp</td><td>Les providers ont leur propre licence ; le binaire <code>terraform</code> des versions récentes est publié sous Business Source License, qui encadre certains usages commerciaux.</td></tr>
+  <tr><td>Visual Studio Marketplace (Microsoft)</td><td>Ses conditions réservent l'usage des extensions aux produits Visual Studio de Microsoft. L'exploitant qui active cette source s'assure que son usage les respecte (par exemple, VS Code de Microsoft sur les postes). Open VSX, source par défaut, n'a pas cette restriction.</td></tr>
+  <tr><td>OSV.dev, Have I Been Pwned</td><td>Services publics consultés par Rémus pour les alertes de sécurité et les mots de passe divulgués (voir la politique de confidentialité).</td></tr>
+</table>
+
+<h2 id="securite">7. Sécurité des paquets collectés</h2>
+<p>Lupa garantit que les fichiers servis par Romulus sont <strong>identiques</strong> à ceux que Rémus a
+téléchargés et vérifiés (sommes de contrôle des registres, signature des bundles). Il ne garantit pas que ces
+paquets sont <strong>sûrs</strong> :</p>
+<ul>
+  <li>les alertes de vulnérabilités (OSV.dev) sont indicatives, limitées à npm, Python et Composer, et figées pour
+  un paquet au moment de son export ;</li>
+  <li>aucun antivirus ni analyse de code malveillant n'est appliqué aux paquets ;</li>
+  <li>une version compromise publiée par son auteur ou par un attaquant est collectée comme les autres si elle
+  est demandée.</li>
+</ul>
+<p>Le choix des paquets, leur revue et l'usage de la liste noire relèvent de l'exploitant. La politique de
+sécurité détaillée décrit ces limites et les mesures recommandées.</p>
+
+<h2 id="support">8. Support, signalement et évolution</h2>
+<ul>
+  <li>Le support est communautaire et sans engagement de délai : tickets du dépôt GitHub.</li>
+  <li>Une faille de sécurité se signale de façon confidentielle par les « Security advisories » du dépôt, et non
+  par un ticket public. L'éditeur s'efforce d'en accuser réception et de publier un correctif et un avis.</li>
+  <li>Les nouvelles versions sont annoncées dans les notes de version du dépôt et des images Docker. Une version
+  majeure peut demander de mettre à jour Rémus et Romulus ensemble (par exemple, un nouvel écosystème dans les
+  bundles).</li>
+</ul>
+
+<h2 id="droit">9. Modification des conditions et droit applicable</h2>
+<p>L'éditeur peut faire évoluer ces conditions ; la version applicable est celle livrée avec la version de Lupa
+installée, consultable dans l'administration de Rémus et de Romulus. Les présentes conditions sont régies par le
+droit français. Elles complètent, sans la remplacer, la licence MIT, qui prévaut en cas de contradiction sur les
+droits d'utilisation du logiciel.</p>
+
+</body>
+</html>

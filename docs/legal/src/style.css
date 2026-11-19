@@ -1,0 +1,64 @@
+/* Mise en page commune des documents de Lupa (WeasyPrint) */
+@page {
+  size: A4;
+  margin: 22mm 18mm 20mm 18mm;
+  @top-left { content: "Lupa · " string(doctitle); font: 8pt "DejaVu Sans", sans-serif; color: #7a6f66; }
+  @top-right { content: string(docversion); font: 8pt "DejaVu Sans", sans-serif; color: #7a6f66; }
+  @bottom-right { content: "Page " counter(page) " / " counter(pages); font: 8pt "DejaVu Sans", sans-serif; color: #7a6f66; }
+  @bottom-left { content: "Imperium Clan Software — licence MIT"; font: 8pt "DejaVu Sans", sans-serif; color: #7a6f66; }
+}
+@page :first { @top-left { content: none; } @top-right { content: none; } }
+
+:root { --accent: #b4532a; --ink: #2b2420; --muted: #6f655d; --line: #e4dbd3; --soft: #f7f1ec; }
+html { font: 10pt/1.5 "DejaVu Sans", "Noto Sans", sans-serif; color: var(--ink); }
+body { margin: 0; }
+h1 { string-set: doctitle content(); font-size: 22pt; margin: 0 0 4mm; color: var(--accent); }
+h2 { font-size: 14pt; margin: 9mm 0 3mm; padding-bottom: 1.5mm; border-bottom: 1.5pt solid var(--accent); page-break-after: avoid; }
+h3 { font-size: 11.5pt; margin: 6mm 0 2mm; page-break-after: avoid; }
+p { margin: 0 0 2.5mm; text-align: justify; hyphens: auto; }
+ul, ol { margin: 0 0 3mm; padding-left: 6mm; }
+li { margin-bottom: 1mm; }
+code { font: 8.5pt "DejaVu Sans Mono", monospace; background: var(--soft); padding: 0 1mm; border-radius: 1mm; }
+a { color: var(--accent); text-decoration: none; }
+.version { string-set: docversion content(); }
+
+/* Page de garde */
+.cover { page-break-after: always; height: 240mm; display: flex; flex-direction: column; justify-content: center; }
+.cover .kicker { color: var(--muted); letter-spacing: 1pt; text-transform: uppercase; font-size: 9pt; }
+.cover h1 { font-size: 30pt; margin: 4mm 0 6mm; }
+.cover .lead { font-size: 12pt; color: var(--muted); max-width: 150mm; }
+.cover dl { margin-top: 18mm; display: grid; grid-template-columns: 38mm auto; gap: 1.5mm 4mm; font-size: 9.5pt; }
+.cover dt { color: var(--muted); }
+.cover dd { margin: 0; }
+
+/* Sommaire */
+.toc { page-break-after: always; }
+.toc ol { list-style: none; padding: 0; }
+.toc li { margin: 1.5mm 0; }
+.toc a::after { content: leader(".") target-counter(attr(href), page); }
+
+/* Tableaux */
+table { width: 100%; border-collapse: collapse; margin: 2mm 0 4mm; font-size: 8.8pt; page-break-inside: auto; }
+th, td { border: 0.6pt solid var(--line); padding: 1.6mm 2mm; text-align: left; vertical-align: top; }
+th { background: var(--soft); font-weight: bold; }
+tr { page-break-inside: avoid; }
+
+/* Encadrés */
+.note, .warn, .risk { border-left: 3pt solid var(--accent); background: var(--soft); padding: 2.5mm 4mm; margin: 3mm 0 4mm; page-break-inside: avoid; }
+.warn { border-color: #c27c0e; background: #fdf5e6; }
+.note p:last-child, .warn p:last-child, .risk p:last-child { margin-bottom: 0; }
+
+/* Schémas : figure + explication textuelle */
+figure { margin: 4mm 0 5mm; page-break-inside: avoid; }
+figure svg { width: 100%; height: auto; display: block; }
+figcaption { font-size: 8.8pt; color: var(--muted); margin-top: 2mm; }
+figcaption strong { color: var(--ink); }
+
+/* Niveaux de criticité */
+.lvl { display: inline-block; padding: 0.3mm 2mm; border-radius: 1mm; font-size: 8pt; font-weight: bold; color: #fff; white-space: nowrap; }
+.lvl.critique { background: #a3241b; }
+.lvl.elevee { background: #d0621b; }
+.lvl.moyenne { background: #c79a10; }
+.lvl.faible { background: #6d7a85; }
+.risk h3 { margin-top: 0; }
+.risk .meta { font-size: 8.5pt; color: var(--muted); margin-bottom: 1.5mm; }

@@ -214,6 +214,10 @@ développement, `make up` fait de même avec le `.env` du projet.
 - Hors périmètre : Sas ne contrôle pas le **contenu** des paquets (vulnérabilités, malveillance). Un
   `npm audit` ou un scanner d'images reste à faire côté collecteur avant l'export si nécessaire.
 - Les écarts assumés aux règles de sécurité de l'équipe sont décrits dans les [ADR](docs/adr/README.md).
+- Conditions d'utilisation, politique de confidentialité, politique de sécurité et politique de sécurité
+  détaillée (pile, mécanismes, risques résiduels) : PDF dans [docs/legal](docs/legal), sources HTML dans
+  `docs/legal/src`, régénérés par `make docs`. Ils sont téléchargeables dans Rémus et Romulus (page Documents)
+  par les comptes connectés ; les politiques de sécurité, par les administrateurs seulement.
 
 ## Limites connues
 

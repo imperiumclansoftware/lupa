@@ -2,6 +2,7 @@ import { Routes } from '@angular/router';
 import {
   AccountPage,
   authGuard,
+  DocumentsPage,
   JobsPage,
   loginGuard,
   LoginPage,
@@ -87,6 +88,7 @@ export const routes: Routes = [
         loadComponent: () => import('./pages/settings'),
         title: 'Réglages · Rémus',
       },
+      { path: 'documents', component: DocumentsPage, title: 'Documents · Rémus' },
       { path: 'compte', component: AccountPage, title: 'Mon compte · Rémus' },
       {
         path: 'comptes',

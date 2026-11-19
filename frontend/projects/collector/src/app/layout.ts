@@ -22,6 +22,7 @@ export class Layout {
     { path: '/exports', label: 'Exports', icon: 'usb' },
     { path: '/activite', label: 'Activité', icon: 'activity' },
     { path: '/reglages', label: 'Réglages', icon: 'settings' },
+    { path: '/documents', label: 'Documents', icon: 'file' },
     { path: '/comptes', label: 'Comptes', icon: 'users', role: 'admin' },
   ];
 }

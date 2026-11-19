@@ -1,0 +1,203 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>Politique de confidentialité de Lupa</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<section class="cover">
+  <div class="kicker">Lupa · Rémus &amp; Romulus</div>
+  <h1>Politique de confidentialité</h1>
+  <p class="lead">Données personnelles traitées par Rémus et Romulus, finalités, destinataires, durées de
+  conservation et droits des personnes.</p>
+  <dl>
+    <dt>Version du document</dt><dd class="version">Version 1.0 — 19 novembre 2026</dd>
+    <dt>S'applique à</dt><dd>Lupa 1.4.0 et versions suivantes</dd>
+    <dt>Éditeur du logiciel</dt><dd>Imperium Clan Software</dd>
+    <dt>Responsable du traitement</dt><dd>L'organisation qui installe et exploite Lupa</dd>
+    <dt>Référence</dt><dd>Règlement (UE) 2016/679 (RGPD) et loi Informatique et Libertés</dd>
+  </dl>
+</section>
+
+<nav class="toc">
+  <h2>Sommaire</h2>
+  <ol>
+    <li><a href="#principe">1. Principe : un logiciel auto-hébergé</a></li>
+    <li><a href="#donnees">2. Données traitées</a></li>
+    <li><a href="#flux">3. Où vont les données</a></li>
+    <li><a href="#finalites">4. Finalités et bases légales</a></li>
+    <li><a href="#tiers">5. Services tiers contactés par Rémus</a></li>
+    <li><a href="#cookies">6. Cookies</a></li>
+    <li><a href="#durees">7. Durées de conservation</a></li>
+    <li><a href="#securite">8. Sécurité des données</a></li>
+    <li><a href="#droits">9. Droits des personnes</a></li>
+  </ol>
+</nav>
+
+<h2 id="principe">1. Principe : un logiciel auto-hébergé</h2>
+<p>Lupa est installé et exploité par chaque organisation sur ses propres serveurs. Les données restent sur ces
+serveurs : <strong>l'éditeur, Imperium Clan Software, ne reçoit aucune donnée</strong> — ni télémétrie, ni
+statistiques d'usage, ni rapport d'erreur, ni compte centralisé.</p>
+<p>Le <strong>responsable du traitement</strong> au sens du RGPD est donc l'organisation exploitante. Elle
+complète, si nécessaire, cette politique avec ses propres informations (contact du délégué à la protection des
+données, durées de conservation des journaux, hébergement) et la porte à la connaissance de ses utilisateurs.</p>
+<div class="note"><p>Lupa ne traite pas de données personnelles pour sa fonction principale : les paquets, listes
+et bundles ne décrivent que des logiciels. Les seules données personnelles concernent les <strong>comptes</strong>
+des utilisateurs et la <strong>traçabilité</strong> de leurs accès.</p></div>
+
+<h2 id="donnees">2. Données traitées</h2>
+<table>
+  <tr><th style="width:24%">Catégorie</th><th style="width:38%">Données</th><th>Où</th></tr>
+  <tr><td>Compte</td><td>Identifiant, rôle (lecteur, opérateur, administrateur), empreinte Argon2id du mot de passe (jamais le mot de passe lui-même)</td><td>Base SQLite de Rémus ou de Romulus</td></tr>
+  <tr><td>Double authentification (facultative)</td><td>Secret TOTP, empreintes SHA-256 des codes de secours non utilisés</td><td>Base SQLite</td></tr>
+  <tr><td>Session</td><td>Identifiant de session aléatoire, jeton anti-CSRF</td><td>Cookies du navigateur, fichiers de session du serveur</td></tr>
+  <tr><td>Journal d'audit</td><td>Date, identifiant, adresse IP, chemin demandé, événement (connexion réussie ou refusée, déconnexion, changement de mot de passe ou de rôle, double authentification, approbation d'un collecteur…)</td><td>Sortie standard du conteneur (format JSON), collectée selon la configuration de l'exploitant</td></tr>
+  <tr><td>Journal d'accès HTTP</td><td>Date, adresse IP du client, méthode, adresse demandée, code de réponse, taille</td><td>Sortie standard du conteneur (serveur web intégré)</td></tr>
+  <tr><td>Historique des tâches</td><td>Titre, étapes et messages des mises à jour, exports et imports ; il ne contient pas d'identifiant d'utilisateur</td><td>Base SQLite</td></tr>
+  <tr><td>Dépôts privés (Rémus)</td><td>Identifiant et mot de passe ou jeton d'accès à un registre d'entreprise, saisis par un administrateur</td><td>Base SQLite, chiffrés (XSalsa20-Poly1305) ; jamais réaffichés</td></tr>
+</table>
+<p>Aucune donnée sensible au sens de l'article 9 du RGPD n'est traitée. Les adresses e-mail ne sont pas
+demandées.</p>
+
+<h2 id="flux">3. Où vont les données</h2>
+<figure>
+<svg viewBox="0 0 760 360" xmlns="http://www.w3.org/2000/svg" font-family="DejaVu Sans, sans-serif" font-size="11">
+  <defs>
+    <marker id="a" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto"><path d="M0 0L10 4L0 8z" fill="#2b2420"/></marker>
+    <marker id="b" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto"><path d="M0 0L10 4L0 8z" fill="#b4532a"/></marker>
+  </defs>
+  <!-- Internet -->
+  <rect x="10" y="10" width="740" height="92" rx="10" fill="#fdf1e8" stroke="#b4532a"/>
+  <text x="22" y="30" font-weight="bold" fill="#b4532a">INTERNET — services publics</text>
+  <rect x="30" y="42" width="160" height="48" rx="6" fill="#fff" stroke="#b4532a"/>
+  <text x="110" y="62" text-anchor="middle" font-weight="bold">Registres</text>
+  <text x="110" y="78" text-anchor="middle" font-size="9.5">npm, PyPI, Docker Hub…</text>
+  <rect x="210" y="42" width="160" height="48" rx="6" fill="#fff" stroke="#b4532a"/>
+  <text x="290" y="62" text-anchor="middle" font-weight="bold">OSV.dev</text>
+  <text x="290" y="78" text-anchor="middle" font-size="9.5">alertes de sécurité</text>
+  <rect x="390" y="42" width="160" height="48" rx="6" fill="#fff" stroke="#b4532a"/>
+  <text x="470" y="62" text-anchor="middle" font-weight="bold">Have I Been Pwned</text>
+  <text x="470" y="78" text-anchor="middle" font-size="9.5">mots de passe divulgués</text>
+  <rect x="570" y="42" width="165" height="48" rx="6" fill="#f3efeb" stroke="#999" stroke-dasharray="4 3"/>
+  <text x="652" y="62" text-anchor="middle" font-weight="bold" fill="#777">Éditeur de Lupa</text>
+  <text x="652" y="78" text-anchor="middle" font-size="9.5" fill="#777">ne reçoit rien</text>
+  <!-- Rémus zone -->
+  <rect x="10" y="150" width="440" height="200" rx="10" fill="#fff" stroke="#2b2420"/>
+  <text x="22" y="170" font-weight="bold">Serveur Rémus (organisation exploitante)</text>
+  <rect x="30" y="185" width="190" height="90" rx="6" fill="#f7f1ec" stroke="#2b2420"/>
+  <text x="125" y="205" text-anchor="middle" font-weight="bold">Base de Rémus</text>
+  <text x="40" y="223" font-size="9.5">comptes (empreintes),</text>
+  <text x="40" y="238" font-size="9.5">listes de paquets, tâches,</text>
+  <text x="40" y="253" font-size="9.5">identifiants des dépôts</text>
+  <text x="40" y="268" font-size="9.5">privés (chiffrés)</text>
+  <rect x="240" y="185" width="190" height="90" rx="6" fill="#f7f1ec" stroke="#2b2420"/>
+  <text x="335" y="205" text-anchor="middle" font-weight="bold">Journaux</text>
+  <text x="250" y="223" font-size="9.5">audit : identifiant, IP,</text>
+  <text x="250" y="238" font-size="9.5">événement ; accès HTTP ;</text>
+  <text x="250" y="253" font-size="9.5">vers la collecte de logs</text>
+  <text x="250" y="268" font-size="9.5">de l'exploitant</text>
+  <rect x="30" y="290" width="400" height="44" rx="6" fill="#fff" stroke="#2b2420"/>
+  <text x="230" y="316" text-anchor="middle">Navigateurs des utilisateurs : cookies de session et anti-CSRF</text>
+  <!-- flèches sortantes : du serveur vers les services -->
+  <line x1="110" y1="150" x2="110" y2="92" stroke="#b4532a" stroke-width="1.5" marker-end="url(#b)"/>
+  <text x="116" y="117" font-size="9" fill="#b4532a">noms de paquets,</text>
+  <text x="116" y="128" font-size="9" fill="#b4532a">IP du serveur</text>
+  <line x1="290" y1="150" x2="290" y2="92" stroke="#b4532a" stroke-width="1.5" marker-end="url(#b)"/>
+  <text x="296" y="122" font-size="9" fill="#b4532a">noms et versions</text>
+  <line x1="430" y1="150" x2="470" y2="92" stroke="#b4532a" stroke-width="1.5" marker-end="url(#b)"/>
+  <text x="472" y="117" font-size="9" fill="#b4532a">5 caractères de l'empreinte</text>
+  <text x="472" y="128" font-size="9" fill="#b4532a">SHA-1, au choix d'un mot de passe</text>
+  <!-- Romulus -->
+  <rect x="490" y="150" width="260" height="200" rx="10" fill="#eef3f6" stroke="#4a6a80"/>
+  <text x="502" y="170" font-weight="bold" fill="#4a6a80">Serveur Romulus (réseau isolé)</text>
+  <rect x="510" y="185" width="220" height="70" rx="6" fill="#fff" stroke="#4a6a80"/>
+  <text x="620" y="205" text-anchor="middle" font-weight="bold">Base et journaux</text>
+  <text x="520" y="223" font-size="9.5">comptes, audit, accès HTTP</text>
+  <text x="520" y="238" font-size="9.5">(adresses IP des postes)</text>
+  <text x="620" y="290" text-anchor="middle" font-weight="bold" fill="#4a6a80">Aucune connexion sortante</text>
+  <text x="620" y="306" text-anchor="middle" font-size="9.5">les données ne quittent pas</text>
+  <text x="620" y="320" text-anchor="middle" font-size="9.5">le réseau isolé</text>
+  <line x1="450" y1="255" x2="488" y2="255" stroke="#2b2420" stroke-width="1.5" stroke-dasharray="5 3" marker-end="url(#a)"/>
+  <text x="452" y="246" font-size="8.5">bundle</text>
+</svg>
+<figcaption><strong>Figure 1 — Flux de données.</strong> Les données des comptes et les journaux restent sur les
+serveurs de l'organisation. Seul Rémus, côté Internet, contacte des services publics, avec des informations
+techniques : noms et versions de paquets, adresse IP du serveur, et, à la création d'un compte ou au changement de
+mot de passe, les 5 premiers caractères de l'empreinte SHA-1 du mot de passe (le mot de passe ne sort jamais).
+Les bundles transportés par clé USB ne contiennent ni compte ni journal, seulement des paquets, la liste noire et
+l'identité publique du collecteur. Romulus n'établit aucune connexion vers l'extérieur. L'éditeur du logiciel ne
+reçoit aucune donnée.</figcaption>
+</figure>
+
+<h2 id="finalites">4. Finalités et bases légales</h2>
+<table>
+  <tr><th style="width:42%">Finalité</th><th style="width:28%">Données</th><th>Base légale (art. 6 RGPD)</th></tr>
+  <tr><td>Authentifier les utilisateurs et appliquer leurs droits</td><td>Compte, session, double authentification</td><td>Intérêt légitime de l'organisation à protéger son outil (ou exécution du contrat de travail, selon l'organisation)</td></tr>
+  <tr><td>Détecter les intrusions et retracer les actions sensibles</td><td>Journal d'audit, journal d'accès</td><td>Intérêt légitime : sécurité du système d'information</td></tr>
+  <tr><td>Refuser les mots de passe connus des attaquants (Rémus)</td><td>5 caractères de l'empreinte SHA-1, au moment de la saisie</td><td>Intérêt légitime : sécurité des comptes</td></tr>
+  <tr><td>Accéder aux registres privés de l'organisation (Rémus)</td><td>Identifiants des dépôts privés</td><td>Intérêt légitime de l'organisation</td></tr>
+</table>
+<p>Aucune donnée n'est utilisée à des fins de profilage, de publicité ou de décision automatisée.</p>
+
+<h2 id="tiers">5. Services tiers contactés par Rémus</h2>
+<ul>
+  <li><strong>Registres de paquets</strong> (npm, PyPI, Packagist, Docker Hub et autres registres OCI, Debian,
+  AlmaLinux, CentOS, Ansible Galaxy, registre Terraform, GitHub, Open VSX, Visual Studio Marketplace, et les
+  dépôts privés configurés) : ils reçoivent l'adresse IP du serveur Rémus, son agent
+  <code>Sas-Collecteur/1.0</code>, les noms des paquets demandés et, pour les dépôts privés ou Docker Hub, les
+  identifiants fournis par l'exploitant.</li>
+  <li><strong>OSV.dev</strong> (Google) : noms et versions des paquets npm, Python et Composer analysés.</li>
+  <li><strong>Have I Been Pwned</strong> : lorsqu'un mot de passe est choisi sur Rémus, seuls les 5 premiers
+  caractères hexadécimaux de son empreinte SHA-1 sont transmis (méthode dite des « k-anonymes ») ; le service
+  renvoie les empreintes commençant ainsi et la comparaison a lieu sur le serveur. Romulus, hors ligne, ne fait pas
+  cette vérification.</li>
+</ul>
+<p>Ces services, pour la plupart situés aux États-Unis, ne reçoivent aucune donnée relative aux utilisateurs
+eux-mêmes, hormis l'élément d'empreinte décrit ci-dessus, qui ne permet pas de retrouver le mot de passe. Leurs
+politiques de confidentialité s'appliquent aux requêtes qu'ils reçoivent.</p>
+
+<h2 id="cookies">6. Cookies</h2>
+<table>
+  <tr><th style="width:30%">Cookie</th><th>Rôle</th><th style="width:28%">Caractéristiques</th></tr>
+  <tr><td><code>sas_collector</code>, <code>sas_mirror</code> (ou <code>__Host-…</code> derrière HTTPS)</td><td>Identifiant de session, indispensable à la connexion</td><td>HttpOnly, SameSite=Strict, Secure en HTTPS ; supprimé à la fermeture du navigateur</td></tr>
+  <tr><td><code>XSRF-TOKEN</code></td><td>Jeton anti-falsification de requête (CSRF), renvoyé par l'interface à chaque action</td><td>SameSite=Strict ; lié à la session</td></tr>
+</table>
+<p>Ces cookies sont strictement nécessaires au fonctionnement du service et ne demandent pas de consentement.
+Lupa ne dépose aucun cookie de mesure d'audience ou de publicité et n'utilise pas le stockage local du navigateur.</p>
+
+<h2 id="durees">7. Durées de conservation</h2>
+<ul>
+  <li><strong>Comptes</strong> : jusqu'à leur suppression par un administrateur. Supprimer un compte efface
+  son identifiant, son empreinte de mot de passe et ses secrets de double authentification.</li>
+  <li><strong>Sessions</strong> : jusqu'à la déconnexion ou la fermeture du navigateur ; le serveur supprime les
+  fichiers de session inactifs.</li>
+  <li><strong>Journaux d'audit et d'accès</strong> : Lupa les écrit sur la sortie standard sans les conserver
+  lui-même ; leur durée de conservation est celle de la solution de collecte de l'exploitant. Une durée de six mois
+  à un an est usuelle pour des journaux de sécurité.</li>
+  <li><strong>Historique des tâches</strong> : conservé en base avec le catalogue de paquets.</li>
+</ul>
+
+<h2 id="securite">8. Sécurité des données</h2>
+<p>Mots de passe hachés avec Argon2id, double authentification facultative, sessions protégées (HttpOnly,
+SameSite=Strict, jeton anti-CSRF), limitation des tentatives de connexion, rôles avec refus par défaut, secrets des
+dépôts privés chiffrés, journaux expurgés des mots de passe et jetons, conteneurs sans privilège. Le détail figure
+dans la politique de sécurité ; ses limites (HTTP par défaut, base non chiffrée sur disque) y sont décrites avec
+les mesures à prendre par l'exploitant.</p>
+
+<h2 id="droits">9. Droits des personnes</h2>
+<p>Chaque utilisateur dispose des droits d'accès, de rectification, d'effacement, de limitation et d'opposition
+prévus par le RGPD. Ils s'exercent <strong>auprès de l'organisation exploitante</strong>, qui détient les données :</p>
+<ul>
+  <li>accès : la page « Mon compte » affiche l'identifiant, le rôle et l'état de la double authentification ;
+  un administrateur peut extraire les entrées du journal d'audit qui concernent la personne ;</li>
+  <li>rectification : changement de mot de passe dans « Mon compte », changement de rôle par un administrateur ;</li>
+  <li>effacement : suppression du compte par un administrateur (page « Comptes ») ; les journaux déjà collectés
+  suivent la durée de conservation de l'exploitant.</li>
+</ul>
+<p>En cas de difficulté, toute personne peut saisir la Commission nationale de l'informatique et des libertés
+(CNIL), ou l'autorité de contrôle de son pays.</p>
+
+</body>
+</html>

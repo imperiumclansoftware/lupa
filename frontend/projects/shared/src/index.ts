@@ -3,6 +3,7 @@ export * from './api';
 export * from './auth';
 export * from './copy-button';
 export * from './dialog';
+export * from './documents';
 export * from './eco';
 export * from './format';
 export * from './icon';
