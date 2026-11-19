@@ -19,42 +19,73 @@ import { Logo, LogoName } from './logo';
           <p>{{ product() }}</p>
         </header>
 
-        <form class="card card-body" (ngSubmit)="submit()">
-          <h2>Connexion</h2>
-          @if (error()) {
-            <div class="alert alert-danger" role="alert">{{ error() }}</div>
-          }
-          <div class="field">
-            <label for="username">Identifiant</label>
-            <input
-              class="input"
-              id="username"
-              name="username"
-              autocomplete="username"
-              required
-              [(ngModel)]="username"
-              autofocus
-            />
-          </div>
-          <div class="field">
-            <label for="current-password">Mot de passe</label>
-            <input
-              class="input"
-              id="current-password"
-              name="password"
-              type="password"
-              autocomplete="current-password"
-              required
-              [(ngModel)]="password"
-            />
-          </div>
-          <button class="btn btn-primary" type="submit" [disabled]="busy()">
-            {{ busy() ? 'Connexion…' : 'Se connecter' }}
-          </button>
-          <p class="subtle">
-            Pas encore de compte ? Créez-le sur le serveur : <code>{{ command() }}</code>
-          </p>
-        </form>
+        @if (auth.twoFactorPending()) {
+          <form class="card card-body" (ngSubmit)="verify()">
+            <h2>Double authentification</h2>
+            @if (error()) {
+              <div class="alert alert-danger" role="alert">{{ error() }}</div>
+            }
+            <div class="field">
+              <label for="code">Code de l’application d’authentification</label>
+              <input
+                class="input code"
+                id="code"
+                name="code"
+                inputmode="text"
+                autocomplete="one-time-code"
+                required
+                [(ngModel)]="code"
+                autofocus
+              />
+              <small class="subtle"
+                >Six chiffres, ou l’un de vos codes de secours (XXXXX-XXXXX).</small
+              >
+            </div>
+            <button class="btn btn-primary" type="submit" [disabled]="busy()">
+              {{ busy() ? 'Vérification…' : 'Valider' }}
+            </button>
+            <button class="btn btn-ghost" type="button" (click)="cancel()">
+              Changer de compte
+            </button>
+          </form>
+        } @else {
+          <form class="card card-body" (ngSubmit)="submit()">
+            <h2>Connexion</h2>
+            @if (error()) {
+              <div class="alert alert-danger" role="alert">{{ error() }}</div>
+            }
+            <div class="field">
+              <label for="username">Identifiant</label>
+              <input
+                class="input"
+                id="username"
+                name="username"
+                autocomplete="username"
+                required
+                [(ngModel)]="username"
+                autofocus
+              />
+            </div>
+            <div class="field">
+              <label for="current-password">Mot de passe</label>
+              <input
+                class="input"
+                id="current-password"
+                name="password"
+                type="password"
+                autocomplete="current-password"
+                required
+                [(ngModel)]="password"
+              />
+            </div>
+            <button class="btn btn-primary" type="submit" [disabled]="busy()">
+              {{ busy() ? 'Connexion…' : 'Se connecter' }}
+            </button>
+            <p class="subtle">
+              Pas encore de compte ? Créez-le sur le serveur : <code>{{ command() }}</code>
+            </p>
+          </form>
+        }
         <footer class="family">
           <sas-logo name="lupa" [size]="16" [bare]="true" />Lupa · Rémus collecte, Romulus sert
         </footer>
@@ -127,6 +158,12 @@ import { Logo, LogoName } from './logo';
     code {
       overflow-wrap: anywhere;
     }
+    .input.code {
+      font-family: var(--mono, monospace);
+      font-size: 1.2rem;
+      letter-spacing: 0.15em;
+      text-align: center;
+    }
   `,
 })
 export class LoginPage {
@@ -134,11 +171,12 @@ export class LoginPage {
   readonly product = input.required<string>();
   readonly logo = input.required<LogoName>();
   readonly command = input('make user');
-  private readonly auth = inject(Auth);
+  protected readonly auth = inject(Auth);
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
   protected username = '';
   protected password = '';
+  protected code = '';
   protected readonly busy = signal(false);
   protected readonly error = signal('');
 
@@ -146,12 +184,38 @@ export class LoginPage {
     this.busy.set(true);
     this.error.set('');
     try {
-      await this.auth.login(this.username, this.password);
-      await this.router.navigateByUrl(this.route.snapshot.queryParamMap.get('retour') ?? '/');
+      if (await this.auth.login(this.username, this.password)) {
+        this.password = '';
+        return;
+      }
+      await this.enter();
     } catch (e) {
       this.error.set(errorMessage(e));
     } finally {
       this.busy.set(false);
     }
+  }
+
+  protected async verify(): Promise<void> {
+    this.busy.set(true);
+    this.error.set('');
+    try {
+      await this.auth.verifyCode(this.code.trim());
+      await this.enter();
+    } catch (e) {
+      this.error.set(errorMessage(e));
+    } finally {
+      this.code = '';
+      this.busy.set(false);
+    }
+  }
+
+  protected async cancel(): Promise<void> {
+    this.error.set('');
+    await this.auth.logout();
+  }
+
+  private async enter(): Promise<void> {
+    await this.router.navigateByUrl(this.route.snapshot.queryParamMap.get('retour') ?? '/');
   }
 }

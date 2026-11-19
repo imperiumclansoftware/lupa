@@ -1,4 +1,5 @@
-# Intégration continue : chaque contrôle bloque la fusion (règles de sécurité de l'équipe, docs/adr)
+# Intégration continue : chaque contrôle bloque la fusion (règles de sécurité de l'équipe, docs/adr).
+# Actions épinglées par commit (une étiquette peut être déplacée) ; Dependabot les met à jour.
 name: CI
 
 on:
@@ -25,12 +26,12 @@ jobs:
       matrix:
         app: [collector, mirror]
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       # Même image que l'environnement de développement (PHP, extensions, gpgv, Python, npm)
       - name: Image PHP de développement
         run: docker build -q -t sas-php:ci docker/php
       - name: Cache Composer
-        uses: actions/cache@v6
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: ~/.cache/composer
           key: composer-${{ matrix.app }}-${{ hashFiles(format('{0}/composer.lock', matrix.app)) }}
@@ -39,6 +40,8 @@ jobs:
           mkdir -p ~/.cache/composer
           docker run --rm -v "$PWD:/srv/sas" -v ~/.cache/composer:/home/app/.composer/cache \
             -w /srv/sas/${{ matrix.app }} -e APP_ENV=dev sas-php:ci sh -euc '
+              mkdir -p var/data
+              git config --global --add safe.directory /srv/sas
               composer install --no-interaction --no-progress
               composer validate --no-check-publish
               composer audit
@@ -57,8 +60,8 @@ jobs:
       run:
         working-directory: frontend
     steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-node@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: 24
           cache: npm
@@ -76,7 +79,7 @@ jobs:
     runs-on: ubuntu-latest
     container: semgrep/semgrep
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       # missing-user : faux positif, l'étape intermédiaire « runtime » n'est pas une image publiée ;
       # les images finales (collector, mirror) se terminent par « USER app »
       - run: >-
@@ -90,7 +93,7 @@ jobs:
     name: Secrets
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
       - run: docker run --rm -v "$PWD:/repo" ghcr.io/gitleaks/gitleaks:latest git /repo --redact --no-banner -v
@@ -103,10 +106,10 @@ jobs:
       matrix:
         target: [collector, mirror]
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - run: docker build --pull -f docker/prod/Dockerfile --target ${{ matrix.target }} -t sas-${{ matrix.target }}:ci .
       - name: Trivy (HIGH, CRITICAL)
-        uses: aquasecurity/trivy-action@v0.36.0
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         with:
           image-ref: sas-${{ matrix.target }}:ci
           severity: HIGH,CRITICAL

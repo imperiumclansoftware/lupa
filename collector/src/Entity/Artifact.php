@@ -8,6 +8,8 @@ use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 use Sas\Bundle\Ecosystem;
+use Symfony\Bridge\Doctrine\Types\UuidType;
+use Symfony\Component\Uid\Uuid;
 
 /**
  * Un paquet téléchargé (une version npm, un fichier wheel, une archive Composer, une image Docker taguée).
@@ -18,8 +20,8 @@ use Sas\Bundle\Ecosystem;
 #[ORM\Index(columns: ['export_id'])]
 class Artifact
 {
-    #[ORM\Id, ORM\GeneratedValue, ORM\Column]
-    private ?int $id = null;
+    #[ORM\Id, ORM\Column(type: UuidType::NAME, unique: true)]
+    private Uuid $id;
 
     /** sha1(écosystème, nom, version, fichier) : identité stable d'un artefact */
     #[ORM\Column(length: 40, unique: true)]
@@ -79,6 +81,7 @@ class Artifact
 
     public function __construct(Ecosystem $ecosystem, string $name, string $version, ?string $filename)
     {
+        $this->id = Uuid::v7();
         $this->identity = self::identity($ecosystem, $name, $version, $filename);
         $this->ecosystem = $ecosystem;
         $this->name = $name;
@@ -93,7 +96,7 @@ class Artifact
         return sha1(implode("\0", [$ecosystem->value, $name, $version, $filename ?? '']));
     }
 
-    public function getId(): ?int
+    public function getId(): Uuid
     {
         return $this->id;
     }

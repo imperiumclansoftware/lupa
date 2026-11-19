@@ -27,6 +27,7 @@ import {
   isActive,
   poll,
   Eco,
+  Auth,
 } from '@sas/shared';
 import { Artifact, CollectorApi, PackageList, Template } from '../api';
 import { BlacklistDialog } from '../blacklist-dialog';
@@ -68,20 +69,26 @@ import { BlacklistDialog } from '../blacklist-dialog';
             </p>
           </div>
           <div class="actions">
-            <button type="button" class="btn btn-ghost btn-danger" (click)="confirmDelete.open()">
-              <sas-icon name="trash" />Supprimer
-            </button>
-            <a class="btn" [routerLink]="['/listes', l.id, 'modifier']"
-              ><sas-icon name="edit" />Modifier</a
-            >
-            <button
-              type="button"
-              class="btn btn-primary"
-              (click)="resolve()"
-              [disabled]="running()"
-            >
-              <sas-icon name="refresh" />{{ running() ? 'Mise à jour…' : 'Mettre à jour' }}
-            </button>
+            @if (auth.can('admin')) {
+              <button type="button" class="btn btn-ghost btn-danger" (click)="confirmDelete.open()">
+                <sas-icon name="trash" />Supprimer
+              </button>
+            }
+            @if (auth.can('operator')) {
+              <a class="btn" [routerLink]="['/listes', l.id, 'modifier']"
+                ><sas-icon name="edit" />Modifier</a
+              >
+            }
+            @if (auth.can('operator')) {
+              <button
+                type="button"
+                class="btn btn-primary"
+                (click)="resolve()"
+                [disabled]="running()"
+              >
+                <sas-icon name="refresh" />{{ running() ? 'Mise à jour…' : 'Mettre à jour' }}
+              </button>
+            }
           </div>
         </header>
 
@@ -117,9 +124,11 @@ import { BlacklistDialog } from '../blacklist-dialog';
               }}</span>
             </div>
             <sas-security-summary [counts]="sec" />
-            <button type="button" class="btn btn-sm" (click)="audit()" [disabled]="running()">
-              <sas-icon name="refresh" [size]="15" />Analyser
-            </button>
+            @if (auth.can('operator')) {
+              <button type="button" class="btn btn-sm" (click)="audit()" [disabled]="running()">
+                <sas-icon name="refresh" [size]="15" />Analyser
+              </button>
+            }
           </section>
         }
 
@@ -253,17 +262,19 @@ import { BlacklistDialog } from '../blacklist-dialog';
                       </td>
                       <td>
                         @if (!a.blacklisted) {
-                          <button
-                            type="button"
-                            class="btn btn-ghost btn-icon btn-sm"
-                            (click)="ban(a)"
-                            title="Ajouter à la liste noire"
-                            [attr.aria-label]="
-                              'Ajouter ' + a.name + ' ' + a.version + ' à la liste noire'
-                            "
-                          >
-                            <sas-icon name="lock" />
-                          </button>
+                          @if (auth.can('admin')) {
+                            <button
+                              type="button"
+                              class="btn btn-ghost btn-icon btn-sm"
+                              (click)="ban(a)"
+                              title="Ajouter à la liste noire"
+                              [attr.aria-label]="
+                                'Ajouter ' + a.name + ' ' + a.version + ' à la liste noire'
+                              "
+                            >
+                              <sas-icon name="lock" />
+                            </button>
+                          }
                         }
                       </td>
                     </tr>
@@ -440,6 +451,7 @@ import { BlacklistDialog } from '../blacklist-dialog';
   `,
 })
 export default class ListDetail implements OnInit {
+  protected readonly auth = inject(Auth);
   private readonly destroyRef = inject(DestroyRef);
   readonly id = input.required<string>();
   private readonly api = inject(CollectorApi);
@@ -533,7 +545,7 @@ export default class ListDetail implements OnInit {
   private async load(): Promise<void> {
     try {
       if (!this.templates().length) this.templates.set(await this.api.templates());
-      const list = await this.api.list(+this.id());
+      const list = await this.api.list(this.id());
       this.list.set(list);
       const running = isActive(list.job);
       // Contenu rechargé au premier affichage et à la fin d'une mise à jour
@@ -553,7 +565,7 @@ export default class ListDetail implements OnInit {
 
   protected async resolve(): Promise<void> {
     try {
-      await this.api.resolve(+this.id());
+      await this.api.resolve(this.id());
       await this.load();
     } catch (e) {
       this.error.set(errorMessage(e));
@@ -567,7 +579,7 @@ export default class ListDetail implements OnInit {
 
   protected async audit(): Promise<void> {
     try {
-      await this.api.audit(+this.id());
+      await this.api.audit(this.id());
       await this.load();
     } catch (e) {
       this.error.set(errorMessage(e));
@@ -576,7 +588,7 @@ export default class ListDetail implements OnInit {
 
   protected async remove(): Promise<void> {
     try {
-      await this.api.deleteList(+this.id());
+      await this.api.deleteList(this.id());
       this.dialog().close();
       this.toasts.ok('Liste supprimée.');
       await this.router.navigate(['/listes']);

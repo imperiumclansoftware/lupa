@@ -25,8 +25,8 @@ final class SourceInput
         public bool $replacesDefault = false,
         public bool $enabled = true,
         /** Test d'un dépôt déjà enregistré : réutilise son secret si aucun n'est saisi */
-        #[Assert\Positive]
-        public ?int $id = null,
+        #[Assert\Uuid(versions: [Assert\Uuid::V7_MONOTONIC])]
+        public ?string $id = null,
     ) {
     }
 }

@@ -46,22 +46,16 @@ les fichiers sont dans le volume `/data`.
   GitHub, PyPA, npm, Packagist) après chaque mise à jour, ou à la demande. Gravité « critique » ou
   « avertissement », versions corrigées, page **Sécurité** dédiée. Les alertes voyagent dans les bundles :
   Romulus les affiche sur le réseau isolé.
-- **Liste noire :** des versions précises (y compris Debian et RPM, `openssl 1:3.0.7-27.el9`) (`lodash 4.17.20`, `nginx 1.25.3`) sont interdites de téléchargement
-  et d'export (Réglages › Liste noire, ou bouton « Interdire » sur la page Sécurité et dans chaque liste).
+- **Liste noire :** des versions précises (`lodash 4.17.20`, `nginx 1.25.3`, `openssl 1:3.0.7-27.el9`) sont
+  interdites de téléchargement et d'export (Réglages › Liste noire, ou « Interdire » sur Sécurité et les listes).
   La liste voyage, signée, dans chaque bundle. Romulus met ces versions en **quarantaine** : elles ne sont
   plus servies, même si elles avaient été importées avant. Un bundle sans nouveau paquet suffit à
   transmettre une liste modifiée, et retirer une entrée lève la quarantaine au bundle suivant.
 - **Dépôts privés :** Verdaccio, Nexus, Artifactory, GitLab, Harbor, devpi, Satis… s'ajoutent aux dépôts
-  officiels (Réglages › Dépôts sources) ou les remplacent (miroir d'entreprise). Les modes sont les
-  suivants :
-  - npm : par portée (`@entreprise`) ;
-  - Python : index supplémentaire ;
-  - Composer : dépôt prioritaire ;
-  - Docker : identifiants par registre, ou miroir de Docker Hub.
-
-  L'authentification se fait par identifiant et mot de passe ou par jeton. Le bouton **Tester** vérifie
-  l'accès et les identifiants avant l'enregistrement. Les secrets sont chiffrés dans la base et ne sont
-  jamais réaffichés.
+  officiels (Réglages › Dépôts sources) ou les remplacent (miroir d'entreprise) : portée npm (`@entreprise`),
+  index Python supplémentaire, dépôt Composer prioritaire, identifiants par registre Docker ou miroir de
+  Docker Hub. Identifiant et mot de passe ou jeton, vérifiés par le bouton **Tester** ; les secrets sont
+  chiffrés dans la base et jamais réaffichés.
 - **Paquets système Debian et RPM :** Debian 12 et 13, AlmaLinux 8, 9 et 10, CentOS Stream 9 et 10,
   CentOS 7 et 8 (dépôts figés de vault.centos.org). On choisit des paquets (`nginx`, `postgresql`, motifs
   `python3-*`, versions exactes `curl=7.88.1-10+deb12u8`, streams de modules `@nodejs:20` sur EL8). Rémus
@@ -81,8 +75,6 @@ les fichiers sont dans le volume `/data`.
   plateformes Linux glibc ou musl (x86_64, ARM64), Windows et macOS. Les sources (sdist) sont disponibles en option.
 - **Docker :** les plateformes à collecter sont au choix (amd64, arm64…). L'index multi-plateformes d'origine
   est conservé, donc `image@sha256:…` reste valide. Les couches communes ne sont téléchargées et transportées qu'une fois.
-- **Téléchargements vérifiés :** integrity sha512 pour npm, sha256 pour PyPI, digest des couches Docker,
-  shasum Composer.
 - **Exports incrémentaux :** seuls les paquets jamais transportés partent. Un export « complet » existe pour un
   nouveau miroir. Un bundle peut être découpé en **parties de 4 Go** pour une clé FAT32.
 - **Bundles signés (Ed25519) :** Romulus refuse tout bundle modifié ou produit par un collecteur qu'il n'a pas approuvé.
@@ -92,11 +84,11 @@ les fichiers sont dans le volume `/data`.
 
 | Tag | Contenu |
 |---|---|
-| `1.3.1`, `latest` | Sécurité : PHP 8.4.27 (CVE-2026-109618 et CVE-2026-109619, critiques), FrankenPHP 1.13.2 |
+| `1.4.0`, `latest` | Rôles, double authentification, identifiants UUID, Symfony 8.1.11 (17 avis de sécurité) |
+| `1.3.1` | Sécurité : PHP 8.4.27 (CVE-2026-109618 et CVE-2026-109619, critiques), FrankenPHP 1.13.2 |
 | `1.3.0` | Paquets Debian et RPM (AlmaLinux, CentOS), Ansible Galaxy, Terraform |
-| `1.2.0` | Liste noire, dépôts sources privés, cible par défaut Linux amd64 |
-| `1.1.0` | Recherche dans les registres, motifs de noms, alertes de sécurité OSV.dev, prise en charge de Docker rootless (`SAS_UID`) |
-| `1.0.0` | Première version : npm, PyPI, Composer, Docker, modèles de framework, bundles signés |
+
+Versions précédentes : [releases GitHub](https://github.com/imperiumclansoftware/lupa/releases).
 
 Plateforme : `linux/amd64`. Sources : [GitHub](https://github.com/imperiumclansoftware/lupa) (licence MIT). Image associée : [`iemperor/romulus`](https://hub.docker.com/r/iemperor/romulus)
 (même version recommandée).
@@ -355,7 +347,7 @@ docker compose up -d
 ```
 
 Les migrations de la base sont appliquées au démarrage. Les secrets, la clé de signature et les paquets
-collectés sont conservés.
+collectés sont conservés. Vers 1.4.0, les identifiants passent en UUID : sauvegardez le volume avant.
 
 ### Sauvegarde et restauration
 
@@ -382,10 +374,18 @@ Pour ne sauvegarder que l'essentiel, copiez `identity/secret.key` en lieu sûr :
 
 ```bash
 docker compose logs -f remus                                   # journaux (application et worker)
-docker compose exec remus php bin/console app:user:create bob  # autre compte (mot de passe saisi masqué)
+docker compose exec remus php bin/console app:user:create bob --role=operator  # compte (admin, operator, reader)
+docker compose exec remus php bin/console app:user:2fa-reset bob  # double authentification perdue
 docker compose exec remus php bin/console app:identity:check   # nom et empreinte de la clé de signature
 docker compose exec remus php bin/console app:setup:code       # nouveau code d'installation (avant le premier compte)
 ```
+
+### Comptes, rôles et double authentification
+
+Trois rôles : **lecteur** (consulte), **opérateur** (listes, analyses, exports) et **administrateur**
+(comptes, réglages, liste noire, dépôts sources). Les administrateurs gèrent les comptes dans la page
+« Comptes » ; chacun change son mot de passe dans « Mon compte » et peut y activer la **double
+authentification** (application TOTP hors ligne, codes de secours).
 
 ## Accès depuis le réseau local
 
@@ -397,18 +397,16 @@ session devient `__Host-` (`Secure`).
 ## Sécurité
 
 - **Assistant d'installation** protégé par un code à usage unique, lisible seulement sur le serveur.
-- **Comptes :** session `HttpOnly`, `SameSite=Strict`, jeton anti-CSRF, tentatives limitées ; mots de passe
-  Argon2id, 12 caractères minimum, refusés s'ils figurent dans une fuite connue.
+- **Comptes :** rôles, double authentification facultative, session `HttpOnly`, `SameSite=Strict`, jeton
+  anti-CSRF, tentatives limitées ; mots de passe Argon2id, 12 caractères minimum, hors fuites connues.
 - **Navigateur :** CSP stricte avec Trusted Types, HSTS, `Permissions-Policy`, COOP.
-- **Téléchargements :** chaque fichier est vérifié avec la somme publiée par son registre ; le stockage
-  est adressé par sha256.
+- **Téléchargements :** chaque fichier est vérifié avec la somme publiée par son registre (integrity sha512
+  npm, sha256 PyPI, digest Docker, shasum Composer) ; le stockage est adressé par sha256.
 - **Bundles :** manifeste signé en Ed25519 et sha256 de chaque fichier. Romulus vérifie la signature
   **avant** d'écrire quoi que ce soit.
 - **Conteneur :** utilisateur sans privilège (votre UID, ou le root sans privilège de Docker rootless),
   capabilities retirées sauf `CHOWN`, `DAC_OVERRIDE` et `FOWNER`, effectives seulement en rootless ;
   `no-new-privileges`, système de fichiers en lecture seule.
-- **Hors périmètre :** Rémus ne contrôle pas le **contenu** des paquets (vulnérabilités, code malveillant).
-  Faites l'audit voulu, par exemple `npm audit` ou un scanner d'images, avant d'exporter.
 
 ## Sécurité des paquets
 

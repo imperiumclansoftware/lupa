@@ -5,6 +5,8 @@ namespace App\Entity;
 use App\Repository\JobRepository;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Bridge\Doctrine\Types\UuidType;
+use Symfony\Component\Uid\Uuid;
 
 /** Tâche de fond (import d'un bundle) suivie depuis l'interface. */
 #[ORM\Entity(repositoryClass: JobRepository::class)]
@@ -16,8 +18,8 @@ class Job
     public const string SUCCEEDED = 'succeeded';
     public const string FAILED = 'failed';
 
-    #[ORM\Id, ORM\GeneratedValue, ORM\Column]
-    private ?int $id = null;
+    #[ORM\Id, ORM\Column(type: UuidType::NAME, unique: true)]
+    private Uuid $id;
 
     #[ORM\Column(length: 16)]
     private string $type;
@@ -57,13 +59,14 @@ class Job
     /** @param array<string, mixed> $payload */
     public function __construct(string $type, string $title, array $payload = [])
     {
+        $this->id = Uuid::v7();
         $this->type = $type;
         $this->title = $title;
         $this->payload = $payload;
         $this->createdAt = new \DateTimeImmutable();
     }
 
-    public function getId(): ?int
+    public function getId(): Uuid
     {
         return $this->id;
     }

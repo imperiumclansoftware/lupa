@@ -21,5 +21,6 @@ export class Layout {
     { path: '/utilisation', label: 'Utilisation', icon: 'terminal' },
     { path: '/activite', label: 'Activité', icon: 'activity' },
     { path: '/reglages', label: 'Réglages', icon: 'key' },
+    { path: '/comptes', label: 'Comptes', icon: 'users', role: 'admin' },
   ];
 }

@@ -1,6 +1,6 @@
 # 0005 — Comptes tous administrateurs, sans Voter par ressource
 
-Statut : accepté, provisoire — 2026-11-19 (à revoir avec l'introduction de rôles)
+Statut : remplacé par [0010](0010-roles.md) — 2026-11-19
 
 ## Contexte
 

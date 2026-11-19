@@ -56,7 +56,7 @@ export interface ListOptions {
 }
 
 export interface PackageList {
-  id: number;
+  id: string;
   name: string;
   ecosystem: EcosystemId;
   specCount: number;
@@ -85,7 +85,7 @@ export interface ListInput {
 }
 
 export interface Artifact {
-  id: number;
+  id: string;
   ecosystem: EcosystemId;
   name: string;
   version: string;
@@ -102,7 +102,7 @@ export interface Artifact {
 }
 
 export interface BlacklistEntry {
-  id: number;
+  id: string;
   ecosystem: EcosystemId;
   name: string;
   version: string;
@@ -129,7 +129,7 @@ export interface Blacklist {
 export type AuthType = 'none' | 'basic' | 'token';
 
 export interface Source {
-  id: number;
+  id: string;
   ecosystem: EcosystemId;
   label: string;
   url: string;
@@ -143,7 +143,7 @@ export interface Source {
 }
 
 export interface SourceInput {
-  id?: number;
+  id?: string;
   ecosystem: EcosystemId;
   label: string;
   url: string;
@@ -158,7 +158,7 @@ export interface SourceInput {
 
 export interface SecurityItem extends Artifact {
   vulnerabilities: Vulnerability[];
-  lists: { id: number; name: string }[];
+  lists: { id: string; name: string }[];
 }
 
 export type AlertLevel = 'all' | 'critical' | 'warning' | 'low';
@@ -185,7 +185,7 @@ export interface ExportFile {
 }
 
 export interface Export {
-  id: number;
+  id: string;
   sequence: number;
   full: boolean;
   baseName: string;
@@ -274,7 +274,7 @@ export class CollectorApi {
     ).items;
   }
 
-  list(id: number): Promise<PackageList> {
+  list(id: string): Promise<PackageList> {
     return firstValueFrom(this.http.get<PackageList>(`/api/lists/${id}`));
   }
 
@@ -282,21 +282,21 @@ export class CollectorApi {
     return firstValueFrom(this.http.post<PackageList>('/api/lists', input));
   }
 
-  updateList(id: number, input: ListInput): Promise<PackageList> {
+  updateList(id: string, input: ListInput): Promise<PackageList> {
     return firstValueFrom(this.http.put<PackageList>(`/api/lists/${id}`, input));
   }
 
-  deleteList(id: number): Promise<unknown> {
+  deleteList(id: string): Promise<unknown> {
     return firstValueFrom(this.http.delete(`/api/lists/${id}`));
   }
 
-  resolve(id: number): Promise<Job> {
+  resolve(id: string): Promise<Job> {
     return firstValueFrom(this.http.post<Job>(`/api/lists/${id}/resolve`, {}));
   }
 
   /** Contenu d'une liste, filtré et paginé par le serveur */
   listArtifacts(
-    id: number,
+    id: string,
     filters: { q?: string; pending?: boolean; vulnerable?: boolean; page?: number },
   ): Promise<Page<Artifact>> {
     let params = new HttpParams().set('page', filters.page ?? 1);
@@ -328,7 +328,7 @@ export class CollectorApi {
     return firstValueFrom(this.http.post<Job>('/api/exports', { full, maxPartMiB }));
   }
 
-  deleteExportFiles(id: number): Promise<Export> {
+  deleteExportFiles(id: string): Promise<Export> {
     return firstValueFrom(this.http.delete<Export>(`/api/exports/${id}/files`));
   }
 
@@ -372,7 +372,7 @@ export class CollectorApi {
     );
   }
 
-  audit(listId?: number): Promise<Job> {
+  audit(listId?: string): Promise<Job> {
     return firstValueFrom(this.http.post<Job>('/api/security/audit', listId ? { listId } : {}));
   }
 
@@ -406,7 +406,7 @@ export class CollectorApi {
     return firstValueFrom(this.http.post<BlacklistEntry>('/api/blacklist', input));
   }
 
-  removeBlacklist(id: number): Promise<unknown> {
+  removeBlacklist(id: string): Promise<unknown> {
     return firstValueFrom(this.http.delete(`/api/blacklist/${id}`));
   }
 
@@ -426,7 +426,7 @@ export class CollectorApi {
     );
   }
 
-  deleteSource(id: number): Promise<unknown> {
+  deleteSource(id: string): Promise<unknown> {
     return firstValueFrom(this.http.delete(`/api/sources/${id}`));
   }
 

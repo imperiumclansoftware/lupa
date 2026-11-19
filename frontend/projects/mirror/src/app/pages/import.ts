@@ -22,6 +22,8 @@ import {
   formatBytes,
   isActive,
   poll,
+  keepOlder,
+  Auth,
 } from '@sas/shared';
 import { ImportedBundle, Inbox, InboxItem, MirrorApi } from '../api';
 
@@ -199,38 +201,44 @@ interface Upload {
 
               <div class="bundle-actions">
                 @if (item.source === 'upload') {
-                  <button
-                    type="button"
-                    class="btn btn-ghost btn-sm"
-                    (click)="removeUpload(item)"
-                    title="Supprimer ce fichier envoyé"
-                  >
-                    <sas-icon name="trash" [size]="15" />
-                  </button>
+                  @if (auth.can('operator')) {
+                    <button
+                      type="button"
+                      class="btn btn-ghost btn-sm"
+                      (click)="removeUpload(item)"
+                      title="Supprimer ce fichier envoyé"
+                    >
+                      <sas-icon name="trash" [size]="15" />
+                    </button>
+                  }
                 }
                 @if (item.report; as r) {
                   @if (!item.missingParts.length) {
                     @if (!r.collector.trusted) {
-                      <button
-                        type="button"
-                        class="btn btn-primary"
-                        (click)="askTrust(item)"
-                        [disabled]="busy()"
-                      >
-                        <sas-icon name="shield" />Vérifier et importer
-                      </button>
+                      @if (auth.can('admin')) {
+                        <button
+                          type="button"
+                          class="btn btn-primary"
+                          (click)="askTrust(item)"
+                          [disabled]="busy()"
+                        >
+                          <sas-icon name="shield" />Vérifier et importer
+                        </button>
+                      }
                     } @else if (r.importable) {
-                      <button
-                        type="button"
-                        class="btn"
-                        [class.btn-primary]="!r.alreadyImported"
-                        (click)="start(item)"
-                        [disabled]="busy() || activeJobs().length > 0"
-                      >
-                        <sas-icon name="download" />{{
-                          r.alreadyImported ? 'Réimporter' : 'Importer'
-                        }}
-                      </button>
+                      @if (auth.can('operator')) {
+                        <button
+                          type="button"
+                          class="btn"
+                          [class.btn-primary]="!r.alreadyImported"
+                          (click)="start(item)"
+                          [disabled]="busy() || activeJobs().length > 0"
+                        >
+                          <sas-icon name="download" />{{
+                            r.alreadyImported ? 'Réimporter' : 'Importer'
+                          }}
+                        </button>
+                      }
                     }
                   }
                 }
@@ -479,6 +487,7 @@ interface Upload {
   `,
 })
 export default class ImportPage {
+  protected readonly auth = inject(Auth);
   private readonly api = inject(MirrorApi);
   private readonly toasts = inject(Toasts);
   protected readonly trustDialog = viewChild.required(Dialog);
@@ -538,9 +547,7 @@ export default class ImportPage {
       const [inbox, history] = await Promise.all([this.api.inbox(), this.api.imports()]);
       this.inbox.set(inbox);
       // Les pages déjà dépliées sont conservées au rafraîchissement
-      const seen = new Set(history.items.map((b) => b.id));
-      const older = this.history().filter((b) => !seen.has(b.id) && b.id < Math.min(...seen));
-      this.history.set([...history.items, ...older]);
+      this.history.set(keepOlder(history.items, this.history()));
       this.historyTotal.set(history.total);
       this.error.set('');
     } catch (e) {

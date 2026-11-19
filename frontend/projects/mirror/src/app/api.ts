@@ -13,7 +13,7 @@ export type { Page } from '@sas/shared';
 import { firstValueFrom } from 'rxjs';
 
 export interface ImportedBundle {
-  id: number;
+  id: string;
   uuid: string;
   collectorId: string;
   collectorName: string;
@@ -103,7 +103,7 @@ export interface PackageSummary {
 }
 
 export interface QuarantineEntry {
-  id: number;
+  id: string;
   ecosystem: EcosystemId;
   name: string;
   version: string;
@@ -119,7 +119,7 @@ export interface Quarantine {
 }
 
 export interface PackageVersion {
-  id: number;
+  id: string;
   version: string;
   filename: string | null;
   size: number;
@@ -143,7 +143,7 @@ export interface PackageDetail extends Page<PackageVersion> {
 }
 
 export interface TrustedKey {
-  id: number;
+  id: string;
   label: string;
   publicKey: string;
   fingerprint: string;
@@ -223,7 +223,7 @@ export class MirrorApi {
     return firstValueFrom(this.http.post<TrustedKey>('/api/keys', { publicKey, label }));
   }
 
-  deleteKey(id: number): Promise<unknown> {
+  deleteKey(id: string): Promise<unknown> {
     return firstValueFrom(this.http.delete(`/api/keys/${id}`));
   }
 

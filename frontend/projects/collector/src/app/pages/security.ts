@@ -20,6 +20,7 @@ import {
   errorMessage,
   isActive,
   poll,
+  Auth,
 } from '@sas/shared';
 import { AlertLevel, CollectorApi, SecurityItem, SecurityReport } from '../api';
 import { BlacklistDialog } from '../blacklist-dialog';
@@ -48,14 +49,16 @@ import { BlacklistDialog } from '../blacklist-dialog';
             affiche aussi sur le réseau isolé.
           </p>
         </div>
-        <button
-          type="button"
-          class="btn btn-primary"
-          (click)="audit()"
-          [disabled]="!!data()?.job || busy()"
-        >
-          <sas-icon name="refresh" />Analyser maintenant
-        </button>
+        @if (auth.can('operator')) {
+          <button
+            type="button"
+            class="btn btn-primary"
+            (click)="audit()"
+            [disabled]="!!data()?.job || busy()"
+          >
+            <sas-icon name="refresh" />Analyser maintenant
+          </button>
+        }
       </header>
 
       @if (error()) {
@@ -168,14 +171,16 @@ import { BlacklistDialog } from '../blacklist-dialog';
                           >Liste noire</span
                         >
                       } @else {
-                        <button
-                          type="button"
-                          class="btn btn-ghost btn-sm ban"
-                          (click)="ban($event, item)"
-                          title="Interdire cette version : plus téléchargée, plus exportée, quarantaine dans Romulus"
-                        >
-                          <sas-icon name="lock" />Interdire
-                        </button>
+                        @if (auth.can('admin')) {
+                          <button
+                            type="button"
+                            class="btn btn-ghost btn-sm ban"
+                            (click)="ban($event, item)"
+                            title="Interdire cette version : plus téléchargée, plus exportée, quarantaine dans Romulus"
+                          >
+                            <sas-icon name="lock" />Interdire
+                          </button>
+                        }
                       }
                       <sas-severity [severity]="item.severity" [count]="item.vulnerabilityCount" />
                       <sas-icon class="chev" name="chevron" [size]="16" />
@@ -329,6 +334,7 @@ import { BlacklistDialog } from '../blacklist-dialog';
   `,
 })
 export default class SecurityPage {
+  protected readonly auth = inject(Auth);
   private readonly api = inject(CollectorApi);
   private readonly toasts = inject(Toasts);
   protected readonly data = signal<SecurityReport | null>(null);

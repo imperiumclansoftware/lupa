@@ -1,6 +1,6 @@
 # 0006 — Identifiants entiers en attendant la migration en UUID v7
 
-Statut : accepté, provisoire — 2026-11-19
+Statut : clos — 2026-11-19 : migration réalisée (`Version20261119120000`), identifiants UUID v7 stockés en BLOB
 
 ## Contexte
 

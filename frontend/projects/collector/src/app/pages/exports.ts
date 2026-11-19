@@ -12,6 +12,8 @@ import {
   errorMessage,
   isActive,
   poll,
+  keepOlder,
+  Auth,
 } from '@sas/shared';
 import { CollectorApi, Export, Exports } from '../api';
 import { KeyValuePipe } from '@angular/common';
@@ -130,19 +132,21 @@ import { KeyValuePipe } from '@angular/common';
                 >Destination : <code>{{ d.exportDir }}</code> ·
                 {{ d.freeSpace | bytes }} libres</span
               >
-              <button
-                type="button"
-                class="btn btn-primary"
-                (click)="create()"
-                [disabled]="
-                  busy() ||
-                  !!activeJob() ||
-                  (selectedCount() === 0 && !d.blacklist.pending) ||
-                  !!d.problem
-                "
-              >
-                <sas-icon name="usb" />Créer le bundle
-              </button>
+              @if (auth.can('operator')) {
+                <button
+                  type="button"
+                  class="btn btn-primary"
+                  (click)="create()"
+                  [disabled]="
+                    busy() ||
+                    !!activeJob() ||
+                    (selectedCount() === 0 && !d.blacklist.pending) ||
+                    !!d.problem
+                  "
+                >
+                  <sas-icon name="usb" />Créer le bundle
+                </button>
+              }
             </div>
           </div>
         </section>
@@ -211,14 +215,16 @@ import { KeyValuePipe } from '@angular/common';
                       </td>
                       <td class="right">
                         @if (hasFiles(e)) {
-                          <button
-                            type="button"
-                            class="btn btn-sm btn-ghost"
-                            (click)="clean(e)"
-                            title="Supprimer les fichiers du dossier d’export"
-                          >
-                            <sas-icon name="trash" [size]="15" />Retirer
-                          </button>
+                          @if (auth.can('operator')) {
+                            <button
+                              type="button"
+                              class="btn btn-sm btn-ghost"
+                              (click)="clean(e)"
+                              title="Supprimer les fichiers du dossier d’export"
+                            >
+                              <sas-icon name="trash" [size]="15" />Retirer
+                            </button>
+                          }
                         }
                       </td>
                     </tr>
@@ -334,6 +340,7 @@ import { KeyValuePipe } from '@angular/common';
   `,
 })
 export default class ExportsPage {
+  protected readonly auth = inject(Auth);
   private readonly api = inject(CollectorApi);
   private readonly toasts = inject(Toasts);
   protected readonly data = signal<Exports | null>(null);
@@ -385,11 +392,7 @@ export default class ExportsPage {
     try {
       const first = await this.api.exports();
       // Les pages déjà dépliées sont conservées au rafraîchissement
-      const seen = new Set(first.items.map((e) => e.id));
-      const older = (this.data()?.items ?? []).filter(
-        (e) => !seen.has(e.id) && e.id < Math.min(...seen),
-      );
-      this.data.set({ ...first, items: [...first.items, ...older] });
+      this.data.set({ ...first, items: keepOlder(first.items, this.data()?.items ?? []) });
       this.error.set('');
       const active = !!this.activeJob();
       if (this.wasActive && !active) {

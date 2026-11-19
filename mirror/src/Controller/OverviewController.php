@@ -20,6 +20,8 @@ use Symfony\Component\HttpKernel\Attribute\MapQueryString;
 use Symfony\Component\HttpKernel\Attribute\MapRequestPayload;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Component\Routing\Requirement\Requirement;
+use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Symfony\Contracts\Cache\CacheInterface;
 use Symfony\Contracts\Cache\ItemInterface;
 
@@ -123,6 +125,7 @@ final class OverviewController
     }
 
     /** Ajout manuel d'une clé (copiée depuis les réglages du collecteur). */
+    #[IsGranted('ROLE_ADMIN')]
     #[Route('/keys', methods: ['POST'])]
     public function addKey(#[MapRequestPayload] KeyInput $input): JsonResponse
     {
@@ -141,7 +144,8 @@ final class OverviewController
         return new JsonResponse(Presenter::key($key), Response::HTTP_CREATED);
     }
 
-    #[Route('/keys/{id}', methods: ['DELETE'], requirements: ['id' => '\d+'])]
+    #[IsGranted('ROLE_ADMIN')]
+    #[Route('/keys/{id}', methods: ['DELETE'], requirements: ['id' => Requirement::UUID_V7])]
     public function deleteKey(TrustedKey $key): Response
     {
         $this->em->remove($key);

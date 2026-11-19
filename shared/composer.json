@@ -7,7 +7,9 @@
         "php": ">=8.4",
         "ext-sodium": "*",
         "ext-hash": "*",
-        "ext-intl": "*"
+        "ext-intl": "*",
+        "doctrine/dbal": "^4.0",
+        "symfony/uid": "^8.1"
     },
     "autoload": {
         "psr-4": {

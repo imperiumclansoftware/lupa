@@ -5,6 +5,7 @@ namespace App\Controller;
 use App\Dto\SetupInput;
 use App\Entity\TrustedKey;
 use App\Entity\User;
+use App\Security\UserView;
 use App\Setup\SetupToken;
 use Doctrine\ORM\EntityManagerInterface;
 use Sas\Bundle\Signer;
@@ -67,6 +68,6 @@ final class SetupController
 
         $this->security->login($user, 'json_login', 'main');
 
-        return new JsonResponse(['user' => ['username' => $user->getUsername()]], Response::HTTP_CREATED);
+        return new JsonResponse(['user' => UserView::of($user)], Response::HTTP_CREATED);
     }
 }

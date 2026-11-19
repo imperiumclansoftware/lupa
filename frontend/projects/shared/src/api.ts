@@ -37,3 +37,19 @@ export async function allPages<P extends Page<unknown>>(
   }
   return { first, items };
 }
+
+/**
+ * Première page rechargée, suivie des éléments plus anciens déjà dépliés (« Afficher plus »).
+ * Les identifiants sont des UUID v7 : leur ordre alphabétique est celui de création.
+ */
+export function keepOlder<T extends { id: string }>(first: T[], previous: T[]): T[] {
+  const seen = new Set(first.map((i) => i.id));
+  const oldest = first.reduce<string | null>(
+    (min, i) => (min === null || i.id < min ? i.id : min),
+    null,
+  );
+  return [
+    ...first,
+    ...previous.filter((i) => !seen.has(i.id) && (oldest === null || i.id < oldest)),
+  ];
+}

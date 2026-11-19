@@ -5,6 +5,7 @@ namespace App\Tests;
 use App\Entity\Job;
 use App\Entity\TrustedKey;
 use App\Entity\User;
+use App\Security\Role;
 use App\Tests\Support\Csrf;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Tools\SchemaTool;
@@ -33,6 +34,8 @@ abstract class MirrorWebTestCase extends WebTestCase
         self::setEnv('PUBLIC_URL', '');
 
         $this->client = static::createClient();
+        // Limiteur des connexions conservé sur disque entre deux exécutions : chaque test repart de zéro
+        static::getContainer()->get('cache.rate_limiter')->clear();
         $em = $this->em();
         // Clés étrangères suspendues : SQLite refuse sinon de supprimer une table encore référencée
         $em->getConnection()->executeStatement('PRAGMA foreign_keys = OFF');
@@ -53,9 +56,9 @@ abstract class MirrorWebTestCase extends WebTestCase
         return static::getContainer()->get(EntityManagerInterface::class);
     }
 
-    protected function createUser(string $username = 'admin', string $password = 'secret-test'): User
+    protected function createUser(string $username = 'admin', string $password = 'secret-test', Role $role = Role::Admin): User
     {
-        $user = new User($username);
+        $user = new User($username, $role);
         $user->setPassword(static::getContainer()->get(UserPasswordHasherInterface::class)->hashPassword($user, $password));
         $em = $this->em();
         $em->persist($user);
@@ -64,10 +67,13 @@ abstract class MirrorWebTestCase extends WebTestCase
         return $user;
     }
 
-    protected function login(): void
+    protected function login(Role $role = Role::Admin): User
     {
-        $this->client->loginUser($this->createUser());
+        $user = $this->createUser($role->value, 'secret-test', $role);
+        $this->client->loginUser($user);
         Csrf::prime($this->client);
+
+        return $user;
     }
 
     protected function trust(string $publicKey): void
@@ -90,7 +96,11 @@ abstract class MirrorWebTestCase extends WebTestCase
         return $em->find(Job::class, $id);
     }
 
-    /** @return array<mixed> */
+    /**
+     * @return array<mixed>
+     *
+     * @phpstan-impure dernière réponse reçue : change à chaque requête
+     */
     protected function json(): array
     {
         return json_decode((string) $this->client->getInternalResponse()->getContent(), true, 512, \JSON_THROW_ON_ERROR);

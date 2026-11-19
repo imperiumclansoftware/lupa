@@ -6,6 +6,8 @@ use App\Repository\BlacklistEntryRepository;
 use Doctrine\ORM\Mapping as ORM;
 use Sas\Bundle\Ecosystem;
 use Sas\Bundle\PackageKey;
+use Symfony\Bridge\Doctrine\Types\UuidType;
+use Symfony\Component\Uid\Uuid;
 
 /**
  * Version précise interdite : jamais téléchargée par Rémus, jamais exportée, et mise en quarantaine
@@ -14,8 +16,8 @@ use Sas\Bundle\PackageKey;
 #[ORM\Entity(repositoryClass: BlacklistEntryRepository::class)]
 class BlacklistEntry
 {
-    #[ORM\Id, ORM\GeneratedValue, ORM\Column]
-    private ?int $id = null;
+    #[ORM\Id, ORM\Column(type: UuidType::NAME, unique: true)]
+    private Uuid $id;
 
     /** sha1 de PackageKey : une seule entrée par version, quelle que soit son écriture */
     #[ORM\Column(length: 40, unique: true)]
@@ -38,6 +40,7 @@ class BlacklistEntry
 
     public function __construct(Ecosystem $ecosystem, string $name, string $version, string $reason)
     {
+        $this->id = Uuid::v7();
         $this->ecosystem = $ecosystem;
         $this->name = PackageKey::name($ecosystem, $name);
         $this->version = trim($version);
@@ -51,7 +54,7 @@ class BlacklistEntry
         return sha1(PackageKey::of($ecosystem, $name, $version));
     }
 
-    public function getId(): ?int
+    public function getId(): Uuid
     {
         return $this->id;
     }

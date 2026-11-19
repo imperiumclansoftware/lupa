@@ -5,6 +5,8 @@ namespace App\Entity;
 use App\Repository\QuarantineEntryRepository;
 use Doctrine\ORM\Mapping as ORM;
 use Sas\Bundle\Ecosystem;
+use Symfony\Bridge\Doctrine\Types\UuidType;
+use Symfony\Component\Uid\Uuid;
 
 /**
  * Version interdite par la liste noire d'un collecteur : déjà présente ou non, elle n'est plus servie
@@ -14,8 +16,8 @@ use Sas\Bundle\Ecosystem;
 #[ORM\Index(columns: ['collector_id'])]
 class QuarantineEntry
 {
-    #[ORM\Id, ORM\GeneratedValue, ORM\Column]
-    private ?int $id = null;
+    #[ORM\Id, ORM\Column(type: UuidType::NAME, unique: true)]
+    private Uuid $id;
 
     #[ORM\Column(length: 64)]
     private string $collectorId;
@@ -44,6 +46,7 @@ class QuarantineEntry
 
     public function __construct(string $collectorId, string $collectorName, Ecosystem $ecosystem, string $name, string $version, string $reason, int $revision)
     {
+        $this->id = Uuid::v7();
         $this->collectorId = $collectorId;
         $this->collectorName = $collectorName;
         $this->ecosystem = $ecosystem;
@@ -54,7 +57,7 @@ class QuarantineEntry
         $this->createdAt = new \DateTimeImmutable();
     }
 
-    public function getId(): ?int
+    public function getId(): Uuid
     {
         return $this->id;
     }

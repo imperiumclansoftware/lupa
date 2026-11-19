@@ -136,7 +136,7 @@ final class RpmResolverTest extends TestCase
 
             return 1;
         });
-        $context = new JobContext($db, 1);
+        $context = new JobContext($db, new \Symfony\Component\Uid\NilUuid());
         $resolver = (new \ReflectionClass(RpmResolver::class))->newInstanceWithoutConstructor();
         $selected = $resolver->select($repository, $specs, $recommends, $context);
         $context->flushLog();

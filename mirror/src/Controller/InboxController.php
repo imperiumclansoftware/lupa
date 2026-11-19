@@ -11,10 +11,14 @@ use App\Job\JobLauncher;
 use App\Repository\JobRepository;
 use App\Repository\TrustedKeyRepository;
 use Doctrine\ORM\EntityManagerInterface;
+use Psr\Log\LoggerInterface;
 use Sas\Bundle\Signer;
+use Symfony\Bundle\SecurityBundle\Security;
+use Symfony\Component\DependencyInjection\Attribute\Target;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Attribute\MapRequestPayload;
+use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\Routing\Attribute\Route;
 
@@ -29,6 +33,9 @@ final class InboxController
         private readonly JobRepository $jobs,
         private readonly EntityManagerInterface $em,
         private readonly JobLauncher $launcher,
+        private readonly Security $security,
+        #[Target('audit')]
+        private readonly LoggerInterface $audit,
     ) {
     }
 
@@ -79,6 +86,10 @@ final class InboxController
         }
 
         if ($input->trust) {
+            // Approuver une clé, c'est accepter tout ce que ce collecteur enverra : administrateurs seulement
+            if (!$this->security->isGranted('ROLE_ADMIN')) {
+                throw new AccessDeniedHttpException('Seul un administrateur peut approuver un nouveau collecteur.');
+            }
             $manifest = $this->inspector->inspect($bundle['parts'])['manifest'];
             if (null === $input->fingerprint || !hash_equals(Signer::fingerprint($manifest->collectorPublicKey), $input->fingerprint)) {
                 return new JsonResponse(['error' => 'L\'empreinte confirmée ne correspond pas à celle du bundle.'], Response::HTTP_UNPROCESSABLE_ENTITY);
@@ -86,6 +97,7 @@ final class InboxController
             if (!$this->keys->findOneBy(['publicKey' => $manifest->collectorPublicKey])) {
                 $this->em->persist(new TrustedKey($manifest->collectorPublicKey, $manifest->collectorName));
                 $this->em->flush();
+                $this->audit->notice('Collecteur approuvé à l\'import', ['user' => $this->security->getUser()?->getUserIdentifier(), 'collector' => $manifest->collectorName, 'fingerprint' => $input->fingerprint]);
             }
         }
 

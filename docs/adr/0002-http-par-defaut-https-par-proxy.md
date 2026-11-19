@@ -1,6 +1,6 @@
 # 0002 — HTTP par défaut, HTTPS assuré par un reverse proxy
 
-Statut : accepté, provisoire — 2026-11-19 (à remplacer par le HTTPS natif)
+Statut : accepté — 2026-11-19 (HTTPS natif écarté le même jour : voir la dernière conséquence)
 
 ## Contexte
 
@@ -25,5 +25,6 @@ sans Internet, ne peut pas obtenir de certificat Let's Encrypt.
   sans cookie `Secure` tant que `TRUSTED_PROXIES` n'est pas renseigné ; l'image l'indique au démarrage.
 - Sans proxy, les échanges ne sont pas chiffrés sur le réseau interne : à réserver aux réseaux de
   confiance, ce que la documentation signale.
-- Prochaine étape : HTTPS natif dans l'image (certificat fourni ou PKI interne), puis HTTP réservé à la
-  redirection ; cet ADR sera alors remplacé.
+- Pas de HTTPS natif dans l'image (décision du 2026-11-19) : certificats, renouvellement et autorités
+  internes restent du ressort du reverse proxy que chaque site maîtrise déjà ; l'image n'a pas à gérer
+  de clé privée TLS.

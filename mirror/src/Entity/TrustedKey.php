@@ -5,13 +5,15 @@ namespace App\Entity;
 use App\Repository\TrustedKeyRepository;
 use Doctrine\ORM\Mapping as ORM;
 use Sas\Bundle\Signer;
+use Symfony\Bridge\Doctrine\Types\UuidType;
+use Symfony\Component\Uid\Uuid;
 
 /** Clé publique d'un collecteur dont les bundles sont acceptés. */
 #[ORM\Entity(repositoryClass: TrustedKeyRepository::class)]
 class TrustedKey
 {
-    #[ORM\Id, ORM\GeneratedValue, ORM\Column]
-    private ?int $id = null;
+    #[ORM\Id, ORM\Column(type: UuidType::NAME, unique: true)]
+    private Uuid $id;
 
     #[ORM\Column(length: 64, unique: true)]
     private string $publicKey;
@@ -24,6 +26,7 @@ class TrustedKey
 
     public function __construct(string $publicKey, string $label)
     {
+        $this->id = Uuid::v7();
         if (!Signer::isPublicKey($publicKey)) {
             throw new \InvalidArgumentException('Clé publique invalide.');
         }
@@ -32,7 +35,7 @@ class TrustedKey
         $this->createdAt = new \DateTimeImmutable();
     }
 
-    public function getId(): ?int
+    public function getId(): Uuid
     {
         return $this->id;
     }

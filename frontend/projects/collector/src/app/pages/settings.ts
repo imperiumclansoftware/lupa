@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, OnInit, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { CopyButton, Icon, Toasts, errorMessage } from '@sas/shared';
+import { CopyButton, Icon, Toasts, errorMessage, Auth } from '@sas/shared';
 import { CollectorApi, Identity } from '../api';
 import { SettingsBlacklist } from './settings-blacklist';
 import { SettingsSources } from './settings-sources';
@@ -33,15 +33,18 @@ import { SettingsSources } from './settings-sources';
                 name="name"
                 maxlength="60"
                 required
+                [readonly]="!auth.can('admin')"
                 [(ngModel)]="name"
               />
-              <button
-                class="btn btn-primary"
-                type="submit"
-                [disabled]="busy() || name.trim() === id.name"
-              >
-                Enregistrer
-              </button>
+              @if (auth.can('admin')) {
+                <button
+                  class="btn btn-primary"
+                  type="submit"
+                  [disabled]="busy() || name.trim() === id.name"
+                >
+                  Enregistrer
+                </button>
+              }
             </div>
           </div>
         </form>
@@ -108,6 +111,7 @@ import { SettingsSources } from './settings-sources';
   `,
 })
 export default class Settings implements OnInit {
+  protected readonly auth = inject(Auth);
   private readonly api = inject(CollectorApi);
   private readonly toasts = inject(Toasts);
   protected readonly identity = signal<Identity | null>(null);

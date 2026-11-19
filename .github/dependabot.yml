@@ -4,18 +4,26 @@ updates:
   - package-ecosystem: composer
     directories: [/collector, /mirror]
     schedule: { interval: weekly }
+    # Délai avant de proposer une version toute neuve (paquet compromis vite retiré)
+    cooldown: { default-days: 7 }
     groups:
       symfony: { patterns: ['symfony/*'] }
       outils: { patterns: ['phpstan/*', 'friendsofphp/*', 'phpunit/*'] }
   - package-ecosystem: npm
     directory: /frontend
     schedule: { interval: weekly }
+    # Délai avant de proposer une version toute neuve (paquet compromis vite retiré)
+    cooldown: { default-days: 7 }
     groups:
       angular: { patterns: ['@angular/*', 'angular-eslint'] }
       outils: { patterns: ['eslint', '@eslint/*', 'typescript-eslint', 'prettier', 'typescript'] }
   - package-ecosystem: docker
     directories: [/docker/prod, /docker/php, /docker/node]
     schedule: { interval: weekly }
+    # Délai avant de proposer une version toute neuve (paquet compromis vite retiré)
+    cooldown: { default-days: 7 }
   - package-ecosystem: github-actions
     directory: /
     schedule: { interval: weekly }
+    # Délai avant de proposer une version toute neuve (paquet compromis vite retiré)
+    cooldown: { default-days: 7 }

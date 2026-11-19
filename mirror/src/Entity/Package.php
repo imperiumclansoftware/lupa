@@ -6,6 +6,8 @@ use App\Repository\PackageRepository;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 use Sas\Bundle\Ecosystem;
+use Symfony\Bridge\Doctrine\Types\UuidType;
+use Symfony\Component\Uid\Uuid;
 
 /**
  * Paquet servi par le miroir : une version npm, un fichier Python, une version Composer
@@ -15,8 +17,8 @@ use Sas\Bundle\Ecosystem;
 #[ORM\Index(columns: ['ecosystem', 'name'])]
 class Package
 {
-    #[ORM\Id, ORM\GeneratedValue, ORM\Column]
-    private ?int $id = null;
+    #[ORM\Id, ORM\Column(type: UuidType::NAME, unique: true)]
+    private Uuid $id;
 
     #[ORM\Column(length: 40, unique: true)]
     private string $identity;
@@ -56,6 +58,7 @@ class Package
 
     public function __construct(Ecosystem $ecosystem, string $name, string $version, ?string $filename)
     {
+        $this->id = Uuid::v7();
         $this->identity = self::identity($ecosystem, $name, $version, $filename);
         $this->ecosystem = $ecosystem;
         $this->name = $name;
@@ -69,7 +72,7 @@ class Package
         return sha1(implode("\0", [$ecosystem->value, $name, $version, $filename ?? '']));
     }
 
-    public function getId(): ?int
+    public function getId(): Uuid
     {
         return $this->id;
     }
@@ -132,7 +135,8 @@ class Package
      */
     public function update(array $blobs, int $size, array $metadata, ImportedBundle $bundle): void
     {
-        if (null !== $this->id && $blobs !== $this->blobs) {
+        // Paquet déjà importé (un paquet neuf n'a encore aucun fichier) dont le contenu change
+        if ([] !== $this->blobs && $blobs !== $this->blobs) {
             $this->updatedAt = new \DateTimeImmutable();
         }
         $this->blobs = $blobs;

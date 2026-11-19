@@ -11,6 +11,7 @@ use Doctrine\DBAL\Connection;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpKernel\Attribute\MapRequestPayload;
 use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 #[Route('/api')]
 final class OverviewController
@@ -63,6 +64,7 @@ final class OverviewController
         return new JsonResponse(['identity' => $this->identityData(), 'exportDir' => $this->exportDir, 'storageDir' => $this->storageDir]);
     }
 
+    #[IsGranted('ROLE_ADMIN')]
     #[Route('/settings', methods: ['PUT'])]
     public function saveSettings(#[MapRequestPayload] SettingsInput $input): JsonResponse
     {

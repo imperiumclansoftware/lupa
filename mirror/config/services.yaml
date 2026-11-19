@@ -1,6 +1,7 @@
 parameters:
     # Nom du cookie de session : préfixe __Host- derrière un proxy HTTPS (entrypoint de production, ADR 0002)
     env(SESSION_NAME): 'sas_mirror'
+    env(TOTP_ISSUER): 'Lupa Romulus'
     env(SETUP_TOKEN_FILE): '%kernel.project_dir%/var/setup.code'
     env(SESSION_DIR): '%kernel.project_dir%/var/sessions/%kernel.environment%'
     env(STORAGE_DIR): '%kernel.project_dir%/var/storage'

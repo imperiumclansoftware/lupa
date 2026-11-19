@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, signal, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import {
   BytesPipe,
@@ -14,9 +14,9 @@ import {
   errorMessage,
   isActive,
   poll,
+  Auth,
 } from '@sas/shared';
 import { CollectorApi, Overview } from '../api';
-import { inject } from '@angular/core';
 
 @Component({
   imports: [
@@ -55,9 +55,11 @@ import { inject } from '@angular/core';
                 <strong>Exportez</strong> un bundle vers la clé USB, puis importez-le dans Romulus.
               </li>
             </ol>
-            <a class="btn btn-primary" routerLink="/listes/nouvelle"
-              ><sas-icon name="plus" />Créer une première liste</a
-            >
+            @if (auth.can('operator')) {
+              <a class="btn btn-primary" routerLink="/listes/nouvelle"
+                ><sas-icon name="plus" />Créer une première liste</a
+              >
+            }
           </section>
         }
 
@@ -93,7 +95,11 @@ import { inject } from '@angular/core';
             <a class="btn btn-primary" routerLink="/exports"
               ><sas-icon name="usb" />{{ pendingTotal() > 0 ? 'Préparer le bundle' : 'Exports' }}</a
             >
-            <a class="btn" routerLink="/listes/nouvelle"><sas-icon name="plus" />Nouvelle liste</a>
+            @if (auth.can('operator')) {
+              <a class="btn" routerLink="/listes/nouvelle"
+                ><sas-icon name="plus" />Nouvelle liste</a
+              >
+            }
           </div>
         </section>
 
@@ -278,6 +284,7 @@ import { inject } from '@angular/core';
   `,
 })
 export default class Dashboard {
+  protected readonly auth = inject(Auth);
   private readonly api = inject(CollectorApi);
   protected readonly ecosystems = ECOSYSTEMS;
   protected readonly data = signal<Overview | null>(null);

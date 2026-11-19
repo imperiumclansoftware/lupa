@@ -19,12 +19,15 @@ use App\Template\TemplateCatalog;
 use Doctrine\ORM\EntityManagerInterface;
 use Sas\Bundle\Distributions;
 use Sas\Bundle\Ecosystem;
+use Symfony\Bridge\Doctrine\Types\UuidType;
 use Symfony\Component\DependencyInjection\Attribute\AutowireIterator;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Attribute\MapQueryString;
 use Symfony\Component\HttpKernel\Attribute\MapRequestPayload;
 use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Component\Routing\Requirement\Requirement;
+use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 #[Route('/api')]
 final class ListController
@@ -90,12 +93,12 @@ final class ListController
         $lists = $this->lists->findBy([], ['ecosystem' => 'ASC', 'name' => 'ASC'], $page->pageSize, $page->offset());
 
         return new JsonResponse($page->envelope(
-            array_map(static fn (PackageList $l) => Presenter::list($l, $active[$l->getId()] ?? null), $lists),
+            array_map(static fn (PackageList $l) => Presenter::list($l, $active[$l->getId()->toRfc4122()] ?? null), $lists),
             $this->lists->count([]),
         ));
     }
 
-    #[Route('/lists/{id}', methods: ['GET'], requirements: ['id' => '\d+'])]
+    #[Route('/lists/{id}', methods: ['GET'], requirements: ['id' => Requirement::UUID_V7])]
     public function show(PackageList $list): JsonResponse
     {
         $job = $this->jobs->findOneBy(['list' => $list], ['id' => 'DESC']);
@@ -111,7 +114,7 @@ final class ListController
         return $this->save($list, $input, Response::HTTP_CREATED);
     }
 
-    #[Route('/lists/{id}', methods: ['PUT'], requirements: ['id' => '\d+'])]
+    #[Route('/lists/{id}', methods: ['PUT'], requirements: ['id' => Requirement::UUID_V7])]
     public function update(PackageList $list, #[MapRequestPayload] ListInput $input): JsonResponse
     {
         if ($input->ecosystem !== $list->getEcosystem()->value) {
@@ -121,7 +124,8 @@ final class ListController
         return $this->save($list, $input, Response::HTTP_OK);
     }
 
-    #[Route('/lists/{id}', methods: ['DELETE'], requirements: ['id' => '\d+'])]
+    #[IsGranted('ROLE_ADMIN')]
+    #[Route('/lists/{id}', methods: ['DELETE'], requirements: ['id' => Requirement::UUID_V7])]
     public function delete(PackageList $list): Response
     {
         // Les paquets téléchargés restent dans le collecteur (ils peuvent servir à d'autres listes)
@@ -131,7 +135,7 @@ final class ListController
         return new Response(null, Response::HTTP_NO_CONTENT);
     }
 
-    #[Route('/lists/{id}/resolve', methods: ['POST'], requirements: ['id' => '\d+'])]
+    #[Route('/lists/{id}/resolve', methods: ['POST'], requirements: ['id' => Requirement::UUID_V7])]
     public function resolve(PackageList $list): JsonResponse
     {
         if ($errors = $this->resolver($list)->validate($list)) {
@@ -142,12 +146,14 @@ final class ListController
         return new JsonResponse(Presenter::job($job), Response::HTTP_ACCEPTED);
     }
 
-    #[Route('/lists/{id}/artifacts', methods: ['GET'], requirements: ['id' => '\d+'])]
+    #[Route('/lists/{id}/artifacts', methods: ['GET'], requirements: ['id' => Requirement::UUID_V7])]
     public function artifacts(PackageList $list, #[MapQueryString(validationFailedStatusCode: 422)] ListArtifactsQuery $query = new ListArtifactsQuery()): JsonResponse
     {
         // Filtres et pagination dans la requête SQL (jamais de chargement complet puis filtrage)
         $qb = $this->artifacts->createQueryBuilder('a')
-            ->innerJoin('a.lists', 'l')->andWhere('l = :list')->setParameter('list', $list)
+            ->innerJoin('a.lists', 'l')->andWhere('l.id = :list')
+            // Type explicite : sans lui, Doctrine lierait l'UUID en texte (RFC 4122) face à une colonne BLOB
+            ->setParameter('list', $list->getId(), UuidType::NAME)
             ->orderBy('a.name')->addOrderBy('a.version')->addOrderBy('a.filename');
         if ('' !== $q = trim($query->q)) {
             $qb->andWhere('LOWER(a.name) LIKE :q')->setParameter('q', '%'.addcslashes(mb_strtolower($q), '%_').'%');
@@ -258,13 +264,13 @@ final class ListController
         throw new \LogicException('Résolveur manquant.');
     }
 
-    /** @return array<int, Job> tâche en cours par liste */
+    /** @return array<string, Job> tâche en cours par liste */
     private function activeJobs(): array
     {
         $active = [];
         foreach ($this->jobs->findBy(['status' => [Job::QUEUED, Job::RUNNING]]) as $job) {
             if ($job->getList()) {
-                $active[$job->getList()->getId()] = $job;
+                $active[$job->getList()->getId()->toRfc4122()] = $job;
             }
         }
 

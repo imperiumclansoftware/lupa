@@ -114,7 +114,7 @@ final class PackageController
     {
         $present = [];
         foreach ($this->quarantine->quarantinedPackages() as $q) {
-            $present[$q['entry']->getId()][] = ['version' => $q['version'], 'files' => $q['files']];
+            $present[$q['entry']->getId()->toRfc4122()][] = ['version' => $q['version'], 'files' => $q['files']];
         }
         $collectors = [];
         foreach ($this->db->fetchAllAssociative("SELECT name, value FROM setting WHERE name LIKE 'blacklist.%'") as $row) {
@@ -122,6 +122,6 @@ final class PackageController
         }
 
         return new JsonResponse(['collectors' => $collectors]
-            + $page->slice(array_map(static fn ($e) => Presenter::quarantine($e) + ['present' => $present[$e->getId()] ?? []], $this->quarantine->all())));
+            + $page->slice(array_map(static fn ($e) => Presenter::quarantine($e) + ['present' => $present[$e->getId()->toRfc4122()] ?? []], $this->quarantine->all())));
     }
 }

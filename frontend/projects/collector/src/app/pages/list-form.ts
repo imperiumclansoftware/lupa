@@ -780,7 +780,7 @@ export default class ListForm implements OnInit {
       if (!id) {
         return;
       }
-      const list = await this.api.list(+id);
+      const list = await this.api.list(id);
       this.ecosystem.set(list.ecosystem);
       this.name = list.name;
       this.nameEdited = true;
@@ -986,7 +986,7 @@ export default class ListForm implements OnInit {
     this.error.set('');
     try {
       const id = this.id();
-      const list = id ? await this.api.updateList(+id, input) : await this.api.createList(input);
+      const list = id ? await this.api.updateList(id, input) : await this.api.createList(input);
       if (resolve) {
         await this.api.resolve(list.id);
         this.toasts.ok('Liste enregistrée, téléchargement lancé.');

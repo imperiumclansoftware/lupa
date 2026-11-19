@@ -19,6 +19,7 @@ use Symfony\Component\HttpFoundation\ResponseHeaderBag;
 use Symfony\Component\HttpKernel\Attribute\MapRequestPayload;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Component\Routing\Requirement\Requirement;
 
 #[Route('/api/exports')]
 final class ExportController
@@ -73,7 +74,7 @@ final class ExportController
     }
 
     /** Téléchargement d'un fichier du bundle par le navigateur (alternative à l'écriture directe sur la clé). */
-    #[Route('/{id}/files/{name}', methods: ['GET'], requirements: ['id' => '\d+'])]
+    #[Route('/{id}/files/{name}', methods: ['GET'], requirements: ['id' => Requirement::UUID_V7])]
     public function download(Export $export, string $name): BinaryFileResponse
     {
         if (!\in_array($name, $export->getFiles(), true) || !is_file($path = $this->exportDir.'/'.$name)) {
@@ -87,7 +88,7 @@ final class ExportController
     }
 
     /** Supprime les fichiers du dossier d'export (ex. après copie sur la clé) ; l'historique est conservé. */
-    #[Route('/{id}/files', methods: ['DELETE'], requirements: ['id' => '\d+'])]
+    #[Route('/{id}/files', methods: ['DELETE'], requirements: ['id' => Requirement::UUID_V7])]
     public function deleteFiles(Export $export): JsonResponse
     {
         foreach ($export->getFiles() as $name) {

@@ -5,6 +5,8 @@ namespace App\Entity;
 use App\Repository\SourceRepository;
 use Doctrine\ORM\Mapping as ORM;
 use Sas\Bundle\Ecosystem;
+use Symfony\Bridge\Doctrine\Types\UuidType;
+use Symfony\Component\Uid\Uuid;
 
 /**
  * Dépôt privé utilisé en plus du dépôt officiel (ou à sa place) : Verdaccio, Nexus, Artifactory,
@@ -17,8 +19,8 @@ class Source
     public const string AUTH_BASIC = 'basic';
     public const string AUTH_TOKEN = 'token';
 
-    #[ORM\Id, ORM\GeneratedValue, ORM\Column]
-    private ?int $id = null;
+    #[ORM\Id, ORM\Column(type: UuidType::NAME, unique: true)]
+    private Uuid $id;
 
     #[ORM\Column(length: 16, enumType: Ecosystem::class)]
     private Ecosystem $ecosystem;
@@ -55,11 +57,12 @@ class Source
 
     public function __construct(Ecosystem $ecosystem)
     {
+        $this->id = Uuid::v7();
         $this->ecosystem = $ecosystem;
         $this->createdAt = new \DateTimeImmutable();
     }
 
-    public function getId(): ?int
+    public function getId(): Uuid
     {
         return $this->id;
     }

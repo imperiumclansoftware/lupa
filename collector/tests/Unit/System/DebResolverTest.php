@@ -153,7 +153,7 @@ final class DebResolverTest extends TestCase
 
             return 1;
         });
-        $context = new JobContext($db, 1);
+        $context = new JobContext($db, new \Symfony\Component\Uid\NilUuid());
         $resolver = (new \ReflectionClass(DebResolver::class))->newInstanceWithoutConstructor();
         $selected = $resolver->select($this->repository, $specs, 'amd64', $recommends, $context);
         $context->flushLog();

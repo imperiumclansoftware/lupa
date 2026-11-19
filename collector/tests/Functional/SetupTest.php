@@ -44,7 +44,7 @@ final class SetupTest extends WebTestCase
     public function testFirstAccountWithInstallationCode(): void
     {
         $this->client->request('GET', '/api/session');
-        self::assertSame(['user' => null, 'setupRequired' => true], $this->json());
+        self::assertSame(['user' => null, 'twoFactor' => false, 'setupRequired' => true], $this->json());
 
         $this->client->request('GET', '/api/setup');
         self::assertTrue($this->json()['required']);
@@ -74,7 +74,10 @@ final class SetupTest extends WebTestCase
         $this->client->request('GET', '/api/overview');
         self::assertResponseIsSuccessful();
         $this->client->request('GET', '/api/session');
-        self::assertSame(['user' => ['username' => 'chef'], 'setupRequired' => false], $this->json());
+        self::assertSame('chef', $this->json()['user']['username']);
+        // Premier compte : administrateur
+        self::assertSame('admin', $this->json()['user']['role']);
+        self::assertFalse($this->json()['setupRequired']);
 
         // Une fois installé, l'assistant est fermé
         $this->client->jsonRequest('POST', '/api/setup', ['code' => $code, 'username' => 'intrus', 'password' => 'phrase-de-passe-longue']);
@@ -87,7 +90,11 @@ final class SetupTest extends WebTestCase
         return static::getContainer()->get(EntityManagerInterface::class);
     }
 
-    /** @return array<mixed> */
+    /**
+     * @return array<mixed>
+     *
+     * @phpstan-impure dernière réponse reçue : change à chaque requête
+     */
     private function json(): array
     {
         return json_decode((string) $this->client->getResponse()->getContent(), true);

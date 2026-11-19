@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, computed, inject, input } from '@angular/core';
 import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
-import { Auth } from './auth';
+import { Auth, Role } from './auth';
 import { Icon } from './icon';
 import { Logo, LogoName } from './logo';
 import { ToastHost } from './toast';
@@ -10,6 +10,8 @@ export interface NavItem {
   label: string;
   icon: string;
   exact?: boolean;
+  /** Rôle minimal pour voir l'entrée (affichage seulement) */
+  role?: Role;
 }
 
 /** Mise en page des pages connectées : navigation latérale (barre en haut sur mobile). */
@@ -28,7 +30,7 @@ export interface NavItem {
           >
         </a>
         <ul>
-          @for (item of nav(); track item.path) {
+          @for (item of visibleNav(); track item.path) {
             <li>
               <a
                 [routerLink]="item.path"
@@ -52,7 +54,14 @@ export interface NavItem {
           </div>
           <div class="user">
             <span class="avatar" aria-hidden="true">{{ initial() }}</span>
-            <span class="name">{{ auth.user()?.username }}</span>
+            <a
+              class="name"
+              routerLink="/compte"
+              title="Mon compte : mot de passe, double authentification"
+            >
+              {{ auth.user()?.username }}
+              <small>{{ auth.user()?.roleLabel }}</small>
+            </a>
             <button
               type="button"
               class="logout"
@@ -215,6 +224,18 @@ export interface NavItem {
       text-overflow: ellipsis;
       font-size: 0.88rem;
       font-weight: 600;
+      display: grid;
+      color: inherit;
+      text-decoration: none;
+      white-space: nowrap;
+    }
+    .name small {
+      font-size: 0.72rem;
+      font-weight: 500;
+      opacity: 0.65;
+    }
+    .name:hover {
+      text-decoration: underline;
     }
     .logout {
       display: grid;
@@ -299,6 +320,9 @@ export class Shell {
   readonly nav = input.required<NavItem[]>();
   readonly online = input(true);
   protected readonly auth = inject(Auth);
+  protected readonly visibleNav = computed(() =>
+    this.nav().filter((item) => !item.role || this.auth.can(item.role)),
+  );
   protected readonly initial = computed(() => (this.auth.user()?.username ?? '?').charAt(0));
   private readonly router = inject(Router);
 

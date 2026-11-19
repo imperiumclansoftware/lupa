@@ -8,7 +8,7 @@ import {
 } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
-import { DateTimePipe, Eco, EcosystemPipe, Icon, Toasts, errorMessage } from '@sas/shared';
+import { DateTimePipe, Eco, EcosystemPipe, Icon, Toasts, errorMessage, Auth } from '@sas/shared';
 import { Blacklist, BlacklistEntry, CollectorApi } from '../api';
 import { BlacklistDialog } from '../blacklist-dialog';
 
@@ -27,9 +27,11 @@ import { BlacklistDialog } from '../blacklist-dialog';
             liste, Romulus met ces versions en quarantaine.
           </p>
         </div>
-        <button type="button" class="btn btn-primary" (click)="dialog.open()">
-          <sas-icon name="plus" />Ajouter
-        </button>
+        @if (auth.can('admin')) {
+          <button type="button" class="btn btn-primary" (click)="dialog.open()">
+            <sas-icon name="plus" />Ajouter
+          </button>
+        }
       </header>
       @if (error()) {
         <div class="card-body">
@@ -104,16 +106,18 @@ import { BlacklistDialog } from '../blacklist-dialog';
                     </td>
                     <td class="subtle nowrap">{{ e.createdAt | datetime }}</td>
                     <td>
-                      <button
-                        type="button"
-                        class="btn btn-ghost btn-icon btn-sm"
-                        (click)="remove(e)"
-                        [disabled]="busy()"
-                        [attr.aria-label]="'Retirer ' + e.name + ' ' + e.version"
-                        title="Retirer de la liste noire"
-                      >
-                        <sas-icon name="trash" />
-                      </button>
+                      @if (auth.can('admin')) {
+                        <button
+                          type="button"
+                          class="btn btn-ghost btn-icon btn-sm"
+                          (click)="remove(e)"
+                          [disabled]="busy()"
+                          [attr.aria-label]="'Retirer ' + e.name + ' ' + e.version"
+                          title="Retirer de la liste noire"
+                        >
+                          <sas-icon name="trash" />
+                        </button>
+                      }
                     </td>
                   </tr>
                 }
@@ -146,6 +150,7 @@ import { BlacklistDialog } from '../blacklist-dialog';
   `,
 })
 export class SettingsBlacklist implements OnInit {
+  protected readonly auth = inject(Auth);
   private readonly api = inject(CollectorApi);
   private readonly toasts = inject(Toasts);
   protected readonly data = signal<Blacklist | null>(null);

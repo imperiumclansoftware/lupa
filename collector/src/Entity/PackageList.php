@@ -8,6 +8,8 @@ use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 use Sas\Bundle\Ecosystem;
+use Symfony\Bridge\Doctrine\Types\UuidType;
+use Symfony\Component\Uid\Uuid;
 
 /**
  * Liste de paquets à collecter pour un écosystème : des spécifications saisies (une par ligne)
@@ -16,8 +18,8 @@ use Sas\Bundle\Ecosystem;
 #[ORM\Entity(repositoryClass: PackageListRepository::class)]
 class PackageList
 {
-    #[ORM\Id, ORM\GeneratedValue, ORM\Column]
-    private ?int $id = null;
+    #[ORM\Id, ORM\Column(type: UuidType::NAME, unique: true)]
+    private Uuid $id;
 
     #[ORM\Column(length: 120)]
     private string $name;
@@ -57,13 +59,14 @@ class PackageList
 
     public function __construct(string $name, Ecosystem $ecosystem)
     {
+        $this->id = Uuid::v7();
         $this->name = $name;
         $this->ecosystem = $ecosystem;
         $this->createdAt = $this->updatedAt = new \DateTimeImmutable();
         $this->artifacts = new ArrayCollection();
     }
 
-    public function getId(): ?int
+    public function getId(): Uuid
     {
         return $this->id;
     }

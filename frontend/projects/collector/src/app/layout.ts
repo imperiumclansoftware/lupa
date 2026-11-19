@@ -22,5 +22,6 @@ export class Layout {
     { path: '/exports', label: 'Exports', icon: 'usb' },
     { path: '/activite', label: 'Activité', icon: 'activity' },
     { path: '/reglages', label: 'Réglages', icon: 'settings' },
+    { path: '/comptes', label: 'Comptes', icon: 'users', role: 'admin' },
   ];
 }

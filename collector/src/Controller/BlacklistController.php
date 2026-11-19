@@ -10,6 +10,8 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Attribute\MapRequestPayload;
 use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Component\Routing\Requirement\Requirement;
+use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 /** Liste noire : versions interdites de téléchargement, transmises à Romulus qui les met en quarantaine. */
 #[Route('/api/blacklist')]
@@ -24,7 +26,7 @@ final class BlacklistController
     {
         $collected = [];
         foreach ($this->blacklist->collected() as $entry) {
-            $collected[$entry->getId()] = ($collected[$entry->getId()] ?? 0) + 1;
+            $collected[$entry->getId()->toRfc4122()] = ($collected[$entry->getId()->toRfc4122()] ?? 0) + 1;
         }
 
         return new JsonResponse([
@@ -32,9 +34,10 @@ final class BlacklistController
             'exportedRevision' => $this->blacklist->exportedRevision(),
             'pending' => $this->blacklist->pendingExport(),
             'updatedAt' => $this->blacklist->updatedAt(),
-        ] + $page->slice(array_map(static fn (BlacklistEntry $e) => Presenter::blacklistEntry($e) + ['collected' => $collected[$e->getId()] ?? 0], $this->blacklist->all())));
+        ] + $page->slice(array_map(static fn (BlacklistEntry $e) => Presenter::blacklistEntry($e) + ['collected' => $collected[$e->getId()->toRfc4122()] ?? 0], $this->blacklist->all())));
     }
 
+    #[IsGranted('ROLE_ADMIN')]
     #[Route('', methods: ['POST'])]
     public function create(#[MapRequestPayload] BlacklistInput $input): JsonResponse
     {
@@ -47,7 +50,8 @@ final class BlacklistController
         return new JsonResponse(Presenter::blacklistEntry($this->blacklist->add($ecosystem, $name, $version, $input->reason)), Response::HTTP_CREATED);
     }
 
-    #[Route('/{id}', methods: ['DELETE'], requirements: ['id' => '\d+'])]
+    #[IsGranted('ROLE_ADMIN')]
+    #[Route('/{id}', methods: ['DELETE'], requirements: ['id' => Requirement::UUID_V7])]
     public function delete(BlacklistEntry $entry): JsonResponse
     {
         $this->blacklist->remove($entry);

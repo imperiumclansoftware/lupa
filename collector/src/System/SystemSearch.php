@@ -9,6 +9,7 @@ use Sas\Bundle\DebVersion;
 use Sas\Bundle\Distributions;
 use Sas\Bundle\Ecosystem;
 use Sas\Bundle\RpmVersion;
+use Symfony\Component\Uid\NilUuid;
 
 /**
  * Recherche dans les index Debian et RPM (formulaire de liste) : même index que la résolution,
@@ -92,7 +93,7 @@ final class SystemSearch
         }
         $arch = array_key_first($dist['architectures']);
         $sections = array_keys(array_filter($dist['sections'], static fn (array $s) => $s['default']));
-        $context = new JobContext($this->db, 0);
+        $context = new JobContext($this->db, new NilUuid());
 
         return $this->loaded[$distribution] ??= Ecosystem::Deb === $ecosystem
             ? $this->deb->load($distribution, $arch, $sections, $context)

@@ -5,14 +5,16 @@ namespace App\Entity;
 use App\Repository\ImportedBundleRepository;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Bridge\Doctrine\Types\UuidType;
+use Symfony\Component\Uid\Uuid;
 
 /** Bundle importé avec succès (historique et détection des bundles manquants). */
 #[ORM\Entity(repositoryClass: ImportedBundleRepository::class)]
 #[ORM\Index(columns: ['collector_id', 'sequence'])]
 class ImportedBundle
 {
-    #[ORM\Id, ORM\GeneratedValue, ORM\Column]
-    private ?int $id = null;
+    #[ORM\Id, ORM\Column(type: UuidType::NAME, unique: true)]
+    private Uuid $id;
 
     #[ORM\Column(length: 36, unique: true)]
     private string $uuid;
@@ -54,6 +56,7 @@ class ImportedBundle
     /** @param array<string, int> $summary */
     public function __construct(string $uuid, string $collectorId, string $collectorName, int $sequence, bool $full, string $source, int $artifactCount, int $newBlobCount, int $size, array $summary, \DateTimeImmutable $createdAt)
     {
+        $this->id = Uuid::v7();
         $this->uuid = $uuid;
         $this->collectorId = $collectorId;
         $this->collectorName = $collectorName;
@@ -68,7 +71,7 @@ class ImportedBundle
         $this->importedAt = new \DateTimeImmutable();
     }
 
-    public function getId(): ?int
+    public function getId(): Uuid
     {
         return $this->id;
     }

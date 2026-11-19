@@ -3,6 +3,8 @@
 namespace App\Job;
 
 use Doctrine\DBAL\Connection;
+use Doctrine\DBAL\ParameterType;
+use Symfony\Component\Uid\Uuid;
 
 /**
  * Progression et journal d'une tâche, écrits directement en base (hors unité de travail Doctrine)
@@ -15,7 +17,7 @@ final class JobContext
 
     public function __construct(
         private readonly Connection $db,
-        public readonly int $jobId,
+        public readonly Uuid $jobId,
     ) {
     }
 
@@ -36,7 +38,8 @@ final class JobContext
         $this->lastReport = $now;
         $this->db->executeStatement(
             'UPDATE job SET step = ?, progress = ? WHERE id = ?',
-            [mb_substr($step, 0, 255), null === $progress ? null : max(0, min(100, $progress)), $this->jobId],
+            [mb_substr($step, 0, 255), null === $progress ? null : max(0, min(100, $progress)), $this->jobId->toBinary()],
+            [ParameterType::STRING, ParameterType::INTEGER, ParameterType::BINARY],
         );
         $this->flushLog(true);
     }
@@ -46,7 +49,7 @@ final class JobContext
         if ('' === $this->pendingLog || (!$force && \strlen($this->pendingLog) < 2000)) {
             return;
         }
-        $this->db->executeStatement('UPDATE job SET log = log || ? WHERE id = ?', [$this->pendingLog, $this->jobId]);
+        $this->db->executeStatement('UPDATE job SET log = log || ? WHERE id = ?', [$this->pendingLog, $this->jobId->toBinary()], [ParameterType::STRING, ParameterType::BINARY]);
         $this->pendingLog = '';
     }
 }

@@ -210,7 +210,7 @@ final class BlacklistAndSourcesTest extends WebTestCase
             self::assertResponseStatusCodeSame(422, $version);
         }
         // Époque nulle implicite
-        $context = new \App\Job\JobContext($this->em()->getConnection(), 0);
+        $context = new \App\Job\JobContext($this->em()->getConnection(), new \Symfony\Component\Uid\NilUuid());
         $blacklist = static::getContainer()->get(\App\Blacklist\Blacklist::class);
         $blacklist->reset();
         self::assertTrue($blacklist->blocks(Ecosystem::Rpm, 'openssl', '1:3.0.7-27.el9', $context));
@@ -222,7 +222,7 @@ final class BlacklistAndSourcesTest extends WebTestCase
         $blacklist = static::getContainer()->get(\App\Blacklist\Blacklist::class);
         $blacklist->add(Ecosystem::Docker, 'nginx', '1.25.3', 'image non conforme');
         $blacklist->add(Ecosystem::Composer, 'monolog/monolog', '3.5.0', '');
-        $context = new \App\Job\JobContext($this->em()->getConnection(), 0);
+        $context = new \App\Job\JobContext($this->em()->getConnection(), new \Symfony\Component\Uid\NilUuid());
 
         self::assertTrue($blacklist->blocks(Ecosystem::Docker, 'library/nginx', '1.25.3', $context));
         self::assertFalse($blacklist->blocks(Ecosystem::Docker, 'library/nginx', '1.25.4', $context));
@@ -260,7 +260,7 @@ final class BlacklistAndSourcesTest extends WebTestCase
         self::assertEqualsCanonicalizing(array_column($manifest->blobs, 'sha256'), $reader->extractBlobs($target));
 
         // Téléchargement par le navigateur (Exports › Historique) : fichier identique
-        $this->client->request('GET', sprintf('/api/exports/%d/files/%s.tar', $export->getId(), $base));
+        $this->client->request('GET', sprintf('/api/exports/%s/files/%s.tar', $export->getId(), $base));
         $downloaded = $this->client->getInternalResponse()->getContent();
         self::assertResponseIsSuccessful();
         self::assertResponseHeaderSame('Content-Type', 'application/x-tar');
@@ -289,7 +289,11 @@ final class BlacklistAndSourcesTest extends WebTestCase
         return static::getContainer()->get(EntityManagerInterface::class);
     }
 
-    /** @return array<mixed> */
+    /**
+     * @return array<mixed>
+     *
+     * @phpstan-impure dernière réponse reçue : change à chaque requête
+     */
     private function json(): array
     {
         return json_decode((string) $this->client->getInternalResponse()->getContent(), true, 512, \JSON_THROW_ON_ERROR);

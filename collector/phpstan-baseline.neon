@@ -289,12 +289,6 @@ parameters:
 			path: src/Audit/Severity.php
 
 		-
-			message: '#^Cannot cast mixed to int\.$#'
-			identifier: cast.int
-			count: 1
-			path: src/Blacklist/Blacklist.php
-
-		-
 			message: '#^Cannot cast mixed to string\.$#'
 			identifier: cast.string
 			count: 1
@@ -322,12 +316,6 @@ parameters:
 			message: '#^Cannot cast mixed to string\.$#'
 			identifier: cast.string
 			count: 6
-			path: src/Controller/ListController.php
-
-		-
-			message: '#^Method App\\Controller\\ListController\:\:activeJobs\(\) should return array\<int, App\\Entity\\Job\> but returns array\<int\|string, App\\Entity\\Job\>\.$#'
-			identifier: return.type
-			count: 1
 			path: src/Controller/ListController.php
 
 		-
@@ -2503,18 +2491,6 @@ parameters:
 			path: tests/Bundle/BundleRoundTripTest.php
 
 		-
-			message: '#^Cannot access offset ''queries'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 1
-			path: tests/Functional/AuditorTest.php
-
-		-
-			message: '#^Cannot access offset ''severity'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 1
-			path: tests/Functional/AuditorTest.php
-
-		-
 			message: '#^Match expression does not handle remaining value\: string$#'
 			identifier: match.unhandled
 			count: 1
@@ -2527,58 +2503,10 @@ parameters:
 			path: tests/Functional/AuditorTest.php
 
 		-
-			message: '#^Parameter \#1 \$json of function json_decode expects string, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: tests/Functional/AuditorTest.php
-
-		-
 			message: '#^Parameter \#1 \$path of function basename expects string, string\|false\|null given\.$#'
 			identifier: argument.type
 			count: 1
 			path: tests/Functional/AuditorTest.php
-
-		-
-			message: '#^Binary operation "\." between ''/api/blacklist/'' and mixed results in an error\.$#'
-			identifier: binaryOp.invalid
-			count: 1
-			path: tests/Functional/BlacklistAndSourcesTest.php
-
-		-
-			message: '#^Binary operation "\." between ''/api/sources/'' and mixed results in an error\.$#'
-			identifier: binaryOp.invalid
-			count: 3
-			path: tests/Functional/BlacklistAndSourcesTest.php
-
-		-
-			message: '#^Cannot access offset ''artifacts'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 1
-			path: tests/Functional/BlacklistAndSourcesTest.php
-
-		-
-			message: '#^Cannot access offset ''collected'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 1
-			path: tests/Functional/BlacklistAndSourcesTest.php
-
-		-
-			message: '#^Cannot access offset ''id'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 1
-			path: tests/Functional/BlacklistAndSourcesTest.php
-
-		-
-			message: '#^Cannot access offset ''name'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 2
-			path: tests/Functional/BlacklistAndSourcesTest.php
-
-		-
-			message: '#^Cannot access offset ''reason'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 1
-			path: tests/Functional/BlacklistAndSourcesTest.php
 
 		-
 			message: '#^Cannot call method getError\(\) on App\\Entity\\Job\|null\.$#'
@@ -2611,45 +2539,9 @@ parameters:
 			path: tests/Functional/BlacklistAndSourcesTest.php
 
 		-
-			message: '#^Method App\\Tests\\Functional\\BlacklistAndSourcesTest\:\:json\(\) should return array\<mixed\> but returns mixed\.$#'
-			identifier: return.type
-			count: 1
-			path: tests/Functional/BlacklistAndSourcesTest.php
-
-		-
 			message: '#^Offset ''revision'' might not exist on array\{revision\: int, updatedAt\: string, entries\: list\<array\{ecosystem\: string, name\: string, version\: string, reason\: string\}\>\}\|null\.$#'
 			identifier: offsetAccess.notFound
 			count: 2
-			path: tests/Functional/BlacklistAndSourcesTest.php
-
-		-
-			message: '#^Parameter \#1 \$array of function array_column expects array, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: tests/Functional/BlacklistAndSourcesTest.php
-
-		-
-			message: '#^Parameter \#1 \$array of function array_filter expects array, mixed given\.$#'
-			identifier: argument.type
-			count: 2
-			path: tests/Functional/BlacklistAndSourcesTest.php
-
-		-
-			message: '#^Parameter \#2 \$haystack of static method PHPUnit\\Framework\\Assert\:\:assertCount\(\) expects Countable\|iterable, mixed given\.$#'
-			identifier: argument.type
-			count: 3
-			path: tests/Functional/BlacklistAndSourcesTest.php
-
-		-
-			message: '#^Parameter \#2 \$haystack of static method PHPUnit\\Framework\\Assert\:\:assertStringNotContainsString\(\) expects string, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: tests/Functional/BlacklistAndSourcesTest.php
-
-		-
-			message: '#^Parameter \#2 \$string of static method PHPUnit\\Framework\\Assert\:\:assertStringStartsWith\(\) expects string, mixed given\.$#'
-			identifier: argument.type
-			count: 1
 			path: tests/Functional/BlacklistAndSourcesTest.php
 
 		-
@@ -2695,46 +2587,10 @@ parameters:
 			path: tests/Functional/ExportTest.php
 
 		-
-			message: '#^Method App\\Tests\\Functional\\ExportTest\:\:json\(\) should return array\<mixed\> but returns mixed\.$#'
-			identifier: return.type
-			count: 1
-			path: tests/Functional/ExportTest.php
-
-		-
-			message: '#^Cannot access offset ''username'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 1
-			path: tests/Functional/SetupTest.php
-
-		-
-			message: '#^Method App\\Tests\\Functional\\SetupTest\:\:json\(\) should return array\<mixed\> but returns mixed\.$#'
-			identifier: return.type
-			count: 1
-			path: tests/Functional/SetupTest.php
-
-		-
-			message: '#^Offset ''required'' does not exist on array\{user\: null, setupRequired\: true\}\.$#'
-			identifier: offsetAccess.notFound
-			count: 1
-			path: tests/Functional/SetupTest.php
-
-		-
-			message: '#^Cannot access offset ''publicKey'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 1
-			path: tests/Unit/Identity/CollectorIdentityTest.php
-
-		-
 			message: '#^Offset ''subdir'' might not exist on array\{url\: string, subdir\: string, strip\: bool\}\|null\.$#'
 			identifier: offsetAccess.notFound
 			count: 1
 			path: tests/Unit/Resolver/GalaxyTerraformTest.php
-
-		-
-			message: '#^Method App\\Tests\\Unit\\Resolver\\NpmResolverTest\:\:lockEntries\(\) should return array\<string, array\<string, mixed\>\> but returns mixed\.$#'
-			identifier: return.type
-			count: 1
-			path: tests/Unit/Resolver/NpmResolverTest.php
 
 		-
 			message: '#^Method App\\Tests\\Unit\\Resolver\\NpmResolverTest\:\:lockfileV3\(\) should return string but returns string\|false\.$#'
@@ -2749,12 +2605,6 @@ parameters:
 			path: tests/Unit/Resolver/NpmResolverTest.php
 
 		-
-			message: '#^Cannot cast mixed to string\.$#'
-			identifier: cast.string
-			count: 1
-			path: tests/Unit/System/DebResolverTest.php
-
-		-
 			message: '#^Method App\\Tests\\Unit\\System\\DebResolverTest\:\:select\(\) has parameter \$specs with no value type specified in iterable type array\.$#'
 			identifier: missingType.iterableValue
 			count: 1
@@ -2767,12 +2617,6 @@ parameters:
 			path: tests/Unit/System/DebResolverTest.php
 
 		-
-			message: '#^Cannot cast mixed to string\.$#'
-			identifier: cast.string
-			count: 1
-			path: tests/Unit/System/RpmResolverTest.php
-
-		-
 			message: '#^Method App\\Tests\\Unit\\System\\RpmResolverTest\:\:select\(\) has parameter \$specs with no value type specified in iterable type array\.$#'
 			identifier: missingType.iterableValue
 			count: 1
@@ -2783,27 +2627,3 @@ parameters:
 			identifier: argument.type
 			count: 1
 			path: tests/Unit/System/RpmResolverTest.php
-
-		-
-			message: '#^Parameter \#1 \$value of static method Sas\\Bundle\\Ecosystem\:\:tryFrom\(\) expects int\|string, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: tests/Unit/Template/TemplatesTest.php
-
-		-
-			message: '#^Parameter \#2 \$message of static method PHPUnit\\Framework\\Assert\:\:assertNotEmpty\(\) expects string, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: tests/Unit/Template/TemplatesTest.php
-
-		-
-			message: '#^Parameter \#2 \$message of static method PHPUnit\\Framework\\Assert\:\:assertNotNull\(\) expects string, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: tests/Unit/Template/TemplatesTest.php
-
-		-
-			message: '#^Parameter \#3 \$message of static method PHPUnit\\Framework\\Assert\:\:assertArrayHasKey\(\) expects string, mixed given\.$#'
-			identifier: argument.type
-			count: 2
-			path: tests/Unit/Template/TemplatesTest.php

@@ -12,6 +12,7 @@ import {
   isActive,
   poll,
   Eco,
+  Auth,
 } from '@sas/shared';
 import { CollectorApi, PackageList } from '../api';
 
@@ -39,13 +40,17 @@ import { CollectorApi, PackageList } from '../api';
         </div>
         <div class="actions">
           @if (lists().length > 0) {
-            <button type="button" class="btn" (click)="resolveAll()" [disabled]="busy()">
-              <sas-icon name="refresh" />Tout mettre à jour
-            </button>
+            @if (auth.can('operator')) {
+              <button type="button" class="btn" (click)="resolveAll()" [disabled]="busy()">
+                <sas-icon name="refresh" />Tout mettre à jour
+              </button>
+            }
           }
-          <a class="btn btn-primary" routerLink="/listes/nouvelle"
-            ><sas-icon name="plus" />Nouvelle liste</a
-          >
+          @if (auth.can('operator')) {
+            <a class="btn btn-primary" routerLink="/listes/nouvelle"
+              ><sas-icon name="plus" />Nouvelle liste</a
+            >
+          }
         </div>
       </header>
 
@@ -62,9 +67,11 @@ import { CollectorApi, PackageList } from '../api';
               Créez une liste de paquets npm, Python, Composer, Debian, RPM, Ansible, Terraform ou
               d’images Docker.
             </p>
-            <a class="btn btn-primary" routerLink="/listes/nouvelle"
-              ><sas-icon name="plus" />Nouvelle liste</a
-            >
+            @if (auth.can('operator')) {
+              <a class="btn btn-primary" routerLink="/listes/nouvelle"
+                ><sas-icon name="plus" />Nouvelle liste</a
+              >
+            }
           </div>
         } @else {
           <div class="table-wrap">
@@ -140,6 +147,7 @@ import { CollectorApi, PackageList } from '../api';
   `,
 })
 export default class Lists {
+  protected readonly auth = inject(Auth);
   private readonly api = inject(CollectorApi);
   private readonly toasts = inject(Toasts);
   protected readonly lists = signal<PackageList[]>([]);

@@ -14,3 +14,8 @@ parameters:
         containerXmlPath: var/cache/dev/App_KernelDevDebugContainer.xml
     doctrine:
         objectManagerLoader: tests/object-manager.php
+    ignoreErrors:
+        -
+            # Tests : réponses JSON décodées (mixed), vérifiées à l'exécution par les assertions
+            message: '#mixed#'
+            path: tests/*

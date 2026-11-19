@@ -29,6 +29,9 @@ final class ApiExceptionListener
                 $messages[] = $violation->getMessage();
             }
             $message = implode("\n", $messages);
+        } elseif (403 === $exception->getStatusCode() && str_starts_with($message, 'Access Denied')) {
+            // Refus du contrôle d'accès (rôle insuffisant, ADR 0010)
+            $message = 'Accès refusé : votre rôle ne permet pas cette action.';
         } elseif ($exception->getStatusCode() >= 500 || '' === $message || str_contains($message, '"App\\')) {
             $message = match ($exception->getStatusCode()) {
                 404 => 'Introuvable.',

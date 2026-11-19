@@ -41,7 +41,7 @@ final readonly class RunJobHandler
 
         $job->start();
         $this->em->flush();
-        $context = new JobContext($this->em->getConnection(), (int) $job->getId());
+        $context = new JobContext($this->em->getConnection(), $job->getId());
 
         try {
             if (!$runner) {

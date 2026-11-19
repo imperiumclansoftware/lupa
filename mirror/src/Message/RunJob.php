@@ -4,7 +4,8 @@ namespace App\Message;
 
 final readonly class RunJob implements AsyncMessage
 {
-    public function __construct(public int $jobId)
+    /** @param string $jobId UUID de la tâche (RFC 4122) */
+    public function __construct(public string $jobId)
     {
     }
 }

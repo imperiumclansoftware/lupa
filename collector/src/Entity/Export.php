@@ -5,13 +5,15 @@ namespace App\Entity;
 use App\Repository\ExportRepository;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Bridge\Doctrine\Types\UuidType;
+use Symfony\Component\Uid\Uuid;
 
 /** Bundle écrit pour la clé USB. Les numéros se suivent : le miroir détecte un bundle oublié. */
 #[ORM\Entity(repositoryClass: ExportRepository::class)]
 class Export
 {
-    #[ORM\Id, ORM\GeneratedValue, ORM\Column]
-    private ?int $id = null;
+    #[ORM\Id, ORM\Column(type: UuidType::NAME, unique: true)]
+    private Uuid $id;
 
     #[ORM\Column(unique: true)]
     private int $sequence;
@@ -55,6 +57,7 @@ class Export
 
     public function __construct(int $sequence, bool $full, ?int $maxPartSize)
     {
+        $this->id = Uuid::v7();
         $this->sequence = $sequence;
         $this->uuid = self::uuid();
         $this->full = $full;
@@ -71,7 +74,7 @@ class Export
         return vsprintf('%s%s-%s-%s-%s-%s%s%s', str_split(bin2hex($b), 4));
     }
 
-    public function getId(): ?int
+    public function getId(): Uuid
     {
         return $this->id;
     }

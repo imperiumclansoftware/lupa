@@ -4,6 +4,11 @@ security:
         Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface:
             algorithm: sodium
             migrate_from: [bcrypt]
+    # Lecteur < Opérateur < Administrateur (ADR 0010)
+    role_hierarchy:
+        ROLE_ADMIN: [ROLE_OPERATOR]
+        ROLE_OPERATOR: [ROLE_READER]
+        ROLE_READER: [ROLE_USER]
     providers:
         users:
             entity:
@@ -25,13 +30,28 @@ security:
                 failure_handler: App\Security\JsonLoginHandler
             logout:
                 path: /api/logout
+            # Double authentification facultative (TOTP ou code de secours, ADR 0009)
+            two_factor:
+                check_path: /api/2fa/check
+                auth_form_path: /api/2fa/check
+                auth_code_parameter_name: code
+                prepare_on_login: true
+                prepare_on_access_denied: true
+                authentication_required_handler: App\Security\TwoFactorHandler
+                success_handler: App\Security\TwoFactorHandler
+                failure_handler: App\Security\TwoFactorHandler
             login_throttling:
                 max_attempts: 5
                 interval: '15 minutes'
             entry_point: App\Security\JsonLoginHandler
+    # Refus par défaut ; écriture réservée aux opérateurs, comptes aux administrateurs (ADR 0010)
     access_control:
-        - { path: ^/api/(login|session|setup)$, roles: PUBLIC_ACCESS }
-        - { path: ^/api/, roles: ROLE_USER }
+        - { path: ^/api/(login|logout|session|setup)$, roles: PUBLIC_ACCESS }
+        - { path: ^/api/2fa/check$, roles: IS_AUTHENTICATED_2FA_IN_PROGRESS }
+        - { path: ^/api/account(/|$), roles: ROLE_READER }
+        - { path: ^/api/users(/|$), roles: ROLE_ADMIN }
+        - { path: ^/api/, methods: [POST, PUT, PATCH, DELETE], roles: ROLE_OPERATOR }
+        - { path: ^/api/, roles: ROLE_READER }
 
 when@test:
     security:

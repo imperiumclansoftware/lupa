@@ -166,7 +166,7 @@ final class ExportTest extends WebTestCase
         self::assertEqualsCanonicalizing(array_column($manifest->blobs, 'sha256'), $reader->extractBlobs($target));
 
         // Téléchargement par le navigateur (Exports › Historique) : fichier identique
-        $this->client->request('GET', sprintf('/api/exports/%d/files/%s.tar', $export->getId(), $base));
+        $this->client->request('GET', sprintf('/api/exports/%s/files/%s.tar', $export->getId(), $base));
         $downloaded = $this->client->getInternalResponse()->getContent();
         self::assertResponseIsSuccessful();
         self::assertResponseHeaderSame('Content-Type', 'application/x-tar');
@@ -195,7 +195,11 @@ final class ExportTest extends WebTestCase
         return static::getContainer()->get(EntityManagerInterface::class);
     }
 
-    /** @return array<mixed> */
+    /**
+     * @return array<mixed>
+     *
+     * @phpstan-impure dernière réponse reçue : change à chaque requête
+     */
     private function json(): array
     {
         return json_decode((string) $this->client->getInternalResponse()->getContent(), true, 512, \JSON_THROW_ON_ERROR);

@@ -1,6 +1,15 @@
 import { ChangeDetectionStrategy, Component, OnInit, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { DateTimePipe, Dialog, Eco, EcosystemPipe, Icon, Toasts, errorMessage } from '@sas/shared';
+import {
+  DateTimePipe,
+  Dialog,
+  Eco,
+  EcosystemPipe,
+  Icon,
+  Toasts,
+  errorMessage,
+  Auth,
+} from '@sas/shared';
 import { MirrorApi, Quarantine, TrustedKey } from '../api';
 import { viewChild } from '@angular/core';
 
@@ -45,52 +54,58 @@ import { viewChild } from '@angular/core';
                   <div class="fingerprint small">{{ k.fingerprint }}</div>
                   <div class="subtle">Approuvé le {{ k.createdAt | datetime }}</div>
                 </div>
-                <button
-                  type="button"
-                  class="btn btn-sm btn-danger btn-ghost"
-                  (click)="askRemove(k)"
-                >
-                  <sas-icon name="trash" [size]="15" />Retirer
-                </button>
+                @if (auth.can('admin')) {
+                  <button
+                    type="button"
+                    class="btn btn-sm btn-danger btn-ghost"
+                    (click)="askRemove(k)"
+                  >
+                    <sas-icon name="trash" [size]="15" />Retirer
+                  </button>
+                }
               </li>
             }
           </ul>
         }
       </section>
 
-      <form class="card card-body stack" (ngSubmit)="add()">
-        <h2>Ajouter une clé</h2>
-        <p class="muted">Copiez la clé publique depuis Rémus (Réglages › Signature des bundles).</p>
-        <div class="field">
-          <label for="label">Nom</label>
-          <input
-            class="input"
-            id="label"
-            name="label"
-            [(ngModel)]="label"
-            placeholder="ex. Collecteur du bureau"
-            maxlength="120"
-          />
-        </div>
-        <div class="field">
-          <label for="key">Clé publique</label>
-          <input
-            class="input mono"
-            id="key"
-            name="key"
-            [(ngModel)]="publicKey"
-            required
-            spellcheck="false"
-            autocomplete="off"
-            placeholder="Base64, 44 caractères"
-          />
-        </div>
-        <div>
-          <button class="btn btn-primary" type="submit" [disabled]="!publicKey.trim()">
-            <sas-icon name="plus" />Ajouter
-          </button>
-        </div>
-      </form>
+      @if (auth.can('admin')) {
+        <form class="card card-body stack" (ngSubmit)="add()">
+          <h2>Ajouter une clé</h2>
+          <p class="muted">
+            Copiez la clé publique depuis Rémus (Réglages › Signature des bundles).
+          </p>
+          <div class="field">
+            <label for="label">Nom</label>
+            <input
+              class="input"
+              id="label"
+              name="label"
+              [(ngModel)]="label"
+              placeholder="ex. Collecteur du bureau"
+              maxlength="120"
+            />
+          </div>
+          <div class="field">
+            <label for="key">Clé publique</label>
+            <input
+              class="input mono"
+              id="key"
+              name="key"
+              [(ngModel)]="publicKey"
+              required
+              spellcheck="false"
+              autocomplete="off"
+              placeholder="Base64, 44 caractères"
+            />
+          </div>
+          <div>
+            <button class="btn btn-primary" type="submit" [disabled]="!publicKey.trim()">
+              <sas-icon name="plus" />Ajouter
+            </button>
+          </div>
+        </form>
+      }
 
       <section class="card" id="quarantaine">
         <header class="card-header">
@@ -202,6 +217,7 @@ import { viewChild } from '@angular/core';
   `,
 })
 export default class Settings implements OnInit {
+  protected readonly auth = inject(Auth);
   private readonly api = inject(MirrorApi);
   private readonly toasts = inject(Toasts);
   protected readonly dialog = viewChild.required(Dialog);

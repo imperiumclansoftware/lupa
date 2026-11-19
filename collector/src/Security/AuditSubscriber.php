@@ -4,6 +4,7 @@ namespace App\Security;
 
 use App\Entity\User;
 use Psr\Log\LoggerInterface;
+use Scheb\TwoFactorBundle\Security\Authentication\Token\TwoFactorTokenInterface;
 use Symfony\Component\DependencyInjection\Attribute\Target;
 use Symfony\Component\EventDispatcher\Attribute\AsEventListener;
 use Symfony\Component\HttpFoundation\Request;
@@ -32,7 +33,10 @@ final class AuditSubscriber
     #[AsEventListener]
     public function onLoginSuccess(LoginSuccessEvent $event): void
     {
-        $this->audit->info('Connexion réussie', self::context($event->getRequest(), $event->getUser()->getUserIdentifier()));
+        $this->audit->info(
+            $event->getAuthenticatedToken() instanceof TwoFactorTokenInterface ? 'Mot de passe accepté, code de double authentification demandé' : 'Connexion réussie',
+            self::context($event->getRequest(), $event->getUser()->getUserIdentifier()),
+        );
     }
 
     #[AsEventListener]

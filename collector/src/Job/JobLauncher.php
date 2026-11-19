@@ -33,7 +33,7 @@ final readonly class JobLauncher
             $beforeDispatch($job);
         }
         $this->em->flush();
-        $this->bus->dispatch(new RunJob((int) $job->getId()));
+        $this->bus->dispatch(new RunJob($job->getId()->toRfc4122()));
 
         return $job;
     }

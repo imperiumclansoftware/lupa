@@ -14,6 +14,8 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Attribute\MapRequestPayload;
 use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Component\Routing\Requirement\Requirement;
+use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 /** Dépôts sources privés, utilisés en plus des dépôts officiels (ou à leur place). */
 #[Route('/api/sources')]
@@ -37,6 +39,7 @@ final class SourceController
         ));
     }
 
+    #[IsGranted('ROLE_ADMIN')]
     #[Route('', methods: ['POST'])]
     public function create(#[MapRequestPayload] SourceInput $input): JsonResponse
     {
@@ -50,7 +53,8 @@ final class SourceController
         return new JsonResponse(Presenter::source($source), Response::HTTP_CREATED);
     }
 
-    #[Route('/{id}', methods: ['PUT'], requirements: ['id' => '\d+'])]
+    #[IsGranted('ROLE_ADMIN')]
+    #[Route('/{id}', methods: ['PUT'], requirements: ['id' => Requirement::UUID_V7])]
     public function update(Source $source, #[MapRequestPayload] SourceInput $input): JsonResponse
     {
         if ($input->ecosystem !== $source->getEcosystem()->value) {
@@ -64,7 +68,8 @@ final class SourceController
         return new JsonResponse(Presenter::source($source));
     }
 
-    #[Route('/{id}', methods: ['DELETE'], requirements: ['id' => '\d+'])]
+    #[IsGranted('ROLE_ADMIN')]
+    #[Route('/{id}', methods: ['DELETE'], requirements: ['id' => Requirement::UUID_V7])]
     public function delete(Source $source): JsonResponse
     {
         $this->em->remove($source);
@@ -74,6 +79,7 @@ final class SourceController
     }
 
     /** Teste un dépôt sans l'enregistrer ({id} pour réutiliser le secret déjà enregistré). */
+    #[IsGranted('ROLE_ADMIN')]
     #[Route('/test', methods: ['POST'])]
     public function test(#[MapRequestPayload] SourceInput $input): JsonResponse
     {

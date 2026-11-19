@@ -1,3 +1,4 @@
+export * from './account';
 export * from './api';
 export * from './auth';
 export * from './copy-button';
@@ -12,3 +13,4 @@ export * from './setup';
 export * from './severity';
 export * from './shell';
 export * from './toast';
+export * from './users';

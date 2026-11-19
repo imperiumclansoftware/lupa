@@ -1,5 +1,15 @@
 import { Routes } from '@angular/router';
-import { JobsPage, LoginPage, SetupPage, authGuard, loginGuard, setupGuard } from '@sas/shared';
+import {
+  AccountPage,
+  authGuard,
+  JobsPage,
+  loginGuard,
+  LoginPage,
+  roleGuard,
+  setupGuard,
+  SetupPage,
+  UsersPage,
+} from '@sas/shared';
 import { Layout } from './layout';
 
 export const routes: Routes = [
@@ -65,6 +75,14 @@ export const routes: Routes = [
         path: 'reglages',
         loadComponent: () => import('./pages/settings'),
         title: 'Réglages · Romulus',
+      },
+      { path: 'compte', component: AccountPage, title: 'Mon compte · Romulus' },
+      {
+        path: 'comptes',
+        component: UsersPage,
+        canActivate: [roleGuard('admin')],
+        data: { operatorHelp: 'imports' },
+        title: 'Comptes · Romulus',
       },
     ],
   },

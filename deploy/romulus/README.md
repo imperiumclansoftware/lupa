@@ -67,7 +67,8 @@ d'aucun service externe : la base SQLite et les paquets sont dans le volume `/da
 
 | Tag | Contenu |
 |---|---|
-| `1.3.1`, `latest` | Sécurité : PHP 8.4.27 (CVE-2026-109618 et CVE-2026-109619, critiques), FrankenPHP 1.13.2 |
+| `1.4.0`, `latest` | Rôles (lecteur, opérateur, administrateur), double authentification facultative, identifiants UUID, Symfony 8.1.11 (17 avis de sécurité), FrankenPHP 1.13.5 ; `TRUSTED_PROXIES` à renseigner derrière un proxy HTTPS |
+| `1.3.1` | Sécurité : PHP 8.4.27 (CVE-2026-109618 et CVE-2026-109619, critiques), FrankenPHP 1.13.2 |
 | `1.3.0` | Dépôts apt (index signés par la clé de Romulus) et dnf/yum ; serveur Ansible Galaxy (API v3) ; miroir Terraform (providers en miroir réseau ou archive locale, modules, binaire) ; quarantaine étendue à ces dépôts |
 | `1.2.0` | Quarantaine des versions de la liste noire reçue de Rémus (plus servies par les registres npm, Python, Composer et Docker ; badges, tableau de bord, liste consultable dans Réglages) |
 | `1.1.0` | Alertes de sécurité transportées par les bundles (tableau de bord, paquets, détail des failles et versions corrigées), dossiers de clés illisibles signalés, détection de Docker rootless, tâches interrompues débloquées automatiquement ; docker rootless : le conteneur tourne sous l'UID de l'hôte (`SAS_UID`, détecté par `configure.sh`), clés USB lisibles quels que soient leurs droits de montage ; messages d'aide sur les droits |
@@ -96,7 +97,7 @@ Le serveur n'a pas Internet : l'image voyage elle aussi par clé USB.
 ```bash
 tar -xf romulus-1.3.1.tar && cd romulus-1.3.1
 sha256sum -c SHA256SUMS                  # la copie sur la clé n'a rien abîmé
-docker load -i romulus-1.3.1.tar.gz
+docker load -i romulus-1.4.0.tar.gz
 ./configure.sh                           # crée .env ; à relire
 ```
 
@@ -106,7 +107,7 @@ docker load -i romulus-1.3.1.tar.gz
 docker pull iemperor/romulus:1.3.1
 docker save iemperor/romulus:1.3.1 | gzip > romulus-1.3.1.tar.gz
 # … clé USB …
-docker load -i romulus-1.3.1.tar.gz      # sur le serveur isolé
+docker load -i romulus-1.4.0.tar.gz      # sur le serveur isolé
 ```
 
 ### 2. Créer `compose.yaml`
@@ -429,12 +430,14 @@ aucune clé secrète : il ne fait que vérifier les signatures.
 Copiez le nouveau package **dans le même dossier** que le précédent. Votre `.env` est conservé.
 
 ```bash
-tar -xf romulus-1.3.1.tar --strip-components=1
+tar -xf romulus-1.4.0.tar --strip-components=1
 sha256sum -c SHA256SUMS
-docker load -i romulus-1.3.1.tar.gz
+docker load -i romulus-1.4.0.tar.gz
 ./configure.sh          # ajoute les nouvelles variables et passe à la nouvelle image ; vos réglages ne changent pas
 docker compose up -d    # migrations appliquées au démarrage ; secrets, paquets et collecteurs approuvés conservés
 ```
+
+Vers 1.4.0, les identifiants passent en UUID : sauvegardez le volume avant (voir ci-dessous).
 
 ### Sauvegarde et restauration
 
@@ -465,9 +468,19 @@ importez-le dans un Romulus neuf.
 
 ```bash
 docker compose logs -f romulus                                   # journaux (application et imports)
-docker compose exec romulus php bin/console app:user:create bob  # autre compte (mot de passe saisi masqué)
+docker compose exec romulus php bin/console app:user:create bob --role=operator  # compte (admin, operator, reader)
+docker compose exec romulus php bin/console app:user:2fa-reset bob  # double authentification perdue
 docker compose exec romulus php bin/console app:setup:code       # nouveau code d'installation (avant le premier compte)
 ```
+
+### Comptes, rôles et double authentification
+
+Trois rôles : **lecteur** (consulte), **opérateur** (importe les bundles des collecteurs déjà approuvés)
+et **administrateur** (en plus : comptes, clés de confiance, approbation d'un nouveau collecteur). Les
+administrateurs gèrent les comptes dans la page « Comptes » ; chacun change son mot de passe dans
+« Mon compte » et peut y activer la **double authentification** (application TOTP, qui fonctionne sans
+réseau, et codes de secours). Elle reste facultative : les téléphones sont souvent interdits sur les
+réseaux isolés.
 
 ## Sécurité
 

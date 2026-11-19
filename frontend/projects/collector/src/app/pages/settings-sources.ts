@@ -16,6 +16,7 @@ import {
   Icon,
   Toasts,
   errorMessage,
+  Auth,
 } from '@sas/shared';
 import { CollectorApi, Source, SourceInput } from '../api';
 
@@ -53,9 +54,11 @@ const HINTS: Partial<Record<EcosystemId, { url: string; help: string }>> = {
             si un dépôt privé les remplace.
           </p>
         </div>
-        <button type="button" class="btn btn-primary" (click)="edit()">
-          <sas-icon name="plus" />Ajouter un dépôt
-        </button>
+        @if (auth.can('admin')) {
+          <button type="button" class="btn btn-primary" (click)="edit()">
+            <sas-icon name="plus" />Ajouter un dépôt
+          </button>
+        }
       </header>
       @if (error()) {
         <div class="card-body">
@@ -87,22 +90,26 @@ const HINTS: Partial<Record<EcosystemId, { url: string; help: string }>> = {
                 <br /><span class="subtle mono">{{ s.url }}</span>
                 <span class="subtle"> · {{ s.ecosystem | ecosystem }} · {{ authLabel(s) }}</span>
               </span>
-              <button
-                type="button"
-                class="btn btn-ghost btn-icon btn-sm"
-                (click)="edit(s)"
-                [attr.aria-label]="'Modifier ' + s.label"
-              >
-                <sas-icon name="edit" />
-              </button>
-              <button
-                type="button"
-                class="btn btn-ghost btn-icon btn-sm"
-                (click)="remove(s)"
-                [attr.aria-label]="'Supprimer ' + s.label"
-              >
-                <sas-icon name="trash" />
-              </button>
+              @if (auth.can('admin')) {
+                <button
+                  type="button"
+                  class="btn btn-ghost btn-icon btn-sm"
+                  (click)="edit(s)"
+                  [attr.aria-label]="'Modifier ' + s.label"
+                >
+                  <sas-icon name="edit" />
+                </button>
+              }
+              @if (auth.can('admin')) {
+                <button
+                  type="button"
+                  class="btn btn-ghost btn-icon btn-sm"
+                  (click)="remove(s)"
+                  [attr.aria-label]="'Supprimer ' + s.label"
+                >
+                  <sas-icon name="trash" />
+                </button>
+              }
             </li>
           }
         </ul>
@@ -294,6 +301,7 @@ const HINTS: Partial<Record<EcosystemId, { url: string; help: string }>> = {
   `,
 })
 export class SettingsSources implements OnInit {
+  protected readonly auth = inject(Auth);
   private readonly api = inject(CollectorApi);
   private readonly toasts = inject(Toasts);
   private readonly dialog = viewChild.required<Dialog>('dialog');

@@ -17,7 +17,7 @@ import { DateTimePipe, RelativePipe } from './format';
 import { Icon } from './icon';
 
 export interface Job {
-  id: number;
+  id: string;
   type: string;
   title: string;
   status: 'queued' | 'running' | 'succeeded' | 'failed';

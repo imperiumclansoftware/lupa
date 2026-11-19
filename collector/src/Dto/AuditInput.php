@@ -8,8 +8,8 @@ use Symfony\Component\Validator\Constraints as Assert;
 final class AuditInput
 {
     public function __construct(
-        #[Assert\Positive]
-        public ?int $listId = null,
+        #[Assert\Uuid(versions: [Assert\Uuid::V7_MONOTONIC])]
+        public ?string $listId = null,
     ) {
     }
 }

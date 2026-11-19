@@ -1,0 +1,13 @@
+# Double authentification facultative (ADR 0009) : TOTP (application d'authentification, hors ligne)
+# et codes de secours à usage unique. Le formulaire est celui du front : voir App\Security\TwoFactorHandler.
+scheb_two_factor:
+    security_tokens:
+        - Symfony\Component\Security\Core\Authentication\Token\UsernamePasswordToken
+        - Symfony\Component\Security\Http\Authenticator\Token\PostAuthenticationToken
+    totp:
+        enabled: true
+        issuer: '%env(TOTP_ISSUER)%'
+        server_name: '%env(TOTP_ISSUER)%'
+        leeway: 15
+    backup_codes:
+        enabled: true

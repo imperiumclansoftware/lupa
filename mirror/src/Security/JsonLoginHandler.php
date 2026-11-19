@@ -3,6 +3,7 @@
 namespace App\Security;
 
 use Psr\Log\LoggerInterface;
+use Scheb\TwoFactorBundle\Security\Authentication\Token\TwoFactorTokenInterface;
 use Symfony\Component\DependencyInjection\Attribute\Target;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -25,6 +26,11 @@ final class JsonLoginHandler implements AuthenticationSuccessHandlerInterface, A
 
     public function onAuthenticationSuccess(Request $request, TokenInterface $token): Response
     {
+        // Mot de passe correct, double authentification activée : le front demande le code
+        if ($token instanceof TwoFactorTokenInterface) {
+            return new JsonResponse(['twoFactor' => true]);
+        }
+
         return new JsonResponse(['username' => $token->getUserIdentifier()]);
     }
 

@@ -45,7 +45,7 @@ final class Blacklist implements ResetInterface
     /**
      * Artefacts déjà collectés qui sont sur la liste noire.
      *
-     * @return array<int, BlacklistEntry> identifiant d'artefact => entrée
+     * @return array<string, BlacklistEntry> identifiant d'artefact (hexadécimal) => entrée
      */
     public function collected(bool $pendingOnly = false): array
     {
@@ -57,7 +57,7 @@ final class Blacklist implements ResetInterface
             );
             foreach ($rows as $row) {
                 if (PackageKey::version($entry->getEcosystem(), (string) $row['version']) === PackageKey::version($entry->getEcosystem(), $entry->getVersion())) {
-                    $ids[(int) $row['id']] = $entry;
+                    $ids[bin2hex(\is_string($row['id']) ? $row['id'] : '')] = $entry;
                 }
             }
         }
