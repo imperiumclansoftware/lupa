@@ -29,9 +29,12 @@ final class SourceController
     }
 
     #[Route('', methods: ['GET'])]
-    public function index(): JsonResponse
+    public function index(#[\Symfony\Component\HttpKernel\Attribute\MapQueryString(validationFailedStatusCode: 422)] \App\Dto\PageQuery $page = new \App\Dto\PageQuery()): JsonResponse
     {
-        return new JsonResponse(array_map(Presenter::source(...), $this->sources->findBy([], ['ecosystem' => 'ASC', 'id' => 'ASC'])));
+        return new JsonResponse($page->envelope(
+            array_map(Presenter::source(...), $this->sources->findBy([], ['ecosystem' => 'ASC', 'id' => 'ASC'], $page->pageSize, $page->offset())),
+            $this->sources->count([]),
+        ));
     }
 
     #[Route('', methods: ['POST'])]
@@ -72,10 +75,9 @@ final class SourceController
 
     /** Teste un dépôt sans l'enregistrer ({id} pour réutiliser le secret déjà enregistré). */
     #[Route('/test', methods: ['POST'])]
-    public function test(#[MapRequestPayload] SourceInput $input, \Symfony\Component\HttpFoundation\Request $request): JsonResponse
+    public function test(#[MapRequestPayload] SourceInput $input): JsonResponse
     {
-        $id = $request->toArray()['id'] ?? null;
-        $stored = null !== $id ? $this->sources->find((int) $id) : null;
+        $stored = null !== $input->id ? $this->sources->find($input->id) : null;
         $source = new Source(Ecosystem::from($input->ecosystem));
         if ($stored && null !== $stored->getSecret()) {
             $source->setAuth($stored->getAuthType(), $stored->getUsername(), $stored->getSecret());

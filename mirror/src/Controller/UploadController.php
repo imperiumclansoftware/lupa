@@ -7,6 +7,8 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
+use App\Dto\UploadInput;
+use Symfony\Component\HttpKernel\Attribute\MapRequestPayload;
 use Symfony\Component\Routing\Attribute\Route;
 
 /**
@@ -17,24 +19,15 @@ use Symfony\Component\Routing\Attribute\Route;
 #[Route('/api/uploads')]
 final class UploadController
 {
-    private const string NAME = '/^[A-Za-z0-9][A-Za-z0-9._-]{0,150}\.tar(\.\d{3})?$/';
 
     public function __construct(private readonly string $uploadDir)
     {
     }
 
     #[Route('', methods: ['POST'])]
-    public function start(Request $request): JsonResponse
+    public function start(#[MapRequestPayload] UploadInput $input): JsonResponse
     {
-        $data = $request->toArray();
-        $filename = (string) ($data['filename'] ?? '');
-        $size = (int) ($data['size'] ?? -1);
-        if (!preg_match(self::NAME, $filename)) {
-            throw new BadRequestHttpException('Ce fichier n\'est pas un bundle Sas (nom attendu : sas-….tar ou sas-….tar.001).');
-        }
-        if ($size <= 0) {
-            throw new BadRequestHttpException('Taille invalide.');
-        }
+        [$filename, $size] = [$input->filename, $input->size];
         $this->ensureDir();
         $free = @disk_free_space($this->uploadDir);
         if (false !== $free && $free < $size) {

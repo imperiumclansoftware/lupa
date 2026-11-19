@@ -4,7 +4,7 @@ framework:
     trusted_headers: ['x-forwarded-for', 'x-forwarded-host', 'x-forwarded-proto', 'x-forwarded-port']
 
     session:
-        name: sas_collector
+        name: '%env(SESSION_NAME)%'
         cookie_samesite: strict
         cookie_secure: auto
         cookie_httponly: true

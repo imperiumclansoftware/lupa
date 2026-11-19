@@ -7,7 +7,7 @@ use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Style\SymfonyStyle;
 
-#[AsCommand('app:setup:code', 'Affiche le code d\'installation (tant qu\'aucun compte n\'existe)')]
+#[AsCommand('app:setup:code', 'Crée un nouveau code d\'installation (tant qu\'aucun compte n\'existe) ; le précédent devient invalide')]
 final class SetupCodeCommand
 {
     public function __construct(private readonly SetupToken $token)
@@ -22,7 +22,7 @@ final class SetupCodeCommand
 
             return Command::SUCCESS;
         }
-        $io->text(['', sprintf('  Code d\'installation : <info>%s</info>', $this->token->code()), '  À saisir dans l\'assistant d\'installation (première ouverture de l\'interface).', '']);
+        $io->text(['', sprintf('  Code d\'installation : <info>%s</info>', $this->token->issue()), '  À saisir dans l\'assistant d\'installation (première ouverture de l\'interface).', '']);
 
         return Command::SUCCESS;
     }

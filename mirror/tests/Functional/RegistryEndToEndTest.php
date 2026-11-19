@@ -109,7 +109,8 @@ final class RegistryEndToEndTest extends MirrorWebTestCase
     {
         $this->client->request('GET', '/api/imports');
         self::assertResponseIsSuccessful();
-        $imports = $this->json();
+        $imports = $this->json()['items'];
+        self::assertSame(1, $this->json()['total']);
         self::assertCount(1, $imports);
         self::assertSame(1, $imports[0]['sequence']);
         self::assertSame(6, $imports[0]['artifactCount']);

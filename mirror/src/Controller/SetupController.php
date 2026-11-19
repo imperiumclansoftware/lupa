@@ -20,6 +20,8 @@ use Symfony\Component\Routing\Attribute\Route;
 final class SetupController
 {
     public function __construct(
+        #[\Symfony\Component\DependencyInjection\Attribute\Target('audit')]
+        private readonly \Psr\Log\LoggerInterface $audit,
         private readonly SetupToken $token,
         private readonly EntityManagerInterface $em,
         private readonly UserPasswordHasherInterface $hasher,
@@ -33,14 +35,11 @@ final class SetupController
         if (!$this->token->isRequired()) {
             return new JsonResponse(['required' => false]);
         }
-        // Crée le code s'il n'existe pas encore : il est alors lisible sur le serveur
-        $this->token->code();
-
         return new JsonResponse(['required' => true, 'defaults' => new \stdClass()]);
     }
 
     #[Route('', methods: ['POST'])]
-    public function install(#[MapRequestPayload] SetupInput $input): JsonResponse
+    public function install(#[MapRequestPayload] SetupInput $input, \Symfony\Component\HttpFoundation\Request $request): JsonResponse
     {
         if (!$this->token->isRequired()) {
             return new JsonResponse(['error' => 'L\'installation est déjà faite : connectez-vous.'], Response::HTTP_CONFLICT);
@@ -50,7 +49,9 @@ final class SetupController
             return new JsonResponse(['error' => 'Clé publique invalide : copiez-la depuis Rémus (Réglages › Signature des bundles).'], Response::HTTP_UNPROCESSABLE_ENTITY);
         }
         if (!$this->token->verify($input->code)) {
-            return new JsonResponse(['error' => 'Code d\'installation incorrect. Il est affiché dans les journaux du serveur.'], Response::HTTP_FORBIDDEN);
+            $this->audit->warning('Code d\'installation incorrect', \App\Security\AuditSubscriber::context($request, $input->username));
+
+            return new JsonResponse(['error' => 'Code d\'installation incorrect. Il est affiché dans les journaux du serveur au démarrage ; app:setup:code en crée un nouveau.'], Response::HTTP_FORBIDDEN);
         }
 
         $user = new User($input->username);
@@ -61,6 +62,7 @@ final class SetupController
         }
         $this->em->flush();
         $this->token->consume();
+        $this->audit->info('Compte initial créé par l\'assistant d\'installation', \App\Security\AuditSubscriber::context($request, $user->getUsername()));
 
         $this->security->login($user, 'json_login', 'main');
 

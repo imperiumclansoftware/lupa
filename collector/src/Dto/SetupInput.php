@@ -11,11 +11,17 @@ final class SetupInput
         public string $code = '',
         #[Assert\NotBlank(message: 'Choisissez un identifiant.'), Assert\Regex('/^[A-Za-z0-9._@-]{3,180}$/', message: 'Identifiant : 3 caractères minimum, lettres, chiffres et . _ @ - uniquement.')]
         public string $username = '',
-        #[Assert\Length(min: 12, max: 4096, minMessage: 'Mot de passe : 12 caractères minimum.')]
+        /** Contraintes : PasswordPolicy (validées par SetupInput::validatePassword) */
         public string $password = '',
         /** Nom du collecteur (facultatif) */
         #[Assert\Length(max: 60)]
         public ?string $name = null,
     ) {
+    }
+
+    #[Assert\Callback]
+    public function validatePassword(\Symfony\Component\Validator\Context\ExecutionContextInterface $context): void
+    {
+        $context->getValidator()->inContext($context)->atPath('password')->validate($this->password, \App\Security\PasswordPolicy::constraints());
     }
 }

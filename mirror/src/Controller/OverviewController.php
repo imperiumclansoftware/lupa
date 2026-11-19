@@ -15,6 +15,10 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
+use App\Dto\KeyInput;
+use App\Dto\PageQuery;
+use Symfony\Component\HttpKernel\Attribute\MapQueryString;
+use Symfony\Component\HttpKernel\Attribute\MapRequestPayload;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Contracts\Cache\CacheInterface;
 use Symfony\Contracts\Cache\ItemInterface;
@@ -101,24 +105,29 @@ final class OverviewController
     }
 
     #[Route('/imports', methods: ['GET'])]
-    public function imports(): JsonResponse
+    public function imports(#[MapQueryString(validationFailedStatusCode: 422)] PageQuery $page = new PageQuery()): JsonResponse
     {
-        return new JsonResponse(array_map(Presenter::bundle(...), $this->bundles->findBy([], ['importedAt' => 'DESC'])));
+        return new JsonResponse($page->envelope(
+            array_map(Presenter::bundle(...), $this->bundles->findBy([], ['importedAt' => 'DESC'], $page->pageSize, $page->offset())),
+            $this->bundles->count([]),
+        ));
     }
 
     #[Route('/keys', methods: ['GET'])]
-    public function keys(): JsonResponse
+    public function keys(#[MapQueryString(validationFailedStatusCode: 422)] PageQuery $page = new PageQuery()): JsonResponse
     {
-        return new JsonResponse(array_map(Presenter::key(...), $this->keys->findBy([], ['createdAt' => 'ASC'])));
+        return new JsonResponse($page->envelope(
+            array_map(Presenter::key(...), $this->keys->findBy([], ['createdAt' => 'ASC'], $page->pageSize, $page->offset())),
+            $this->keys->count([]),
+        ));
     }
 
     /** Ajout manuel d'une clé (copiée depuis les réglages du collecteur). */
     #[Route('/keys', methods: ['POST'])]
-    public function addKey(Request $request): JsonResponse
+    public function addKey(#[MapRequestPayload] KeyInput $input): JsonResponse
     {
-        $data = $request->toArray();
-        $publicKey = trim((string) ($data['publicKey'] ?? ''));
-        $label = trim((string) ($data['label'] ?? '')) ?: 'Collecteur';
+        $publicKey = trim($input->publicKey);
+        $label = trim($input->label) ?: 'Collecteur';
         if (!Signer::isPublicKey($publicKey)) {
             throw new BadRequestHttpException('Clé publique invalide : copiez-la depuis Réglages dans le collecteur.');
         }

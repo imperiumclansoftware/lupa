@@ -1,6 +1,7 @@
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
-import { EcosystemId, Job, SecurityCounts, Severity, Vulnerability } from '@sas/shared';
+import { EcosystemId, Job, Page, SecurityCounts, Severity, Vulnerability, allPages } from '@sas/shared';
+export type { Page } from '@sas/shared';
 import { firstValueFrom } from 'rxjs';
 
 export interface Identity {
@@ -152,13 +153,14 @@ export interface SecurityItem extends Artifact {
   lists: { id: number; name: string }[];
 }
 
-export interface SecurityReport {
+export type AlertLevel = 'all' | 'critical' | 'warning' | 'low';
+
+export interface SecurityReport extends Page<SecurityItem> {
   counts: SecurityCounts;
   auditable: number;
   audited: number;
   oldestAudit: string | null;
   job: Job | null;
-  items: SecurityItem[];
 }
 
 export interface SearchResult {
@@ -166,13 +168,6 @@ export interface SearchResult {
   description: string | null;
   version: string | null;
   info: string | null;
-}
-
-export interface Page<T> {
-  items: T[];
-  total: number;
-  page: number;
-  pageSize: number;
 }
 
 export interface ExportFile {
@@ -202,7 +197,7 @@ export interface Pending {
   size: number;
 }
 
-export interface Exports {
+export interface Exports extends Page<Export> {
   exportDir: string;
   problem: string | null;
   freeSpace: number | null;
@@ -263,8 +258,8 @@ export class CollectorApi {
     return (this.templateList ??= firstValueFrom(this.http.get<Template[]>('/api/templates')));
   }
 
-  lists(): Promise<PackageList[]> {
-    return firstValueFrom(this.http.get<PackageList[]>('/api/lists'));
+  async lists(): Promise<PackageList[]> {
+    return (await allPages((page) => firstValueFrom(this.http.get<Page<PackageList>>('/api/lists', { params: { page } })))).items;
   }
 
   list(id: number): Promise<PackageList> {
@@ -287,8 +282,13 @@ export class CollectorApi {
     return firstValueFrom(this.http.post<Job>(`/api/lists/${id}/resolve`, {}));
   }
 
-  listArtifacts(id: number): Promise<Artifact[]> {
-    return firstValueFrom(this.http.get<Artifact[]>(`/api/lists/${id}/artifacts`));
+  /** Contenu d'une liste, filtré et paginé par le serveur */
+  listArtifacts(id: number, filters: { q?: string; pending?: boolean; vulnerable?: boolean; page?: number }): Promise<Page<Artifact>> {
+    let params = new HttpParams().set('page', filters.page ?? 1);
+    if (filters.q) params = params.set('q', filters.q);
+    if (filters.pending) params = params.set('pending', '1');
+    if (filters.vulnerable) params = params.set('vulnerable', '1');
+    return firstValueFrom(this.http.get<Page<Artifact>>(`/api/lists/${id}/artifacts`, { params }));
   }
 
   artifacts(filters: { ecosystem?: string; q?: string; pending?: boolean; page?: number }): Promise<Page<Artifact>> {
@@ -300,8 +300,8 @@ export class CollectorApi {
     return firstValueFrom(this.http.get<Page<Artifact>>('/api/artifacts', { params }));
   }
 
-  exports(): Promise<Exports> {
-    return firstValueFrom(this.http.get<Exports>('/api/exports'));
+  exports(page = 1): Promise<Exports> {
+    return firstValueFrom(this.http.get<Exports>('/api/exports', { params: { page } }));
   }
 
   createExport(full: boolean, maxPartMiB: number | null): Promise<Job> {
@@ -325,8 +325,8 @@ export class CollectorApi {
     return firstValueFrom(this.http.post<{ lines: string[]; skipped: string[]; pattern: boolean }>('/api/search/expand', { ecosystem, line, distribution }));
   }
 
-  security(): Promise<SecurityReport> {
-    return firstValueFrom(this.http.get<SecurityReport>('/api/security'));
+  security(level: AlertLevel = 'all', page = 1): Promise<SecurityReport> {
+    return firstValueFrom(this.http.get<SecurityReport>('/api/security', { params: { level, page } }));
   }
 
   audit(listId?: number): Promise<Job> {
@@ -341,8 +341,9 @@ export class CollectorApi {
     return firstValueFrom(this.http.put<{ identity: Identity; exportDir: string; storageDir: string }>('/api/settings', { name }));
   }
 
-  blacklist(): Promise<Blacklist> {
-    return firstValueFrom(this.http.get<Blacklist>('/api/blacklist'));
+  async blacklist(): Promise<Blacklist> {
+    const { first, items } = await allPages((page) => firstValueFrom(this.http.get<Blacklist & Page<BlacklistEntry>>('/api/blacklist', { params: { page } })));
+    return { ...first, items };
   }
 
   addBlacklist(input: BlacklistInput): Promise<BlacklistEntry> {
@@ -353,8 +354,8 @@ export class CollectorApi {
     return firstValueFrom(this.http.delete(`/api/blacklist/${id}`));
   }
 
-  sources(): Promise<Source[]> {
-    return firstValueFrom(this.http.get<Source[]>('/api/sources'));
+  async sources(): Promise<Source[]> {
+    return (await allPages((page) => firstValueFrom(this.http.get<Page<Source>>('/api/sources', { params: { page } })))).items;
   }
 
   saveSource(input: SourceInput): Promise<Source> {

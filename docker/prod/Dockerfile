@@ -63,7 +63,7 @@ ENV APP_ENV=prod \
     STORAGE_DIR=/data/storage \
     SESSION_DIR=/data/sessions \
     SETUP_TOKEN_FILE=/data/setup.code \
-    TRUSTED_PROXIES=127.0.0.1,REMOTE_ADDR,private_ranges \
+    TRUSTED_PROXIES=127.0.0.1 \
     XDG_DATA_HOME=/data/caddy \
     XDG_CONFIG_HOME=/config
 COPY docker/prod/Caddyfile /etc/frankenphp/Caddyfile

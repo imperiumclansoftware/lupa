@@ -3,7 +3,9 @@
 namespace App\Controller;
 
 use App\Blacklist\Blacklist;
+use App\Dto\ListArtifactsQuery;
 use App\Dto\ListInput;
+use App\Dto\PageQuery;
 use App\Entity\Artifact;
 use App\Entity\Job;
 use App\Entity\PackageList;
@@ -20,6 +22,7 @@ use Sas\Bundle\Ecosystem;
 use Symfony\Component\DependencyInjection\Attribute\AutowireIterator;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpKernel\Attribute\MapQueryString;
 use Symfony\Component\HttpKernel\Attribute\MapRequestPayload;
 use Symfony\Component\Routing\Attribute\Route;
 
@@ -35,6 +38,7 @@ final class ListController
         #[AutowireIterator('app.resolver')]
         private readonly iterable $resolvers,
         private readonly Blacklist $blacklist,
+        private readonly \App\Repository\ArtifactRepository $artifacts,
     ) {
     }
 
@@ -80,13 +84,14 @@ final class ListController
     }
 
     #[Route('/lists', methods: ['GET'])]
-    public function index(): JsonResponse
+    public function index(#[MapQueryString(validationFailedStatusCode: 422)] PageQuery $page = new PageQuery()): JsonResponse
     {
         $active = $this->activeJobs();
+        $lists = $this->lists->findBy([], ['ecosystem' => 'ASC', 'name' => 'ASC'], $page->pageSize, $page->offset());
 
-        return new JsonResponse(array_map(
-            static fn (PackageList $l) => Presenter::list($l, $active[$l->getId()] ?? null),
-            $this->lists->findBy([], ['ecosystem' => 'ASC', 'name' => 'ASC']),
+        return new JsonResponse($page->envelope(
+            array_map(static fn (PackageList $l) => Presenter::list($l, $active[$l->getId()] ?? null), $lists),
+            $this->lists->count([]),
         ));
     }
 
@@ -138,12 +143,30 @@ final class ListController
     }
 
     #[Route('/lists/{id}/artifacts', methods: ['GET'], requirements: ['id' => '\d+'])]
-    public function artifacts(PackageList $list): JsonResponse
+    public function artifacts(PackageList $list, #[MapQueryString(validationFailedStatusCode: 422)] ListArtifactsQuery $query = new ListArtifactsQuery()): JsonResponse
     {
-        $artifacts = $list->getArtifacts()->toArray();
-        usort($artifacts, static fn (Artifact $a, Artifact $b) => [$a->getName(), $a->getVersion(), $a->getFilename()] <=> [$b->getName(), $b->getVersion(), $b->getFilename()]);
+        // Filtres et pagination dans la requête SQL (jamais de chargement complet puis filtrage)
+        $qb = $this->artifacts->createQueryBuilder('a')
+            ->innerJoin('a.lists', 'l')->andWhere('l = :list')->setParameter('list', $list)
+            ->orderBy('a.name')->addOrderBy('a.version')->addOrderBy('a.filename');
+        if ('' !== $q = trim($query->q)) {
+            $qb->andWhere('LOWER(a.name) LIKE :q')->setParameter('q', '%'.addcslashes(mb_strtolower($q), '%_').'%');
+        }
+        if ($query->pending) {
+            $qb->andWhere('a.export IS NULL');
+        }
+        if ($query->vulnerable) {
+            $qb->andWhere('a.severity IS NOT NULL');
+        }
+        $page = $query->page();
+        $total = (int) (clone $qb)->select('COUNT(a.id)')->resetDQLPart('orderBy')->getQuery()->getSingleScalarResult();
+        /** @var list<Artifact> $items */
+        $items = $qb->setFirstResult($page->offset())->setMaxResults($page->pageSize)->getQuery()->getResult();
 
-        return new JsonResponse(array_map(fn (Artifact $a) => Presenter::artifact($a, null !== $a->getSeverity(), $this->blacklist->find($a->getEcosystem(), $a->getName(), $a->getVersion())), $artifacts));
+        return new JsonResponse($page->envelope(
+            array_map(fn (Artifact $a) => Presenter::artifact($a, null !== $a->getSeverity(), $this->blacklist->find($a->getEcosystem(), $a->getName(), $a->getVersion())), $items),
+            $total,
+        ));
     }
 
     private function save(PackageList $list, ListInput $input, int $status): JsonResponse

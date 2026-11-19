@@ -3,6 +3,8 @@
 namespace App\Controller;
 
 use App\Blacklist\Blacklist;
+use App\Dto\AuditInput;
+use App\Dto\SecurityQuery;
 use App\Entity\Artifact;
 use App\Entity\Job;
 use App\Job\JobLauncher;
@@ -13,6 +15,8 @@ use Doctrine\DBAL\Connection;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpKernel\Attribute\MapQueryString;
+use Symfony\Component\HttpKernel\Attribute\MapRequestPayload;
 use Symfony\Component\Routing\Attribute\Route;
 
 /** Alertes de sécurité : paquets vulnérables et nouvelle analyse. */
@@ -30,7 +34,7 @@ final class SecurityController
     }
 
     #[Route('', methods: ['GET'])]
-    public function index(): JsonResponse
+    public function index(#[MapQueryString(validationFailedStatusCode: 422)] SecurityQuery $query = new SecurityQuery()): JsonResponse
     {
         /** @var list<Artifact> $vulnerable */
         $vulnerable = $this->artifacts->createQueryBuilder('a')
@@ -61,19 +65,29 @@ final class SecurityController
             'audited' => (int) ($stats['audited'] ?? 0),
             'oldestAudit' => isset($stats['oldest']) ? (new \DateTimeImmutable($stats['oldest']))->format(\DATE_ATOM) : null,
             'job' => $active ? Presenter::job($active) : null,
-            'items' => array_values($items),
+            // Une page des versions vulnérables du niveau demandé (critique ; élevée, moyenne, inconnue ; faible)
+            ...$query->page()->slice(array_values(array_filter($items, static fn (array $i) => 'all' === $query->level || $query->level === self::level($i['severity'])))),
         ]);
     }
 
     /** Nouvelle analyse : {listId} pour une liste, sinon tout le collecteur. */
     #[Route('/audit', methods: ['POST'])]
-    public function audit(Request $request): JsonResponse
+    public function audit(#[MapRequestPayload] AuditInput $input = new AuditInput()): JsonResponse
     {
-        $listId = $request->toArray()['listId'] ?? null;
-        $list = null !== $listId ? $this->lists->find((int) $listId) : null;
+        $list = null !== $input->listId ? $this->lists->find($input->listId) : null;
         $job = $this->launcher->launch('audit', $list ? sprintf('Analyse de sécurité de « %s »', $list->getName()) : 'Analyse de sécurité de tous les paquets', $list);
 
         return new JsonResponse(Presenter::job($job), Response::HTTP_ACCEPTED);
+    }
+
+    /** Niveau d'alerte d'une gravité : critical, warning (élevée, moyenne, inconnue) ou low. */
+    public static function level(?string $severity): string
+    {
+        return match ($severity) {
+            'critical' => 'critical',
+            'low' => 'low',
+            default => 'warning',
+        };
     }
 
     /**

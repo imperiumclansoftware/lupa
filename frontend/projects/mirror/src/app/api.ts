@@ -1,6 +1,7 @@
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
-import { EcosystemId, Job, SecurityCounts, Severity, Vulnerability } from '@sas/shared';
+import { EcosystemId, Job, Page, SecurityCounts, Severity, Vulnerability, allPages } from '@sas/shared';
+export type { Page } from '@sas/shared';
 import { firstValueFrom } from 'rxjs';
 
 export interface ImportedBundle {
@@ -125,18 +126,12 @@ export interface PackageVersion {
   updatedAt: string;
 }
 
-export interface PackageDetail {
+export interface PackageDetail extends Page<PackageVersion> {
   ecosystem: EcosystemId;
   name: string;
   description: string | null;
-  items: PackageVersion[];
-}
-
-export interface Page<T> {
-  items: T[];
-  total: number;
-  page: number;
-  pageSize: number;
+  /** Versions vulnérables (toutes, une par version), indépendamment de la page */
+  vulnerable: PackageVersion[];
 }
 
 export interface TrustedKey {
@@ -175,8 +170,8 @@ export class MirrorApi {
     return firstValueFrom(this.http.delete(`/api/inbox/upload/${encodeURIComponent(name)}`));
   }
 
-  imports(): Promise<ImportedBundle[]> {
-    return firstValueFrom(this.http.get<ImportedBundle[]>('/api/imports'));
+  imports(page = 1): Promise<Page<ImportedBundle>> {
+    return firstValueFrom(this.http.get<Page<ImportedBundle>>('/api/imports', { params: { page } }));
   }
 
   packages(filters: { ecosystem?: string; q?: string; page?: number }): Promise<Page<PackageSummary>> {
@@ -187,12 +182,12 @@ export class MirrorApi {
     return firstValueFrom(this.http.get<Page<PackageSummary>>('/api/packages', { params }));
   }
 
-  package(ecosystem: string, name: string): Promise<PackageDetail> {
-    return firstValueFrom(this.http.get<PackageDetail>(`/api/packages/${ecosystem}/${name}`));
+  package(ecosystem: string, name: string, page = 1): Promise<PackageDetail> {
+    return firstValueFrom(this.http.get<PackageDetail>(`/api/packages/${ecosystem}/${name}`, { params: { page } }));
   }
 
-  keys(): Promise<TrustedKey[]> {
-    return firstValueFrom(this.http.get<TrustedKey[]>('/api/keys'));
+  async keys(): Promise<TrustedKey[]> {
+    return (await allPages((page) => firstValueFrom(this.http.get<Page<TrustedKey>>('/api/keys', { params: { page } })))).items;
   }
 
   addKey(publicKey: string, label: string): Promise<TrustedKey> {
@@ -204,8 +199,9 @@ export class MirrorApi {
   }
 
   /** Envoi par morceaux de 16 Mio, avec reprise ; progress reçoit les octets envoyés. */
-  quarantine(): Promise<Quarantine> {
-    return firstValueFrom(this.http.get<Quarantine>('/api/packages/-/quarantine'));
+  async quarantine(): Promise<Quarantine> {
+    const { first, items } = await allPages((page) => firstValueFrom(this.http.get<Quarantine & Page<Quarantine['items'][number]>>('/api/packages/-/quarantine', { params: { page } })));
+    return { ...first, items };
   }
 
   async upload(file: File, progress: (sent: number) => void, signal: AbortSignal): Promise<void> {

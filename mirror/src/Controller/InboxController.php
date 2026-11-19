@@ -15,6 +15,8 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
+use App\Dto\ImportInput;
+use Symfony\Component\HttpKernel\Attribute\MapRequestPayload;
 use Symfony\Component\Routing\Attribute\Route;
 
 /** Bundles présents sur la clé USB ou envoyés depuis le navigateur, et leur import. */
@@ -67,11 +69,9 @@ final class InboxController
      * l'envoie qu'après que l'utilisateur a comparé l'empreinte affichée avec celle du collecteur.
      */
     #[Route('/import', methods: ['POST'])]
-    public function import(Request $request): JsonResponse
+    public function import(#[MapRequestPayload] ImportInput $input): JsonResponse
     {
-        $data = $request->toArray();
-        $source = (string) ($data['source'] ?? '');
-        $name = (string) ($data['name'] ?? '');
+        [$source, $name] = [$input->source, $input->name];
         $bundle = $this->inbox->find($source, $name) ?? throw new NotFoundHttpException('Bundle introuvable.');
 
         $running = $this->jobs->findOneBy(['type' => 'import', 'status' => [Job::QUEUED, Job::RUNNING]]);
@@ -79,9 +79,9 @@ final class InboxController
             return new JsonResponse(['error' => 'Un import est déjà en cours.'], Response::HTTP_CONFLICT);
         }
 
-        if (true === ($data['trust'] ?? false)) {
+        if ($input->trust) {
             $manifest = $this->inspector->inspect($bundle['parts'])['manifest'];
-            if (($data['fingerprint'] ?? null) !== Signer::fingerprint($manifest->collectorPublicKey)) {
+            if (null === $input->fingerprint || !hash_equals(Signer::fingerprint($manifest->collectorPublicKey), $input->fingerprint)) {
                 return new JsonResponse(['error' => 'L\'empreinte confirmée ne correspond pas à celle du bundle.'], Response::HTTP_UNPROCESSABLE_ENTITY);
             }
             if (!$this->keys->findOneBy(['publicKey' => $manifest->collectorPublicKey])) {
@@ -90,7 +90,7 @@ final class InboxController
             }
         }
 
-        $job = $this->launcher->launch('import', sprintf('Import de %s', $name), ['source' => $source, 'name' => $name, 'deleteAfter' => (bool) ($data['deleteAfter'] ?? true)]);
+        $job = $this->launcher->launch('import', sprintf('Import de %s', $name), ['source' => $source, 'name' => $name, 'deleteAfter' => $input->deleteAfter]);
 
         return new JsonResponse(Presenter::job($job), Response::HTTP_ACCEPTED);
     }

@@ -7,8 +7,11 @@ use App\Search\PackageSearch;
 use App\Search\PatternExpander;
 use Sas\Bundle\Ecosystem;
 use Symfony\Component\HttpFoundation\JsonResponse;
-use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use App\Dto\ExpandInput;
+use App\Dto\SearchQuery;
+use Symfony\Component\HttpKernel\Attribute\MapQueryString;
+use Symfony\Component\HttpKernel\Attribute\MapRequestPayload;
 use Symfony\Component\Routing\Attribute\Route;
 
 /** Recherche dans les registres publics et aperçu des motifs, pour composer une liste. */
@@ -23,24 +26,24 @@ final class SearchController
 
     /** ?ecosystem=npm&q=lodash */
     #[Route('', methods: ['GET'])]
-    public function search(Request $request): JsonResponse
+    public function search(#[MapQueryString(validationFailedStatusCode: 422)] SearchQuery $query): JsonResponse
     {
-        return $this->guard(fn () => $this->search->search($this->ecosystem($request), $request->query->getString('q'), 20, $request->query->getString('distribution') ?: null));
+        return $this->guard(fn () => $this->search->search(Ecosystem::from($query->ecosystem), $query->q, 20, $query->distribution ?: null));
     }
 
     /** ?ecosystem=npm&name=lodash */
     #[Route('/versions', methods: ['GET'])]
-    public function versions(Request $request): JsonResponse
+    public function versions(#[MapQueryString(validationFailedStatusCode: 422)] SearchQuery $query): JsonResponse
     {
-        return $this->guard(fn () => $this->search->versions($this->ecosystem($request), $request->query->getString('name'), $request->query->getString('distribution') ?: null));
+        return $this->guard(fn () => $this->search->versions(Ecosystem::from($query->ecosystem), $query->name, $query->distribution ?: null));
     }
 
     /** Aperçu d'un motif avant de l'enregistrer : {ecosystem, line} → lignes obtenues */
     #[Route('/expand', methods: ['POST'])]
-    public function expand(Request $request): JsonResponse
+    public function expand(#[MapRequestPayload] ExpandInput $input): JsonResponse
     {
-        $data = $request->toArray();
-        $ecosystem = Ecosystem::tryFrom((string) ($data['ecosystem'] ?? '')) ?? Ecosystem::Npm;
+        $ecosystem = Ecosystem::from($input->ecosystem);
+        $data = ['line' => $input->line, 'distribution' => $input->distribution];
 
         return $this->guard(function () use ($ecosystem, $data) {
             // Debian, RPM : noms correspondants dans l'index de la distribution choisie
@@ -60,11 +63,6 @@ final class SearchController
 
             return ['lines' => $result['lines'] ?? [], 'skipped' => $result['skipped'] ?? [], 'pattern' => null !== $result];
         });
-    }
-
-    private function ecosystem(Request $request): Ecosystem
-    {
-        return Ecosystem::tryFrom($request->query->getString('ecosystem')) ?? throw new \InvalidArgumentException('Écosystème inconnu.');
     }
 
     private function guard(callable $action): JsonResponse

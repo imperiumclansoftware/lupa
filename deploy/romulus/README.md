@@ -127,6 +127,7 @@ services:
     environment:
       # Adresse des paquets donnée aux clients ; vide = celle par laquelle ils contactent le miroir
       PUBLIC_URL: ${PUBLIC_URL:-}
+      TRUSTED_PROXIES: ${TRUSTED_PROXIES:-127.0.0.1}
       APP_SECRET: ${APP_SECRET:-}
       APP_SECRET_FILE: ${APP_SECRET_FILE:-}
     volumes:
@@ -172,6 +173,7 @@ HTTP_PORT=8080
 
 # Adresse publique, seulement derrière un reverse proxy HTTPS (ex. https://romulus.intranet)
 PUBLIC_URL=
+TRUSTED_PROXIES=
 
 # Dossier où les clés USB sont montées sur le serveur
 USB_DIR=/media
@@ -185,8 +187,8 @@ docker compose logs romulus | grep "Code d'installation"
 ```
 
 Au premier démarrage, Romulus génère ses secrets (voir [Secrets](#secrets)) et affiche un **code
-d'installation** à usage unique. Il apparaît aussi avec
-`docker compose exec romulus php bin/console app:setup:code`.
+d'installation** à usage unique. Perdu ?
+`docker compose exec romulus php bin/console app:setup:code` en crée un nouveau.
 
 ### 5. Assistant d'installation
 
@@ -356,9 +358,12 @@ romulus.intranet {
 
 ```bash
 PUBLIC_URL=https://romulus.intranet
+TRUSTED_PROXIES=172.18.0.0/16   # adresse du proxy vue par le conteneur
 ```
 
-Les postes utilisent alors `https://romulus.intranet/...` sans aucune option « insecure ».
+Les postes utilisent alors `https://romulus.intranet/...` sans aucune option « insecure ». Le cookie de
+session devient `__Host-` (`Secure`) : administrez Romulus par cette adresse HTTPS. Seul le proxy déclaré peut
+transmettre l'adresse des clients (`X-Forwarded-For`), utilisée par la limitation des connexions.
 
 ## Droits et Docker rootless
 
@@ -388,6 +393,7 @@ Aucune n'est obligatoire.
 | Variable | Défaut | Rôle |
 |---|---|---|
 | `PUBLIC_URL` | adresse de la requête | Adresse mise dans les liens des paquets (`https://…` derrière un reverse proxy). Mal formée, elle arrête le démarrage |
+| `TRUSTED_PROXIES` | aucun | Adresse ou plage du reverse proxy, vue par le conteneur ; requis avec `PUBLIC_URL` en HTTPS |
 | `APP_SECRET` / `APP_SECRET_FILE` | généré | Secret des sessions, voir [Secrets](#secrets) |
 
 Côté Compose : `ROMULUS_IMAGE`, `SAS_UID`, `HTTP_BIND`, `HTTP_PORT` et `USB_DIR` (voir l'étape 3).
@@ -460,7 +466,7 @@ importez-le dans un Romulus neuf.
 ```bash
 docker compose logs -f romulus                                   # journaux (application et imports)
 docker compose exec romulus php bin/console app:user:create bob  # autre compte (mot de passe saisi masqué)
-docker compose exec romulus php bin/console app:setup:code       # code d'installation (avant le premier compte)
+docker compose exec romulus php bin/console app:setup:code       # nouveau code d'installation (avant le premier compte)
 ```
 
 ## Sécurité
@@ -469,8 +475,8 @@ docker compose exec romulus php bin/console app:setup:code       # code d'instal
   signés par une clé approuvée, vérifie la signature avant toute écriture, puis l'empreinte de chaque fichier.
 - **Assistant d'installation** protégé par un code à usage unique, lisible seulement sur le serveur. Sans
   ce code, un tiers du réseau ne peut pas s'attribuer le compte administrateur.
-- **Administration** protégée par mot de passe : session `HttpOnly` et `SameSite=Strict`, limitation des
-  tentatives. Les **registres** sont en lecture seule et accessibles sans authentification sur le réseau
+- **Administration** protégée par mot de passe (Argon2id, 12 caractères minimum) : session `HttpOnly` et
+  `SameSite=Strict`, jeton anti-CSRF, limitation des tentatives. CSP stricte avec Trusted Types, HSTS. Les **registres** sont en lecture seule et accessibles sans authentification sur le réseau
   isolé, comme un dépôt interne classique ; `docker push` est refusé.
 - **Conteneur :** utilisateur sans privilège (votre UID, ou le root sans privilège de Docker rootless),
   capabilities retirées sauf `CHOWN`, `DAC_OVERRIDE` et `FOWNER`, effectives seulement en rootless ;

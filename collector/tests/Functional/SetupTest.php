@@ -3,6 +3,7 @@
 namespace App\Tests\Functional;
 
 use App\Entity\User;
+use App\Tests\Support\Csrf;
 use App\Identity\CollectorIdentity;
 use App\Setup\SetupToken;
 use Doctrine\ORM\EntityManagerInterface;
@@ -25,6 +26,7 @@ final class SetupTest extends WebTestCase
             putenv($name.'='.$value);
         }
         $this->client = static::createClient();
+        Csrf::prime($this->client);
         $em = $this->em();
         $em->getConnection()->executeStatement('PRAGMA foreign_keys = OFF');
         $tool = new SchemaTool($em);
@@ -46,9 +48,12 @@ final class SetupTest extends WebTestCase
 
         $this->client->request('GET', '/api/setup');
         self::assertTrue($this->json()['required']);
-        self::assertFileExists($this->dir.'/setup.code');
-        $code = static::getContainer()->get(SetupToken::class)->code();
+        // Le code n'est créé qu'au démarrage ou par app:setup:code ; seule son empreinte est conservée
+        self::assertFileDoesNotExist($this->dir.'/setup.code');
+        $code = static::getContainer()->get(SetupToken::class)->issue();
         self::assertMatchesRegularExpression('/^[A-Z2-9]{4}-[A-Z2-9]{4}-[A-Z2-9]{4}$/', $code);
+        self::assertStringStartsWith('sha256:', (string) file_get_contents($this->dir.'/setup.code'));
+        self::assertStringNotContainsString(str_replace('-', '', $code), (string) file_get_contents($this->dir.'/setup.code'));
 
         // Mauvais code : rien n'est créé
         $this->client->jsonRequest('POST', '/api/setup', ['code' => 'AAAA-BBBB-CCCC', 'username' => 'admin', 'password' => 'phrase-de-passe-longue']);

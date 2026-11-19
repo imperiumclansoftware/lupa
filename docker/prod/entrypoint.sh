@@ -130,6 +130,20 @@ if [ -n "${PUBLIC_URL:-}" ]; then
 	export PUBLIC_URL="${PUBLIC_URL%/}"
 fi
 
+# Derrière un proxy HTTPS déclaré : cookie de session « __Host- » (Secure, sans domaine, ADR 0002).
+# TRUSTED_PROXIES est requis : sans lui Symfony ignore X-Forwarded-Proto et ne poserait pas Secure.
+# Aucun proxy n'est cru par défaut : un client direct pourrait sinon falsifier X-Forwarded-For et
+# contourner la limitation des tentatives de connexion.
+case "${PUBLIC_URL:-}" in
+	https://*)
+		if [ -n "${TRUSTED_PROXIES:-}" ] && [ "$TRUSTED_PROXIES" != 127.0.0.1 ]; then
+			[ -n "${SESSION_NAME:-}" ] || export SESSION_NAME="__Host-sas_${SAS_APP}"
+		else
+			warn "PUBLIC_URL est en HTTPS mais TRUSTED_PROXIES n'est pas renseigné : indiquez l'adresse du reverse proxy (vue par le conteneur) pour des cookies Secure et la bonne IP des clients."
+		fi
+		;;
+esac
+
 if [ "$SAS_APP" = collector ]; then
 	for var in NPM_REGISTRY PYPI_INDEX; do
 		eval "value=\${$var:-}"

@@ -2,7 +2,10 @@
 
 namespace App\Controller;
 
+use App\Dto\PackagesQuery;
+use App\Dto\PageQuery;
 use App\Entity\Package;
+use Symfony\Component\HttpKernel\Attribute\MapQueryString;
 use App\Quarantine\Quarantine;
 use App\Repository\PackageRepository;
 use Doctrine\DBAL\Connection;
@@ -30,22 +33,22 @@ final class PackageController
 
     /** Paquets regroupés par nom : ?ecosystem=npm&q=lod&page=1 */
     #[Route('', methods: ['GET'])]
-    public function index(Request $request): JsonResponse
+    public function index(#[MapQueryString(validationFailedStatusCode: 422)] PackagesQuery $query = new PackagesQuery()): JsonResponse
     {
         // Recettes Symfony Flex (_flex/…) : servies sous /composer/flex, pas des paquets
         $where = ["name NOT LIKE '\\_flex/%' ESCAPE '\\'"];
         $params = [];
-        if ($ecosystem = Ecosystem::tryFrom($request->query->getString('ecosystem'))) {
+        if ($ecosystem = Ecosystem::tryFrom($query->ecosystem)) {
             $where[] = 'ecosystem = ?';
             $params[] = $ecosystem->value;
         }
-        if ('' !== $q = trim($request->query->getString('q'))) {
+        if ('' !== $q = trim($query->q)) {
             $where[] = "LOWER(name) LIKE ? ESCAPE '\\'";
             $params[] = '%'.addcslashes(mb_strtolower($q), '%_\\').'%';
         }
         $sql = 'FROM package WHERE '.implode(' AND ', $where);
         $total = (int) $this->db->fetchOne('SELECT COUNT(*) FROM (SELECT 1 '.$sql.' GROUP BY ecosystem, name)', $params);
-        $page = max(1, $request->query->getInt('page', 1));
+        $page = $query->page;
         $rows = $this->db->fetchAllAssociative(
             'SELECT ecosystem, name, COUNT(DISTINCT version) AS versions, COUNT(*) AS files, SUM(size) AS size, MAX(updated_at) AS updated_at, '
             // Gravité la plus élevée parmi les versions (alertes transportées par les bundles)
@@ -77,7 +80,7 @@ final class PackageController
     }
 
     #[Route('/{ecosystem}/{name}', methods: ['GET'], requirements: ['name' => '.+'])]
-    public function show(string $ecosystem, string $name): JsonResponse
+    public function show(string $ecosystem, string $name, #[MapQueryString(validationFailedStatusCode: 422)] PageQuery $page = new PageQuery()): JsonResponse
     {
         $eco = Ecosystem::tryFrom($ecosystem) ?? throw new NotFoundHttpException();
         $items = $this->packages->findBy(['ecosystem' => $eco, 'name' => $name]);
@@ -87,17 +90,28 @@ final class PackageController
         usort($items, static fn (Package $a, Package $b) => version_compare($b->getVersion(), $a->getVersion()) ?: strcmp((string) $a->getFilename(), (string) $b->getFilename()));
         $first = $items[0]->getMetadata();
 
+        // Versions vulnérables (une par version) : résumé complet, indépendant de la page affichée
+        $vulnerable = [];
+        foreach ($items as $p) {
+            if (null !== ($p->getMetadata()['security']['severity'] ?? null)) {
+                $vulnerable[$p->getVersion()] ??= Presenter::package($p, $this->quarantine->forPackage($p));
+            }
+        }
+
         return new JsonResponse([
             'ecosystem' => $eco->value,
             'name' => $name,
             'description' => \is_string($first['description'] ?? null) ? $first['description'] : null,
-            'items' => array_map(fn (Package $p) => Presenter::package($p, $this->quarantine->forPackage($p)), $items),
-        ]);
+            'vulnerable' => array_values($vulnerable),
+        ] + $page->envelope(
+            array_map(fn (Package $p) => Presenter::package($p, $this->quarantine->forPackage($p)), \array_slice($items, $page->offset(), $page->pageSize)),
+            \count($items),
+        ));
     }
 
     /** Liste noire reçue des collecteurs (lecture seule : elle se règle dans Rémus). */
     #[Route('/-/quarantine', methods: ['GET'], priority: 10)]
-    public function quarantine(): JsonResponse
+    public function quarantine(#[MapQueryString(validationFailedStatusCode: 422)] PageQuery $page = new PageQuery()): JsonResponse
     {
         $present = [];
         foreach ($this->quarantine->quarantinedPackages() as $q) {
@@ -108,9 +122,7 @@ final class PackageController
             $collectors[] = ['id' => substr((string) $row['name'], 10)] + (json_decode((string) $row['value'], true) ?: []);
         }
 
-        return new JsonResponse([
-            'collectors' => $collectors,
-            'items' => array_map(static fn ($e) => Presenter::quarantine($e) + ['present' => $present[$e->getId()] ?? []], $this->quarantine->all()),
-        ]);
+        return new JsonResponse(['collectors' => $collectors]
+            + $page->slice(array_map(static fn ($e) => Presenter::quarantine($e) + ['present' => $present[$e->getId()] ?? []], $this->quarantine->all())));
     }
 }

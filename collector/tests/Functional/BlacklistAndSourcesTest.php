@@ -3,6 +3,7 @@
 namespace App\Tests\Functional;
 
 use App\Entity\Artifact;
+use App\Tests\Support\Csrf;
 use App\Entity\Source;
 use App\Source\Sources;
 use App\Entity\Blob;
@@ -53,6 +54,7 @@ final class BlacklistAndSourcesTest extends WebTestCase
         $em->persist($user);
         $em->flush();
         $this->client->loginUser($user);
+        Csrf::prime($this->client);
     }
 
     protected function tearDown(): void
@@ -188,7 +190,15 @@ final class BlacklistAndSourcesTest extends WebTestCase
         $this->client->request('DELETE', '/api/sources/'.$npm['id']);
         self::assertResponseStatusCodeSame(204);
         $this->client->request('GET', '/api/sources');
-        self::assertCount(3, $this->json());
+        self::assertCount(3, $this->json()['items']);
+        self::assertSame(3, $this->json()['total']);
+
+        // Pagination plafonnée côté serveur
+        $this->client->request('GET', '/api/sources?pageSize=2&page=2');
+        self::assertSame(['total' => 3, 'page' => 2, 'pageSize' => 2], array_intersect_key($this->json(), array_flip(['total', 'page', 'pageSize'])));
+        self::assertCount(1, $this->json()['items']);
+        $this->client->request('GET', '/api/sources?pageSize=500');
+        self::assertResponseStatusCodeSame(422);
     }
 
     public function testSystemPackageVersions(): void

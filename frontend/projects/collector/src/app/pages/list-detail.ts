@@ -73,19 +73,21 @@ import { BlacklistDialog } from '../blacklist-dialog';
             <h2>Contenu</h2>
             <div class="row filters">
               <label class="visually-hidden" for="filter">Filtrer</label>
-              <input class="input" id="filter" type="search" placeholder="Filtrer…" [ngModel]="filter()" (ngModelChange)="filter.set($event)" />
-              <label class="check"><input type="checkbox" [ngModel]="pendingOnly()" (ngModelChange)="pendingOnly.set($event)" /> À exporter</label>
+              <input class="input" id="filter" type="search" placeholder="Filtrer…" [ngModel]="filter()" (ngModelChange)="filter.set($event); refilter()" />
+              <label class="check"><input type="checkbox" [ngModel]="pendingOnly()" (ngModelChange)="pendingOnly.set($event); refilter(0)" /> À exporter</label>
               @if (l.ecosystem !== 'docker') {
-                <label class="check"><input type="checkbox" [ngModel]="vulnerableOnly()" (ngModelChange)="vulnerableOnly.set($event)" /> Vulnérables</label>
+                <label class="check"><input type="checkbox" [ngModel]="vulnerableOnly()" (ngModelChange)="vulnerableOnly.set($event); refilter(0)" /> Vulnérables</label>
               }
             </div>
           </header>
-          @if (artifacts().length === 0) {
+          @if (l.artifactCount === 0 && artifacts().length === 0) {
             <div class="empty">
               <sas-icon name="package" [size]="28" />
               <h3>Liste pas encore téléchargée</h3>
               <p>Lancez une mise à jour pour résoudre les dépendances et télécharger les paquets.</p>
             </div>
+          } @else if (artifacts().length === 0) {
+            <p class="subtle more">Aucun paquet ne correspond au filtre.</p>
           } @else {
             <div class="table-wrap">
               <table class="table">
@@ -93,7 +95,7 @@ import { BlacklistDialog } from '../blacklist-dialog';
                   <tr><th>Nom</th><th>Version</th><th>{{ l.ecosystem === 'docker' ? 'Plateformes' : l.ecosystem === 'pypi' ? 'Fichier' : 'Description' }}</th><th class="right">Taille</th>@if (l.ecosystem !== 'docker') { <th>Sécurité</th> }<th>Export</th><th></th></tr>
                 </thead>
                 <tbody>
-                  @for (a of visible(); track a.id) {
+                  @for (a of artifacts(); track a.id) {
                     <tr>
                       <td><strong class="name">{{ a.name }}</strong></td>
                       <td class="mono">{{ a.version }}</td>
@@ -122,8 +124,8 @@ import { BlacklistDialog } from '../blacklist-dialog';
                 </tbody>
               </table>
             </div>
-            @if (visible().length < filtered().length) {
-              <div class="more"><button type="button" class="btn btn-sm" (click)="limit.set(limit() + 200)">Afficher plus ({{ filtered().length - visible().length }} restants)</button></div>
+            @if (artifacts().length < total()) {
+              <div class="more"><button type="button" class="btn btn-sm" (click)="more()">Afficher plus ({{ total() - artifacts().length }} restants)</button></div>
             }
           }
         </section>
@@ -208,22 +210,48 @@ export default class ListDetail implements OnInit {
 
   protected async reload(): Promise<void> {
     await this.load();
+    await this.fetchArtifacts(1);
   }
-  protected readonly limit = signal(200);
+  protected readonly total = signal(0);
+  private page = 1;
+  private filterTimer?: ReturnType<typeof setTimeout>;
   protected readonly templates = signal<Template[]>([]);
   protected readonly template = computed(() => this.templates().find((t) => t.id === this.list()?.options.template?.id) ?? null);
   protected readonly usage = computed(() => (this.template()?.usage ?? '').replaceAll('{version}', this.list()?.options.template?.version ?? 'latest'));
   protected readonly running = computed(() => isActive(this.list()?.job));
-  protected readonly filtered = computed(() => {
-    const q = this.filter().trim().toLowerCase();
-    return this.artifacts().filter(
-      (a) => (!q || a.name.toLowerCase().includes(q) || (a.filename ?? '').toLowerCase().includes(q)) && (!this.pendingOnly() || !a.exportSequence) && (!this.vulnerableOnly() || !!a.severity),
-    );
-  });
-  protected readonly visible = computed(() => this.filtered().slice(0, this.limit()));
   private wasRunning = false;
+  private loaded = false;
+  private request = 0;
+
+  /** Filtrage côté serveur : la saisie est temporisée, les cases rechargent immédiatement. */
+  protected refilter(delay = 300): void {
+    clearTimeout(this.filterTimer);
+    this.filterTimer = setTimeout(() => void this.fetchArtifacts(1), delay);
+  }
+
+  protected async more(): Promise<void> {
+    await this.fetchArtifacts(this.page + 1);
+  }
+
+  private async fetchArtifacts(page: number): Promise<void> {
+    const id = this.list()?.id;
+    if (id === undefined) return;
+    const request = ++this.request;
+    try {
+      const result = await this.api.listArtifacts(id, { q: this.filter().trim(), pending: this.pendingOnly(), vulnerable: this.vulnerableOnly(), page });
+      // Une réponse plus ancienne que la dernière saisie est ignorée
+      if (request !== this.request) return;
+      this.page = page;
+      this.total.set(result.total);
+      this.artifacts.set(page === 1 ? result.items : [...this.artifacts(), ...result.items]);
+      this.error.set('');
+    } catch (e) {
+      this.error.set(errorMessage(e));
+    }
+  }
 
   ngOnInit(): void {
+    this.destroyRef.onDestroy(() => clearTimeout(this.filterTimer));
     // Démarré ici : l'identifiant de la route n'est pas encore disponible dans le constructeur
     poll(async () => {
       await this.load();
@@ -238,8 +266,9 @@ export default class ListDetail implements OnInit {
       this.list.set(list);
       const running = isActive(list.job);
       // Contenu rechargé au premier affichage et à la fin d'une mise à jour
-      if (!running && (this.wasRunning || this.artifacts().length === 0)) {
-        this.artifacts.set(await this.api.listArtifacts(list.id));
+      if (!running && (this.wasRunning || !this.loaded)) {
+        this.loaded = true;
+        await this.fetchArtifacts(1);
       }
       if (this.wasRunning && !running && list.job?.status === 'succeeded') {
         this.toasts.ok(`« ${list.name} » à jour : ${list.job.step}`);

@@ -11,3 +11,26 @@ export function errorMessage(error: unknown): string {
   }
   return error instanceof Error ? error.message : 'Erreur inattendue.';
 }
+
+/** Page d'une liste renvoyée par l'API (100 éléments au plus, plafond imposé par le serveur). */
+export interface Page<T> {
+  items: T[];
+  total: number;
+  page: number;
+  pageSize: number;
+}
+
+/**
+ * Toutes les pages d'une petite collection (listes, dépôts, clés…) : chaque requête reste bornée
+ * côté serveur. Renvoie la première réponse (métadonnées) et l'ensemble des éléments.
+ */
+export async function allPages<P extends Page<unknown>>(load: (page: number) => Promise<P>, maxPages = 50): Promise<{ first: P; items: P['items'] }> {
+  const first = await load(1);
+  const items = [...first.items];
+  for (let page = 2; items.length < first.total && page <= maxPages; page++) {
+    const next = await load(page);
+    if (next.items.length === 0) break;
+    items.push(...next.items);
+  }
+  return { first, items };
+}

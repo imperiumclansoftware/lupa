@@ -1,6 +1,9 @@
 security:
     password_hashers:
-        Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface: 'auto'
+        # Argon2id (libsodium), coût par défaut de Symfony : 64 Mio, 4 itérations, au-dessus du minimum OWASP
+        Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface:
+            algorithm: sodium
+            migrate_from: [bcrypt]
     providers:
         users:
             entity:
@@ -34,7 +37,7 @@ when@test:
     security:
         password_hashers:
             Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface:
-                algorithm: auto
+                algorithm: sodium
                 cost: 4
                 time_cost: 3
                 memory_cost: 10

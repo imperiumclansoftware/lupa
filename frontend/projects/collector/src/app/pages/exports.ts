@@ -116,6 +116,9 @@ import { KeyValuePipe } from '@angular/common';
                 </tbody>
               </table>
             </div>
+            @if (d.items.length < d.total) {
+              <div class="more"><button type="button" class="btn btn-sm" (click)="more()">Afficher plus ({{ d.total - d.items.length }} restants)</button></div>
+            }
           }
         </section>
 
@@ -132,6 +135,7 @@ import { KeyValuePipe } from '@angular/common';
     </div>
   `,
   styles: `
+    .more { display: flex; justify-content: center; padding: 14px; border-top: 1px solid var(--border); }
     .modes { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px; }
     .mode { position: relative; display: grid; gap: 4px; padding: 16px 16px 16px 44px; border-radius: 14px; background: var(--surface-2); box-shadow: inset 0 0 0 1px var(--border); cursor: pointer;
       transition-property: background-color, box-shadow; transition-duration: 140ms; }
@@ -171,13 +175,29 @@ export default class ExportsPage {
     });
   }
 
+  protected async more(): Promise<void> {
+    const current = this.data();
+    if (!current) return;
+    try {
+      const next = await this.api.exports(Math.floor(current.items.length / current.pageSize) + 1);
+      const seen = new Set(current.items.map((e) => e.id));
+      this.data.set({ ...current, total: next.total, items: [...current.items, ...next.items.filter((e) => !seen.has(e.id))] });
+    } catch (e) {
+      this.error.set(errorMessage(e));
+    }
+  }
+
   protected hasFiles(e: Export): boolean {
     return e.files.some((f) => f.present);
   }
 
   private async load(): Promise<void> {
     try {
-      this.data.set(await this.api.exports());
+      const first = await this.api.exports();
+      // Les pages déjà dépliées sont conservées au rafraîchissement
+      const seen = new Set(first.items.map((e) => e.id));
+      const older = (this.data()?.items ?? []).filter((e) => !seen.has(e.id) && e.id < Math.min(...seen));
+      this.data.set({ ...first, items: [...first.items, ...older] });
       this.error.set('');
       const active = !!this.activeJob();
       if (this.wasActive && !active) {

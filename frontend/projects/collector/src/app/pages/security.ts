@@ -1,12 +1,11 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal, viewChild } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import {
-  DateTimePipe, Eco, EcosystemPipe, Icon, JobProgress, RelativePipe, SEVERITY_LABELS, SeverityBadge, Toasts, alertLevel, errorMessage, isActive, poll,
+  DateTimePipe, Eco, EcosystemPipe, Icon, JobProgress, RelativePipe, SEVERITY_LABELS, SeverityBadge, Toasts, errorMessage, isActive, poll,
 } from '@sas/shared';
-import { CollectorApi, SecurityItem, SecurityReport } from '../api';
+import { AlertLevel, CollectorApi, SecurityItem, SecurityReport } from '../api';
 import { BlacklistDialog } from '../blacklist-dialog';
 
-type Filter = 'all' | 'critical' | 'warning' | 'low';
 
 @Component({
   imports: [BlacklistDialog, RouterLink, Icon, Eco, SeverityBadge, JobProgress, RelativePipe, DateTimePipe, EcosystemPipe],
@@ -50,15 +49,15 @@ type Filter = 'all' | 'critical' | 'warning' | 'low';
             <h2>{{ filter() === 'all' ? 'Paquets vulnérables' : filterLabel() }}</h2>
             @if (filter() !== 'all') { <button type="button" class="btn btn-sm btn-ghost" (click)="setFilter('all')">Tout afficher</button> }
           </header>
-          @if (visible().length === 0) {
+          @if (d.items.length === 0) {
             <div class="empty">
               <sas-icon name="shield" [size]="28" />
-              <h3>{{ d.items.length === 0 ? 'Aucune vulnérabilité connue' : 'Rien dans cette catégorie' }}</h3>
+              <h3>{{ d.counts.critical + d.counts.warning + d.counts.low === 0 ? 'Aucune vulnérabilité connue' : 'Rien dans cette catégorie' }}</h3>
               @if (d.audited < d.auditable) { <p>{{ d.auditable - d.audited }} paquet(s) n’ont pas encore été analysés : lancez une analyse.</p> }
             </div>
           } @else {
             <ul class="items">
-              @for (item of visible(); track item.id) {
+              @for (item of d.items; track item.id) {
                 <li>
                   <details>
                     <summary>
@@ -98,6 +97,9 @@ type Filter = 'all' | 'critical' | 'warning' | 'low';
                 </li>
               }
             </ul>
+            @if (d.items.length < d.total) {
+              <div class="more"><button type="button" class="btn btn-sm" (click)="more()">Afficher plus ({{ d.total - d.items.length }} restants)</button></div>
+            }
           }
         </section>
         <p class="subtle">Les images Docker ne sont pas analysées : leurs failles se trouvent dans les paquets du système, qui demandent un scanner d’images dédié.</p>
@@ -107,6 +109,7 @@ type Filter = 'all' | 'critical' | 'warning' | 'low';
   `,
   styles: `
     .ban { white-space: nowrap; }
+    .more { display: flex; justify-content: center; padding: 14px; border-top: 1px solid var(--border); }
     .stats { grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); }
     button.stat { border: none; text-align: left; font: inherit; color: inherit; cursor: pointer; transition-property: box-shadow, transform; transition-duration: 160ms; }
     button.stat:hover { box-shadow: var(--shadow-hover); transform: translateY(-1px); }
@@ -133,20 +136,16 @@ export default class SecurityPage {
   private readonly api = inject(CollectorApi);
   private readonly toasts = inject(Toasts);
   protected readonly data = signal<SecurityReport | null>(null);
-  protected readonly filter = signal<Filter>('all');
+  protected readonly filter = signal<AlertLevel>('all');
   protected readonly error = signal('');
   protected readonly busy = signal(false);
-  protected readonly visible = computed(() => {
-    const f = this.filter();
-    return (this.data()?.items ?? []).filter((i) => f === 'all' || alertLevel(i.severity) === f);
-  });
   protected readonly filterLabel = computed(() => ({ all: '', critical: 'Paquets critiques', warning: 'Avertissements', low: 'Faibles' })[this.filter()]);
   private wasActive = false;
 
   constructor() {
     poll(async () => {
       try {
-        const data = await this.api.security();
+        const data = await this.api.security(this.filter());
         if (this.wasActive && !data.job) this.toasts.ok('Analyse de sécurité terminée.');
         this.wasActive = isActive(data.job);
         this.data.set(data);
@@ -167,11 +166,28 @@ export default class SecurityPage {
   }
 
   protected async refresh(): Promise<void> {
-    this.data.set(await this.api.security());
+    try {
+      this.data.set(await this.api.security(this.filter()));
+    } catch (e) {
+      this.error.set(errorMessage(e));
+    }
   }
 
-  protected setFilter(filter: Filter): void {
+  /** Page suivante, ajoutée à la suite de celles déjà affichées */
+  protected async more(): Promise<void> {
+    const current = this.data();
+    if (!current) return;
+    try {
+      const next = await this.api.security(this.filter(), current.page + 1);
+      this.data.set({ ...next, items: [...current.items, ...next.items] });
+    } catch (e) {
+      this.error.set(errorMessage(e));
+    }
+  }
+
+  protected setFilter(filter: AlertLevel): void {
     this.filter.set(this.filter() === filter ? 'all' : filter);
+    void this.refresh();
   }
 
   /** Plus petite version corrigée proposée par les avis (indication) */
@@ -185,7 +201,7 @@ export default class SecurityPage {
     try {
       await this.api.audit();
       this.wasActive = true;
-      this.data.set(await this.api.security());
+      this.data.set(await this.api.security(this.filter()));
     } catch (e) {
       this.error.set(errorMessage(e));
     } finally {

@@ -3,6 +3,7 @@
 namespace App\Tests\Functional;
 
 use App\Entity\TrustedKey;
+use App\Tests\Support\Csrf;
 use App\Entity\User;
 use App\Setup\SetupToken;
 use App\Tests\MirrorWebTestCase;
@@ -17,13 +18,14 @@ final class SetupTest extends MirrorWebTestCase
         $_ENV['SETUP_TOKEN_FILE'] = $_SERVER['SETUP_TOKEN_FILE'] = $file;
         putenv('SETUP_TOKEN_FILE='.$file);
         parent::setUp();
+        Csrf::prime($this->client);
     }
 
     public function testFirstAccountAndTrustedCollector(): void
     {
         $this->client->request('GET', '/api/session');
         self::assertTrue($this->json()['setupRequired']);
-        $code = static::getContainer()->get(SetupToken::class)->code();
+        $code = static::getContainer()->get(SetupToken::class)->issue();
         $keys = Signer::generateKeyPair();
 
         $this->client->jsonRequest('POST', '/api/setup', ['code' => $code, 'username' => 'admin', 'password' => 'phrase-de-passe-longue', 'publicKey' => 'pas-une-cle']);

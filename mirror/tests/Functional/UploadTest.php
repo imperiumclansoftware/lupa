@@ -50,12 +50,13 @@ final class UploadTest extends MirrorWebTestCase
 
     public function testInvalidUploads(): void
     {
+        // Validation du DTO : 422
         $this->client->jsonRequest('POST', '/api/uploads', ['filename' => '../evil.tar', 'size' => 10]);
-        self::assertResponseStatusCodeSame(400);
+        self::assertResponseStatusCodeSame(422);
         $this->client->jsonRequest('POST', '/api/uploads', ['filename' => 'photo.jpg', 'size' => 10]);
-        self::assertResponseStatusCodeSame(400);
+        self::assertResponseStatusCodeSame(422);
         $this->client->jsonRequest('POST', '/api/uploads', ['filename' => 'sas-x.tar', 'size' => 0]);
-        self::assertResponseStatusCodeSame(400);
+        self::assertResponseStatusCodeSame(422);
 
         $this->put(str_repeat('a', 32), 0, 'x');
         self::assertResponseStatusCodeSame(404);

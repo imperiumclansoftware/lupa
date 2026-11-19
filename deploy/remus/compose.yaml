@@ -26,6 +26,10 @@ services:
       DOCKERHUB_TOKEN_FILE: ${DOCKERHUB_TOKEN_FILE:-}
       NPM_REGISTRY: ${NPM_REGISTRY:-https://registry.npmjs.org}
       PYPI_INDEX: ${PYPI_INDEX:-https://pypi.org}
+      # Derrière un reverse proxy HTTPS seulement (ex. https://remus.intranet) : cookie de session « __Host- »
+      PUBLIC_URL: ${PUBLIC_URL:-}
+      # Adresse du reverse proxy HTTPS, vue par le conteneur (ex. 172.18.0.0/16) ; vide = aucun proxy cru
+      TRUSTED_PROXIES: ${TRUSTED_PROXIES:-127.0.0.1}
     volumes:
       - data:/data
       # Dossier d'export : la clé USB elle-même, ou un dossier copié ensuite sur la clé

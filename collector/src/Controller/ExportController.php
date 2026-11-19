@@ -36,7 +36,7 @@ final class ExportController
     }
 
     #[Route('', methods: ['GET'])]
-    public function index(): JsonResponse
+    public function index(#[\Symfony\Component\HttpKernel\Attribute\MapQueryString(validationFailedStatusCode: 422)] \App\Dto\PageQuery $page = new \App\Dto\PageQuery()): JsonResponse
     {
         return new JsonResponse([
             'exportDir' => $this->exportDir,
@@ -46,8 +46,10 @@ final class ExportController
             'pending' => $this->pending(false),
             'full' => $this->pending(true),
             'blacklist' => ['revision' => $this->blacklist->revision(), 'pending' => $this->blacklist->pendingExport(), 'entries' => \count($this->blacklist->all())],
-            'items' => array_map(fn (Export $e) => Presenter::export($e, $this->exportDir), $this->exports->findBy([], ['sequence' => 'DESC'])),
-        ]);
+        ] + $page->envelope(
+            array_map(fn (Export $e) => Presenter::export($e, $this->exportDir), $this->exports->findBy([], ['sequence' => 'DESC'], $page->pageSize, $page->offset())),
+            $this->exports->count([]),
+        ));
     }
 
     #[Route('', methods: ['POST'])]

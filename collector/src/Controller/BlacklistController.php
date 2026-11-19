@@ -20,7 +20,7 @@ final class BlacklistController
     }
 
     #[Route('', methods: ['GET'])]
-    public function index(): JsonResponse
+    public function index(#[\Symfony\Component\HttpKernel\Attribute\MapQueryString(validationFailedStatusCode: 422)] \App\Dto\PageQuery $page = new \App\Dto\PageQuery()): JsonResponse
     {
         $collected = [];
         foreach ($this->blacklist->collected() as $entry) {
@@ -32,8 +32,7 @@ final class BlacklistController
             'exportedRevision' => $this->blacklist->exportedRevision(),
             'pending' => $this->blacklist->pendingExport(),
             'updatedAt' => $this->blacklist->updatedAt(),
-            'items' => array_map(static fn (BlacklistEntry $e) => Presenter::blacklistEntry($e) + ['collected' => $collected[$e->getId()] ?? 0], $this->blacklist->all()),
-        ]);
+        ] + $page->slice(array_map(static fn (BlacklistEntry $e) => Presenter::blacklistEntry($e) + ['collected' => $collected[$e->getId()] ?? 0], $this->blacklist->all())));
     }
 
     #[Route('', methods: ['POST'])]

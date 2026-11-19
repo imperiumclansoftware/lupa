@@ -199,11 +199,14 @@ développement, `make up` fait de même avec le `.env` du projet.
   signature **avant** d'écrire quoi que ce soit, puis l'empreinte sha256 de chaque fichier.
 - Le collecteur vérifie à chaque téléchargement les sommes publiées par le registre (integrity sha512
   npm, sha256 PyPI, digest des couches Docker, shasum Composer quand il est fourni).
-- Interfaces d'administration protégées par mot de passe (session, cookie `SameSite=Strict`, limitation
-  des tentatives). Les registres sont en lecture seule et accessibles sans authentification sur le
+- Interfaces d'administration protégées par mot de passe (Argon2id, 12 caractères minimum ; session
+  `HttpOnly`, `SameSite=Strict`, `__Host-` derrière HTTPS ; jeton anti-CSRF ; limitation des tentatives ;
+  connexions et actions d'administration journalisées sur le canal `audit`, secrets masqués). CSP stricte
+  avec Trusted Types, HSTS, `Permissions-Policy`, COOP ; listes paginées (100 éléments au plus). Les registres sont en lecture seule et accessibles sans authentification sur le
   réseau isolé, comme un registre interne classique.
 - Hors périmètre : Sas ne contrôle pas le **contenu** des paquets (vulnérabilités, malveillance). Un
   `npm audit` ou un scanner d'images reste à faire côté collecteur avant l'export si nécessaire.
+- Les écarts assumés aux règles de sécurité de l'équipe sont décrits dans les [ADR](docs/adr/README.md).
 
 ## Limites connues
 

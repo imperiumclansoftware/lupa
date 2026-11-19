@@ -6,14 +6,13 @@ use App\Blacklist\Blacklist;
 use App\Entity\Artifact;
 use App\Repository\ArtifactRepository;
 use Symfony\Component\HttpFoundation\JsonResponse;
-use Symfony\Component\HttpFoundation\Request;
+use App\Dto\ArtifactsQuery;
+use Symfony\Component\HttpKernel\Attribute\MapQueryString;
 use Symfony\Component\Routing\Attribute\Route;
 
 #[Route('/api/artifacts')]
 final class ArtifactController
 {
-    private const int PAGE_SIZE = 100;
-
     public function __construct(
         private readonly ArtifactRepository $artifacts,
         private readonly Blacklist $blacklist,
@@ -22,28 +21,26 @@ final class ArtifactController
 
     /** Recherche paginée : ?ecosystem=npm&q=lodash&pending=1&page=2 */
     #[Route('', methods: ['GET'])]
-    public function index(Request $request): JsonResponse
+    public function index(#[MapQueryString(validationFailedStatusCode: 422)] ArtifactsQuery $query = new ArtifactsQuery()): JsonResponse
     {
         $qb = $this->artifacts->createQueryBuilder('a')->orderBy('a.name')->addOrderBy('a.version')->addOrderBy('a.filename');
-        if ($ecosystem = $request->query->getString('ecosystem')) {
-            $qb->andWhere('a.ecosystem = :ecosystem')->setParameter('ecosystem', $ecosystem);
+        if ('' !== $query->ecosystem) {
+            $qb->andWhere('a.ecosystem = :ecosystem')->setParameter('ecosystem', $query->ecosystem);
         }
-        if ('' !== $q = trim($request->query->getString('q'))) {
+        if ('' !== $q = trim($query->q)) {
             $qb->andWhere('LOWER(a.name) LIKE :q')->setParameter('q', '%'.addcslashes(mb_strtolower($q), '%_').'%');
         }
-        if ($request->query->getBoolean('pending')) {
+        if ($query->pending) {
             $qb->andWhere('a.export IS NULL');
         }
+        $page = $query->page();
         $total = (int) (clone $qb)->select('COUNT(a.id)')->resetDQLPart('orderBy')->getQuery()->getSingleScalarResult();
-        $page = max(1, $request->query->getInt('page', 1));
         /** @var list<Artifact> $items */
-        $items = $qb->setFirstResult(($page - 1) * self::PAGE_SIZE)->setMaxResults(self::PAGE_SIZE)->getQuery()->getResult();
+        $items = $qb->setFirstResult($page->offset())->setMaxResults($page->pageSize)->getQuery()->getResult();
 
-        return new JsonResponse([
-            'items' => array_map(fn (Artifact $a) => Presenter::artifact($a, false, $this->blacklist->find($a->getEcosystem(), $a->getName(), $a->getVersion())), $items),
-            'total' => $total,
-            'page' => $page,
-            'pageSize' => self::PAGE_SIZE,
-        ]);
+        return new JsonResponse($page->envelope(
+            array_map(fn (Artifact $a) => Presenter::artifact($a, false, $this->blacklist->find($a->getEcosystem(), $a->getName(), $a->getVersion())), $items),
+            $total,
+        ));
     }
 }

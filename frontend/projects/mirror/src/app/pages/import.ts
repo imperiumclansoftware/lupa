@@ -176,6 +176,9 @@ interface Upload {
               </tbody>
             </table>
           </div>
+          @if (history().length < historyTotal()) {
+            <div class="more"><button type="button" class="btn btn-sm" (click)="more()">Afficher plus ({{ historyTotal() - history().length }} restants)</button></div>
+          }
         }
       </section>
     </div>
@@ -194,6 +197,7 @@ interface Upload {
     </sas-dialog>
   `,
   styles: `
+    .more { display: flex; justify-content: center; padding: 14px; border-top: 1px solid var(--border); }
     .sources { display: flex; gap: 6px; flex-wrap: wrap; }
     .sources code { font-size: 0.75rem; }
     .unreadable { padding-top: 0; }
@@ -221,6 +225,7 @@ export default class ImportPage {
 
   protected readonly inbox = signal<Inbox | null>(null);
   protected readonly history = signal<ImportedBundle[]>([]);
+  protected readonly historyTotal = signal(0);
   protected readonly jobs = signal<Job[]>([]);
   protected readonly error = signal('');
   protected readonly busy = signal(false);
@@ -266,8 +271,23 @@ export default class ImportPage {
     try {
       const [inbox, history] = await Promise.all([this.api.inbox(), this.api.imports()]);
       this.inbox.set(inbox);
-      this.history.set(history);
+      // Les pages déjà dépliées sont conservées au rafraîchissement
+      const seen = new Set(history.items.map((b) => b.id));
+      const older = this.history().filter((b) => !seen.has(b.id) && b.id < Math.min(...seen));
+      this.history.set([...history.items, ...older]);
+      this.historyTotal.set(history.total);
       this.error.set('');
+    } catch (e) {
+      this.error.set(errorMessage(e));
+    }
+  }
+
+  protected async more(): Promise<void> {
+    try {
+      const next = await this.api.imports(Math.floor(this.history().length / 100) + 1);
+      const seen = new Set(this.history().map((b) => b.id));
+      this.history.set([...this.history(), ...next.items.filter((b) => !seen.has(b.id))]);
+      this.historyTotal.set(next.total);
     } catch (e) {
       this.error.set(errorMessage(e));
     }

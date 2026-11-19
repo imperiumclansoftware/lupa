@@ -165,6 +165,8 @@ services:
       DOCKERHUB_TOKEN_FILE: ${DOCKERHUB_TOKEN_FILE:-}
       NPM_REGISTRY: ${NPM_REGISTRY:-https://registry.npmjs.org}
       PYPI_INDEX: ${PYPI_INDEX:-https://pypi.org}
+      PUBLIC_URL: ${PUBLIC_URL:-}
+      TRUSTED_PROXIES: ${TRUSTED_PROXIES:-127.0.0.1}
     volumes:
       - data:/data
       # Dossier d'export : la clé USB elle-même, ou un dossier copié ensuite sur la clé
@@ -223,8 +225,8 @@ docker compose logs remus | grep "Code d'installation"
 ```
 
 Au premier démarrage, Rémus génère ses secrets et sa clé de signature (voir [Secrets](#secrets)), puis
-affiche un **code d'installation** à usage unique. Il apparaît aussi avec
-`docker compose exec remus php bin/console app:setup:code`.
+affiche un **code d'installation** à usage unique. Perdu ?
+`docker compose exec remus php bin/console app:setup:code` en crée un nouveau.
 
 ### 5. Assistant d'installation
 
@@ -382,19 +384,22 @@ Pour ne sauvegarder que l'essentiel, copiez `identity/secret.key` en lieu sûr :
 docker compose logs -f remus                                   # journaux (application et worker)
 docker compose exec remus php bin/console app:user:create bob  # autre compte (mot de passe saisi masqué)
 docker compose exec remus php bin/console app:identity:check   # nom et empreinte de la clé de signature
-docker compose exec remus php bin/console app:setup:code       # code d'installation (avant le premier compte)
+docker compose exec remus php bin/console app:setup:code       # nouveau code d'installation (avant le premier compte)
 ```
 
 ## Accès depuis le réseau local
 
 Par défaut, Rémus n'écoute que sur `127.0.0.1`. Pour y accéder depuis d'autres postes, réglez
-`HTTP_BIND=0.0.0.0`, de préférence derrière un reverse proxy HTTPS (Caddy, nginx, Traefik). Les cookies
-de session sont alors marqués `Secure` automatiquement.
+`HTTP_BIND=0.0.0.0`, de préférence derrière un reverse proxy HTTPS (Caddy, nginx, Traefik) avec
+`PUBLIC_URL=https://…` et `TRUSTED_PROXIES` (adresse du proxy vue par le conteneur) : le cookie de
+session devient `__Host-` (`Secure`).
 
 ## Sécurité
 
 - **Assistant d'installation** protégé par un code à usage unique, lisible seulement sur le serveur.
-- **Comptes :** session par cookie `HttpOnly` et `SameSite=Strict`, limitation des tentatives de connexion.
+- **Comptes :** session `HttpOnly`, `SameSite=Strict`, jeton anti-CSRF, tentatives limitées ; mots de passe
+  Argon2id, 12 caractères minimum, refusés s'ils figurent dans une fuite connue.
+- **Navigateur :** CSP stricte avec Trusted Types, HSTS, `Permissions-Policy`, COOP.
 - **Téléchargements :** chaque fichier est vérifié avec la somme publiée par son registre ; le stockage
   est adressé par sha256.
 - **Bundles :** manifeste signé en Ed25519 et sha256 de chaque fichier. Romulus vérifie la signature

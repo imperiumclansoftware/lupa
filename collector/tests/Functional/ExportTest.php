@@ -3,6 +3,7 @@
 namespace App\Tests\Functional;
 
 use App\Entity\Artifact;
+use App\Tests\Support\Csrf;
 use App\Entity\Blob;
 use App\Entity\Export;
 use App\Entity\Job;
@@ -51,6 +52,7 @@ final class ExportTest extends WebTestCase
         $em->persist($user);
         $em->flush();
         $this->client->loginUser($user);
+        Csrf::prime($this->client);
     }
 
     protected function tearDown(): void

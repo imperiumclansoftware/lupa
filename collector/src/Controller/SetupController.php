@@ -19,6 +19,8 @@ use Symfony\Component\Routing\Attribute\Route;
 final class SetupController
 {
     public function __construct(
+        #[\Symfony\Component\DependencyInjection\Attribute\Target('audit')]
+        private readonly \Psr\Log\LoggerInterface $audit,
         private readonly SetupToken $token,
         private readonly EntityManagerInterface $em,
         private readonly UserPasswordHasherInterface $hasher,
@@ -33,20 +35,19 @@ final class SetupController
         if (!$this->token->isRequired()) {
             return new JsonResponse(['required' => false]);
         }
-        // Crée le code s'il n'existe pas encore : il est alors lisible sur le serveur
-        $this->token->code();
-
         return new JsonResponse(['required' => true, 'defaults' => ['name' => $this->identity->name()]]);
     }
 
     #[Route('', methods: ['POST'])]
-    public function install(#[MapRequestPayload] SetupInput $input): JsonResponse
+    public function install(#[MapRequestPayload] SetupInput $input, \Symfony\Component\HttpFoundation\Request $request): JsonResponse
     {
         if (!$this->token->isRequired()) {
             return new JsonResponse(['error' => 'L\'installation est déjà faite : connectez-vous.'], Response::HTTP_CONFLICT);
         }
         if (!$this->token->verify($input->code)) {
-            return new JsonResponse(['error' => 'Code d\'installation incorrect. Il est affiché dans les journaux du serveur.'], Response::HTTP_FORBIDDEN);
+            $this->audit->warning('Code d\'installation incorrect', \App\Security\AuditSubscriber::context($request, $input->username));
+
+            return new JsonResponse(['error' => 'Code d\'installation incorrect. Il est affiché dans les journaux du serveur au démarrage ; app:setup:code en crée un nouveau.'], Response::HTTP_FORBIDDEN);
         }
 
         $user = new User($input->username);
@@ -54,6 +55,7 @@ final class SetupController
         $this->em->persist($user);
         $this->em->flush();
         $this->token->consume();
+        $this->audit->info('Compte initial créé par l\'assistant d\'installation', \App\Security\AuditSubscriber::context($request, $user->getUsername()));
 
         if (null !== $input->name && '' !== trim($input->name)) {
             $this->identity->rename(trim($input->name));

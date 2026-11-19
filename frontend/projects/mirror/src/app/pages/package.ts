@@ -80,11 +80,15 @@ import { installCommand } from '../clients';
               </tbody>
             </table>
           </div>
+          @if (d.items.length < d.total) {
+            <div class="more"><button type="button" class="btn btn-sm" (click)="more()">Afficher plus ({{ d.total - d.items.length }} restants)</button></div>
+          }
         </section>
       }
     </div>
   `,
   styles: `
+    .more { display: flex; justify-content: center; padding: 14px; border-top: 1px solid var(--border); }
     .quarantine { color: var(--danger); font-size: 0.86rem; }
     .back { display: inline-flex; align-items: center; gap: 4px; text-decoration: none; margin-bottom: 6px; }
     .name { overflow-wrap: anywhere; }
@@ -105,13 +109,25 @@ export default class PackagePage implements OnInit {
   /** Versions signalées, sans doublon (plusieurs fichiers Python par version) */
   protected readonly vulnerable = computed(() => {
     const seen = new Set<string>();
-    return (this.data()?.items ?? []).filter((v) => v.severity && !seen.has(v.version) && !!seen.add(v.version));
+    return (this.data()?.vulnerable ?? []).filter((v) => v.severity && !seen.has(v.version) && !!seen.add(v.version));
   });
   protected readonly error = signal('');
 
   async ngOnInit(): Promise<void> {
     try {
       this.data.set(await this.api.package(this.ecosystem(), this.name()));
+    } catch (e) {
+      this.error.set(errorMessage(e));
+    }
+  }
+
+  /** Page suivante des versions, ajoutée à la suite */
+  protected async more(): Promise<void> {
+    const current = this.data();
+    if (!current) return;
+    try {
+      const next = await this.api.package(this.ecosystem(), this.name(), current.page + 1);
+      this.data.set({ ...next, items: [...current.items, ...next.items] });
     } catch (e) {
       this.error.set(errorMessage(e));
     }

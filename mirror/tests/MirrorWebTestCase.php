@@ -3,6 +3,7 @@
 namespace App\Tests;
 
 use App\Entity\Job;
+use App\Tests\Support\Csrf;
 use App\Entity\TrustedKey;
 use App\Entity\User;
 use Doctrine\ORM\EntityManagerInterface;
@@ -66,6 +67,7 @@ abstract class MirrorWebTestCase extends WebTestCase
     protected function login(): void
     {
         $this->client->loginUser($this->createUser());
+        Csrf::prime($this->client);
     }
 
     protected function trust(string $publicKey): void
