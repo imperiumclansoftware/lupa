@@ -5,7 +5,7 @@ namespace App\Dto;
 use Symfony\Component\Validator\Constraints as Assert;
 
 /** Import d'un bundle de la clé USB ou envoyé par le navigateur. */
-final class ImportInput
+final readonly class ImportInput
 {
     public function __construct(
         #[Assert\Choice(choices: ['usb', 'upload'], message: 'Source inconnue.')]

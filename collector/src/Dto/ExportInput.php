@@ -4,7 +4,7 @@ namespace App\Dto;
 
 use Symfony\Component\Validator\Constraints as Assert;
 
-final class ExportInput
+final readonly class ExportInput
 {
     public function __construct(
         public bool $full = false,

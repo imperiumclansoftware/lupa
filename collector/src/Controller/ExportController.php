@@ -18,12 +18,16 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\ResponseHeaderBag;
 use Symfony\Component\HttpKernel\Attribute\MapRequestPayload;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
+use Symfony\Component\Lock\LockFactory;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Routing\Requirement\Requirement;
 
 #[Route('/api/exports')]
 final class ExportController
 {
+    /** Verrou de lancement : vérification « déjà en cours » et création de la tâche en une seule étape */
+    public const string LOCK = 'job:export';
+
     public function __construct(
         private readonly ExportRepository $exports,
         private readonly JobRepository $jobs,
@@ -32,6 +36,7 @@ final class ExportController
         private readonly Connection $db,
         private readonly Blacklist $blacklist,
         private readonly string $exportDir,
+        private readonly LockFactory $locks,
     ) {
     }
 
@@ -54,6 +59,20 @@ final class ExportController
 
     #[Route('', methods: ['POST'])]
     public function create(#[MapRequestPayload] ExportInput $input): JsonResponse
+    {
+        // Deux demandes simultanées passeraient sinon toutes deux la vérification « déjà en cours »
+        $lock = $this->locks->createLock(self::LOCK);
+        if (!$lock->acquire()) {
+            return new JsonResponse(['error' => 'Un export est déjà en cours de lancement.'], Response::HTTP_CONFLICT);
+        }
+        try {
+            return $this->start($input);
+        } finally {
+            $lock->release();
+        }
+    }
+
+    private function start(ExportInput $input): JsonResponse
     {
         $running = $this->jobs->findOneBy(['type' => 'export', 'status' => [Job::QUEUED, Job::RUNNING]]);
         if ($running) {

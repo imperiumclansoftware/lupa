@@ -5,7 +5,7 @@ namespace App\Dto;
 use Symfony\Component\Validator\Constraints as Assert;
 
 /** Aperçu d'un motif de noms (« * », « ? ») avant de l'ajouter à une liste. */
-final class ExpandInput
+final readonly class ExpandInput
 {
     public function __construct(
         #[Assert\Choice(choices: ['npm', 'pypi', 'composer', 'docker', 'deb', 'rpm', 'galaxy', 'terraform'], message: 'Écosystème inconnu.')]

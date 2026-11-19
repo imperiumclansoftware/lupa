@@ -2,3 +2,6 @@
 # utilisé : compose.yaml fournit APP_SECRET. Retiré des fichiers ; conservé ici pour l'historique.
 47edb0600b1865c891430ea46a9f0232e38fb64a:collector/.env.dev:generic-api-key:3
 47edb0600b1865c891430ea46a9f0232e38fb64a:mirror/.env.dev:generic-api-key:3
+# Mots de passe factices des tests de rôles (marqués gitleaks:allow depuis)
+bd7346ef74fc3f4feacd924a0ac33fc0a0603ac6:mirror/tests/Functional/RolesAndTwoFactorTest.php:generic-api-key:49
+bd7346ef74fc3f4feacd924a0ac33fc0a0603ac6:mirror/tests/Functional/RolesAndTwoFactorTest.php:generic-api-key:56

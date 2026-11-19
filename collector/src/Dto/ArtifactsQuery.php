@@ -5,7 +5,7 @@ namespace App\Dto;
 use Symfony\Component\Validator\Constraints as Assert;
 
 /** Catalogue des paquets collectés : filtres et pagination. */
-final class ArtifactsQuery
+final readonly class ArtifactsQuery
 {
     public function __construct(
         #[Assert\Choice(choices: ['', 'npm', 'pypi', 'composer', 'docker', 'deb', 'rpm', 'galaxy', 'terraform'])]

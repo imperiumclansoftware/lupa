@@ -2,6 +2,8 @@
 
 namespace App\Tests\Functional;
 
+use App\Blacklist\Blacklist;
+use App\Controller\ExportController;
 use App\Entity\Artifact;
 use App\Entity\Blob;
 use App\Entity\Export;
@@ -11,7 +13,11 @@ use App\Identity\CollectorIdentity;
 use App\Resolver\ArtifactCatalog;
 use App\Tests\Support\Csrf;
 use Doctrine\ORM\EntityManagerInterface;
+use Doctrine\ORM\Event\OnFlushEventArgs;
+use Doctrine\ORM\Event\PostUpdateEventArgs;
+use Doctrine\ORM\Events;
 use Doctrine\ORM\Tools\SchemaTool;
+use PHPUnit\Framework\Attributes\DataProvider;
 use Sas\Bundle\BlobStore;
 use Sas\Bundle\BundleFiles;
 use Sas\Bundle\BundleReader;
@@ -19,6 +25,7 @@ use Sas\Bundle\Ecosystem;
 use Sas\Bundle\Manifest;
 use Symfony\Bundle\FrameworkBundle\KernelBrowser;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
+use Symfony\Component\Lock\LockFactory;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 
 /**
@@ -121,6 +128,22 @@ final class ExportTest extends WebTestCase
         self::assertResponseStatusCodeSame(401);
     }
 
+    /** Deux demandes simultanées : la seconde est refusée au lieu de réserver le même numéro (symfony/lock). */
+    public function testConcurrentExportRequestIsRefused(): void
+    {
+        $this->record(Ecosystem::Npm, 'a', '1.0.0', null, [$this->blob('archive npm a')]);
+        $lock = static::getContainer()->get(LockFactory::class)->createLock(ExportController::LOCK);
+        self::assertTrue($lock->acquire());
+        try {
+            $this->client->jsonRequest('POST', '/api/exports', ['full' => false]);
+            self::assertResponseStatusCodeSame(409);
+            self::assertSame(0, $this->em()->getRepository(Export::class)->count([]));
+        } finally {
+            $lock->release();
+        }
+        $this->export(false, 1);
+    }
+
     public function testMissingBlobFailsTheJobAndFreesTheSequence(): void
     {
         $a = $this->blob('sera supprimé');
@@ -135,6 +158,91 @@ final class ExportTest extends WebTestCase
         // Numéro libéré : le prochain export reprendra le n° 1
         self::assertSame(0, $this->em()->getRepository(Export::class)->count([]));
         self::assertSame([], glob($this->dir.'/usb/*') ?: []);
+    }
+
+    /**
+     * Échec après l'écriture du bundle (enregistrement final en base) : rien ne doit rester, ni en base
+     * (artefacts marqués exportés, liste noire marquée transmise, numéro consommé) ni sur le support.
+     */
+    /** @return iterable<string, array{string}> */
+    public static function failures(): iterable
+    {
+        // Erreur SQL pendant l'enregistrement : Doctrine annule la transaction et ferme l'EntityManager
+        yield 'EntityManager fermé' => [Events::postUpdate];
+        // Erreur avant la transaction : l'EntityManager reste ouvert avec les changements en mémoire
+        yield 'EntityManager ouvert' => [Events::onFlush];
+    }
+
+    #[DataProvider('failures')]
+    public function testFailureAfterWritingLeavesNothingBehind(string $event): void
+    {
+        $a = $this->blob('archive npm a');
+        $this->record(Ecosystem::Npm, 'a', '1.0.0', null, [$a]);
+        $this->client->jsonRequest('POST', '/api/blacklist', ['ecosystem' => 'npm', 'name' => 'lodash', 'version' => '4.17.20', 'reason' => 'test']);
+        self::assertResponseStatusCodeSame(201);
+
+        // Même noyau pour la requête suivante : l'écouteur doit voir l'enregistrement final de l'export
+        $this->client->disableReboot();
+        $failure = new class {
+            public bool $armed = true;
+
+            public function postUpdate(PostUpdateEventArgs $args): void
+            {
+                if ($args->getObject() instanceof Export && [] !== $args->getObject()->getFiles()) {
+                    $this->fail();
+                }
+            }
+
+            public function onFlush(OnFlushEventArgs $args): void
+            {
+                foreach ($args->getObjectManager()->getUnitOfWork()->getScheduledEntityUpdates() as $entity) {
+                    if ($entity instanceof Export && [] !== $entity->getFiles()) {
+                        $this->fail();
+                    }
+                }
+            }
+
+            private function fail(): void
+            {
+                if ($this->armed) {
+                    $this->armed = false;
+                    throw new \RuntimeException('Base indisponible (simulé)');
+                }
+            }
+        };
+        $this->em()->getEventManager()->addEventListener($event, $failure);
+
+        $this->client->jsonRequest('POST', '/api/exports', ['full' => false]);
+        self::assertResponseStatusCodeSame(202);
+        self::assertFalse($failure->armed, 'l\'échec simulé doit s\'être produit');
+
+        $em = $this->resetEm();
+        $job = $em->find(Job::class, $this->json()['id']);
+        self::assertNotNull($job);
+        self::assertSame(Job::FAILED, $job->getStatus());
+        self::assertStringContainsString('Base indisponible', (string) $job->getError());
+        self::assertSame(0, $em->getRepository(Export::class)->count([]), 'numéro d\'export libéré');
+        self::assertSame(1, $em->getRepository(Artifact::class)->count(['export' => null]), 'artefact toujours à exporter');
+        self::assertSame(1, $em->getRepository(Blob::class)->count(['export' => null]), 'fichier toujours à exporter');
+        self::assertTrue(static::getContainer()->get(Blacklist::class)->pendingExport(), 'liste noire toujours à transmettre');
+        self::assertSame([], glob($this->dir.'/usb/sas-*') ?: [], 'aucun fichier de bundle laissé sur le support');
+
+        // L'export suivant reprend le n° 1, avec la liste noire
+        $this->client->enableReboot();
+        $manifest = $this->export(false, 1);
+        self::assertSame(['a'], array_column($manifest->artifacts, 'name'));
+        self::assertNotNull($manifest->blacklist);
+    }
+
+    /** EntityManager neuf (l'ancien peut avoir été fermé par l'échec) */
+    private function resetEm(): EntityManagerInterface
+    {
+        $doctrine = static::getContainer()->get('doctrine');
+        $doctrine->resetManager();
+        $em = $doctrine->getManager();
+        self::assertInstanceOf(EntityManagerInterface::class, $em);
+
+        return $em;
     }
 
     /** Lance un export, vérifie la tâche et relit le bundle écrit (signature comprise). */

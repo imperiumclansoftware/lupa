@@ -8,7 +8,7 @@ use Symfony\Component\Validator\Constraints as Assert;
 use Symfony\Component\Validator\Context\ExecutionContextInterface;
 
 /** Création d'un compte par un administrateur (mot de passe provisoire, à changer par son titulaire). */
-final class UserInput
+final readonly class UserInput
 {
     public function __construct(
         #[Assert\NotBlank(message: 'Choisissez un identifiant.'), Assert\Regex('/^[A-Za-z0-9._@-]{3,180}$/', message: 'Identifiant : 3 caractères minimum, lettres, chiffres et . _ @ - uniquement.')]

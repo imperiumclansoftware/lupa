@@ -5,7 +5,7 @@ namespace App\Dto;
 use Symfony\Component\Validator\Constraints as Assert;
 
 /** Contenu d'une liste : filtres et pagination côté serveur. */
-final class ListArtifactsQuery
+final readonly class ListArtifactsQuery
 {
     public function __construct(
         #[Assert\Length(max: 200)]

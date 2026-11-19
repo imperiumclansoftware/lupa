@@ -5,7 +5,7 @@ namespace App\Dto;
 use Symfony\Component\Validator\Constraints as Assert;
 
 /** Alertes de sécurité : niveau affiché et pagination. */
-final class SecurityQuery
+final readonly class SecurityQuery
 {
     public function __construct(
         #[Assert\Choice(choices: ['all', 'critical', 'warning', 'low'])]

@@ -4,7 +4,7 @@ namespace App\Dto;
 
 use Symfony\Component\Validator\Constraints as Assert;
 
-final class ListInput
+final readonly class ListInput
 {
     public function __construct(
         #[Assert\NotBlank(message: 'Donnez un nom à la liste.'), Assert\Length(max: 120)]

@@ -2,12 +2,14 @@
 
 namespace App\Tests\Functional;
 
+use App\Controller\InboxController;
 use App\Entity\ImportedBundle;
 use App\Entity\Job;
 use App\Entity\Package;
 use App\Tests\MirrorWebTestCase;
 use App\Tests\Support\BundleBuilder;
 use Sas\Bundle\Signer;
+use Symfony\Component\Lock\LockFactory;
 
 /** La clé USB est un vecteur d'attaque : rien ne doit être publié si le bundle n'est pas intègre et approuvé. */
 final class ImportSafetyTest extends MirrorWebTestCase
@@ -133,5 +135,18 @@ final class ImportSafetyTest extends MirrorWebTestCase
         self::assertSame(0, $this->countRows(ImportedBundle::class));
         $this->client->request('GET', '/npm/demo');
         self::assertResponseStatusCodeSame(404);
+    }
+
+    /** Deux imports demandés en même temps : le second est refusé (symfony/lock). */
+    public function testConcurrentImportRequestIsRefused(): void
+    {
+        $lock = static::getContainer()->get(LockFactory::class)->createLock(InboxController::LOCK);
+        self::assertTrue($lock->acquire());
+        try {
+            $this->client->jsonRequest('POST', '/api/inbox/import', ['source' => 'usb', 'name' => 'sas-absent.tar']);
+            self::assertResponseStatusCodeSame(409);
+        } finally {
+            $lock->release();
+        }
     }
 }

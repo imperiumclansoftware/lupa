@@ -7,7 +7,7 @@ use Symfony\Component\Validator\Constraints as Assert;
 use Symfony\Component\Validator\Context\ExecutionContextInterface;
 
 /** Changement de son propre mot de passe : l'actuel est redemandé. */
-final class PasswordChangeInput
+final readonly class PasswordChangeInput
 {
     public function __construct(
         #[Assert\NotBlank(message: 'Saisissez votre mot de passe actuel.')]

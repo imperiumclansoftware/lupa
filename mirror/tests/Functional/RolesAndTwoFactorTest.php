@@ -46,14 +46,14 @@ final class RolesAndTwoFactorTest extends MirrorWebTestCase
     {
         $admin = $this->login();
 
-        $this->client->jsonRequest('POST', '/api/users', ['username' => 'lea', 'role' => 'operator', 'password' => 'Pivoine-Granit-1987']);
+        $this->client->jsonRequest('POST', '/api/users', ['username' => 'lea', 'role' => 'operator', 'password' => 'Pivoine-Granit-1987']); // gitleaks:allow (mot de passe de test)
         self::assertResponseStatusCodeSame(201);
         $lea = $this->json();
         self::assertMatchesRegularExpression(self::UUID_V7, $lea['id']);
         self::assertSame('operator', $lea['role']);
         self::assertArrayNotHasKey('password', $lea);
 
-        $this->client->jsonRequest('POST', '/api/users', ['username' => 'lea', 'role' => 'reader', 'password' => 'Pivoine-Granit-1987']);
+        $this->client->jsonRequest('POST', '/api/users', ['username' => 'lea', 'role' => 'reader', 'password' => 'Pivoine-Granit-1987']); // gitleaks:allow (mot de passe de test)
         self::assertResponseStatusCodeSame(409);
         $this->client->jsonRequest('POST', '/api/users', ['username' => 'bob', 'role' => 'reader', 'password' => 'court']);
         self::assertResponseStatusCodeSame(422);

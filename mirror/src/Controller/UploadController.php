@@ -2,10 +2,12 @@
 
 namespace App\Controller;
 
+use App\Dto\UploadChunkQuery;
 use App\Dto\UploadInput;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpKernel\Attribute\MapQueryString;
 use Symfony\Component\HttpKernel\Attribute\MapRequestPayload;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
@@ -44,10 +46,10 @@ final class UploadController
     }
 
     #[Route('/{id}', methods: ['PUT'], requirements: ['id' => '[a-f0-9]{32}'])]
-    public function chunk(Request $request, string $id): JsonResponse
+    public function chunk(Request $request, string $id, #[MapQueryString(validationFailedStatusCode: 422)] UploadChunkQuery $query = new UploadChunkQuery()): JsonResponse
     {
         $meta = $this->meta($id);
-        $offset = $request->query->getInt('offset', -1);
+        $offset = $query->offset;
         clearstatcache(true, $this->partial($id));
         $received = filesize($this->partial($id));
         if ($offset !== $received) {

@@ -5,7 +5,7 @@ namespace App\Dto;
 use Symfony\Component\Validator\Constraints as Assert;
 
 /** Pagination de toute liste renvoyée par l'API : 100 éléments au plus par page (guidelines). */
-final class PageQuery
+final readonly class PageQuery
 {
     public const int MAX = 100;
 

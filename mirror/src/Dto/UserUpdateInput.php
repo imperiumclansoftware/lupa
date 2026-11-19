@@ -8,7 +8,7 @@ use Symfony\Component\Validator\Constraints as Assert;
 use Symfony\Component\Validator\Context\ExecutionContextInterface;
 
 /** Modification d'un compte par un administrateur : rôle et/ou nouveau mot de passe provisoire. */
-final class UserUpdateInput
+final readonly class UserUpdateInput
 {
     public function __construct(
         public ?Role $role = null,

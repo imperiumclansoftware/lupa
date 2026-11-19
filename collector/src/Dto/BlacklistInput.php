@@ -4,7 +4,7 @@ namespace App\Dto;
 
 use Symfony\Component\Validator\Constraints as Assert;
 
-final class BlacklistInput
+final readonly class BlacklistInput
 {
     public function __construct(
         #[Assert\Choice(choices: ['npm', 'pypi', 'composer', 'docker', 'deb', 'rpm', 'galaxy', 'terraform'], message: 'Écosystème inconnu.')]

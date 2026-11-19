@@ -8,6 +8,7 @@ use App\Job\JobRunner;
 use App\Message\RunJob;
 use App\Repository\JobRepository;
 use Doctrine\ORM\EntityManagerInterface;
+use Doctrine\Persistence\ManagerRegistry;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\DependencyInjection\Attribute\AutowireIterator;
 use Symfony\Component\Messenger\Attribute\AsMessageHandler;
@@ -22,6 +23,7 @@ final readonly class RunJobHandler
         #[AutowireIterator('app.job_runner')]
         private iterable $runners,
         private LoggerInterface $logger,
+        private ManagerRegistry $doctrine,
     ) {
     }
 
@@ -54,10 +56,13 @@ final readonly class RunJobHandler
             $this->logger->error('Tâche {id} en échec : {error}', ['id' => $job->getId(), 'error' => $e->getMessage(), 'exception' => $e]);
             $context->log('ERREUR : '.$e->getMessage());
             $context->flushLog();
-            if (!$this->em->isOpen()) {
-                throw $e;
+            if ($this->em->isOpen()) {
+                $this->em->clear();
+            } else {
+                // Échec d'un enregistrement : l'EntityManager est fermé. Neuf, il permet encore de marquer
+                // la tâche en échec, sinon elle resterait « en cours » jusqu'au prochain redémarrage.
+                $this->doctrine->resetManager();
             }
-            $this->em->clear();
             $this->reload($job)->fail($e->getMessage());
         }
         $this->em->flush();

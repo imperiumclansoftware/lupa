@@ -5,6 +5,7 @@ namespace App\Job;
 use App\Blacklist\Blacklist;
 use App\Entity\Artifact;
 use App\Entity\Blob;
+use App\Entity\Export;
 use App\Entity\Job;
 use App\Export\ExportDirectory;
 use App\Identity\CollectorIdentity;
@@ -16,6 +17,7 @@ use Sas\Bundle\BlobStore;
 use Sas\Bundle\BundleFiles;
 use Sas\Bundle\BundleWriter;
 use Sas\Bundle\Manifest;
+use Symfony\Bridge\Doctrine\Types\UuidType;
 
 /**
  * Écrit un bundle dans le dossier d'export (la clé USB) : soit tout ce qui n'a jamais été exporté
@@ -43,17 +45,36 @@ final readonly class ExportRunner implements JobRunner
     public function run(Job $job, JobContext $context): string
     {
         $export = $this->exports->findOneBy(['job' => $job]) ?? throw new \RuntimeException('Export introuvable.');
+        $files = [];
         try {
-            return $this->write($export, $context);
+            return $this->write($export, $context, $files);
         } catch (\Throwable $e) {
-            // Numéro libéré : le miroir ne doit pas croire qu'un bundle manque
-            $this->em->remove($export);
-            $this->em->flush();
+            $this->rollback($export, $files);
             throw $e;
         }
     }
 
-    private function write(\App\Entity\Export $export, JobContext $context): string
+    /**
+     * Annule un export en échec. Les changements faits en mémoire (artefacts et fichiers marqués exportés,
+     * liste noire marquée transmise) sont abandonnés, jamais enregistrés ; le numéro est libéré pour que le
+     * miroir ne croie pas qu'un bundle manque, et les parties déjà écrites quittent le support.
+     *
+     * @param list<string> $files
+     */
+    private function rollback(Export $export, array $files): void
+    {
+        foreach ($files as $file) {
+            @unlink($file);
+        }
+        // Requête directe : l'EntityManager peut avoir été fermé par l'échec de l'enregistrement
+        $this->em->getConnection()->delete('export', ['id' => $export->getId()], ['id' => UuidType::NAME]);
+        if ($this->em->isOpen()) {
+            $this->em->clear();
+        }
+    }
+
+    /** @param list<string> $files parties écrites sur le support, connues de l'appelant même en cas d'échec */
+    private function write(Export $export, JobContext $context, array &$files): string
     {
         $context->report('Sélection du contenu');
         /** @var list<Artifact> $artifacts */
@@ -132,6 +153,7 @@ final readonly class ExportRunner implements JobRunner
             static fn (int $done, int $all) => $context->report(sprintf('Écriture : %s / %s', Bytes::format($done), Bytes::format($all)), $all > 0 ? (int) ($done * 100 / $all) : null),
         );
 
+        // Base modifiée seulement une fois le bundle complet sur le support, en une seule transaction (flush)
         $size = array_sum(array_map(filesize(...), $files));
         foreach ($artifacts as $artifact) {
             if (null === $artifact->getExport()) {

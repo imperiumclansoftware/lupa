@@ -5,7 +5,7 @@ namespace App\Dto;
 use Symfony\Component\Validator\Constraints as Assert;
 
 /** Paquets servis : filtres et pagination. */
-final class PackagesQuery
+final readonly class PackagesQuery
 {
     public const int MAX = 50;
 

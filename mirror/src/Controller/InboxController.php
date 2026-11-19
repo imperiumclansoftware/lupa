@@ -20,12 +20,16 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Attribute\MapRequestPayload;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
+use Symfony\Component\Lock\LockFactory;
 use Symfony\Component\Routing\Attribute\Route;
 
 /** Bundles présents sur la clé USB ou envoyés depuis le navigateur, et leur import. */
 #[Route('/api/inbox')]
 final class InboxController
 {
+    /** Verrou de lancement : vérification « déjà en cours » et création de la tâche en une seule étape */
+    public const string LOCK = 'job:import';
+
     public function __construct(
         private readonly Inbox $inbox,
         private readonly BundleInspector $inspector,
@@ -36,6 +40,7 @@ final class InboxController
         private readonly Security $security,
         #[Target('audit')]
         private readonly LoggerInterface $audit,
+        private readonly LockFactory $locks,
     ) {
     }
 
@@ -76,6 +81,20 @@ final class InboxController
      */
     #[Route('/import', methods: ['POST'])]
     public function import(#[MapRequestPayload] ImportInput $input): JsonResponse
+    {
+        // Deux demandes simultanées passeraient sinon toutes deux la vérification « déjà en cours »
+        $lock = $this->locks->createLock(self::LOCK);
+        if (!$lock->acquire()) {
+            return new JsonResponse(['error' => 'Un import est déjà en cours de lancement.'], Response::HTTP_CONFLICT);
+        }
+        try {
+            return $this->start($input);
+        } finally {
+            $lock->release();
+        }
+    }
+
+    private function start(ImportInput $input): JsonResponse
     {
         [$source, $name] = [$input->source, $input->name];
         $bundle = $this->inbox->find($source, $name) ?? throw new NotFoundHttpException('Bundle introuvable.');
