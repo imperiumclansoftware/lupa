@@ -48,15 +48,11 @@ when@prod:
             console:
                 type: console
                 process_psr_3_messages: false
-                channels: ["!event", "!doctrine"]
+                # Dépréciations ignorées en production : bruit pour l'exploitant, suivies en développement et en CI
+                channels: ["!event", "!doctrine", "!deprecation"]
             audit:
                 type: stream
                 channels: [audit]
                 path: php://stderr
                 level: info
-                formatter: monolog.formatter.json
-            deprecation:
-                type: stream
-                channels: [deprecation]
-                path: php://stderr
                 formatter: monolog.formatter.json
