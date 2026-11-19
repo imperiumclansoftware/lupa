@@ -17,7 +17,9 @@ import { SettingsSources } from './settings-sources';
         </div>
       </header>
 
-      @if (error()) { <div class="alert alert-danger">{{ error() }}</div> }
+      @if (error()) {
+        <div class="alert alert-danger">{{ error() }}</div>
+      }
 
       @if (identity(); as id) {
         <form class="card card-body stack" (ngSubmit)="save()">
@@ -25,8 +27,21 @@ import { SettingsSources } from './settings-sources';
           <div class="field name">
             <label for="name">Nom affiché dans Romulus et dans le nom des fichiers</label>
             <div class="row">
-              <input class="input" id="name" name="name" maxlength="60" required [(ngModel)]="name" />
-              <button class="btn btn-primary" type="submit" [disabled]="busy() || name.trim() === id.name">Enregistrer</button>
+              <input
+                class="input"
+                id="name"
+                name="name"
+                maxlength="60"
+                required
+                [(ngModel)]="name"
+              />
+              <button
+                class="btn btn-primary"
+                type="submit"
+                [disabled]="busy() || name.trim() === id.name"
+              >
+                Enregistrer
+              </button>
             </div>
           </div>
         </form>
@@ -35,10 +50,14 @@ import { SettingsSources } from './settings-sources';
         <sas-settings-sources />
 
         <section class="card card-body stack">
-          <div class="row"><sas-icon name="shield" /><h2>Signature des bundles</h2></div>
+          <div class="row">
+            <sas-icon name="shield" />
+            <h2>Signature des bundles</h2>
+          </div>
           <p class="muted">
-            Chaque bundle est signé avec la clé secrète de ce collecteur (Ed25519). Romulus refuse tout bundle
-            dont la signature ne correspond pas à une clé qu’il a approuvée : un fichier modifié ou fabriqué ailleurs est rejeté.
+            Chaque bundle est signé avec la clé secrète de ce collecteur (Ed25519). Romulus refuse
+            tout bundle dont la signature ne correspond pas à une clé qu’il a approuvée : un fichier
+            modifié ou fabriqué ailleurs est rejeté.
           </p>
           <div class="field">
             <span class="label">Empreinte de la clé</span>
@@ -46,13 +65,18 @@ import { SettingsSources } from './settings-sources';
               <span class="fingerprint">{{ id.fingerprint }}</span>
               <sas-copy [text]="id.fingerprint" />
             </div>
-            <span class="hint">Au premier import, Romulus affiche cette même empreinte : vérifiez qu’elle est identique avant d’approuver.</span>
+            <span class="hint"
+              >Au premier import, Romulus affiche cette même empreinte : vérifiez qu’elle est
+              identique avant d’approuver.</span
+            >
           </div>
           <div class="field">
             <span class="label">Clé publique</span>
             <pre class="kbd-block">{{ id.publicKey }}</pre>
             <div><sas-copy [text]="id.publicKey" label="Copier la clé publique" /></div>
-            <span class="hint">Pour approuver ce collecteur à l’avance : Romulus › Réglages › Ajouter une clé.</span>
+            <span class="hint"
+              >Pour approuver ce collecteur à l’avance : Romulus › Réglages › Ajouter une clé.</span
+            >
           </div>
         </section>
 
@@ -67,10 +91,20 @@ import { SettingsSources } from './settings-sources';
     </div>
   `,
   styles: `
-    .name { max-width: 520px; }
-    .name .row { align-items: stretch; }
-    .kv { display: grid; grid-template-columns: auto 1fr; gap: 8px 16px; }
-    .kv code { overflow-wrap: anywhere; }
+    .name {
+      max-width: 520px;
+    }
+    .name .row {
+      align-items: stretch;
+    }
+    .kv {
+      display: grid;
+      grid-template-columns: auto 1fr;
+      gap: 8px 16px;
+    }
+    .kv code {
+      overflow-wrap: anywhere;
+    }
   `,
 })
 export default class Settings implements OnInit {

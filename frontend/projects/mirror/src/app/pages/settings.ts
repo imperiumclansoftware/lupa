@@ -16,13 +16,26 @@ import { viewChild } from '@angular/core';
         </div>
       </header>
 
-      @if (error()) { <div class="alert alert-danger">{{ error() }}</div> }
+      @if (error()) {
+        <div class="alert alert-danger">{{ error() }}</div>
+      }
 
       <section class="card">
-        <header class="card-header"><div class="row"><sas-icon name="shield" /><h2>Collecteurs approuvés</h2></div></header>
+        <header class="card-header">
+          <div class="row">
+            <sas-icon name="shield" />
+            <h2>Collecteurs approuvés</h2>
+          </div>
+        </header>
         @if (keys().length === 0) {
-          <div class="empty"><sas-icon name="key" [size]="28" /><h3>Aucun collecteur approuvé</h3>
-            <p>Le premier import propose d’approuver le collecteur après vérification de son empreinte, ou ajoutez sa clé ci-dessous.</p></div>
+          <div class="empty">
+            <sas-icon name="key" [size]="28" />
+            <h3>Aucun collecteur approuvé</h3>
+            <p>
+              Le premier import propose d’approuver le collecteur après vérification de son
+              empreinte, ou ajoutez sa clé ci-dessous.
+            </p>
+          </div>
         } @else {
           <ul class="keys">
             @for (k of keys(); track k.id) {
@@ -32,7 +45,13 @@ import { viewChild } from '@angular/core';
                   <div class="fingerprint small">{{ k.fingerprint }}</div>
                   <div class="subtle">Approuvé le {{ k.createdAt | datetime }}</div>
                 </div>
-                <button type="button" class="btn btn-sm btn-danger btn-ghost" (click)="askRemove(k)"><sas-icon name="trash" [size]="15" />Retirer</button>
+                <button
+                  type="button"
+                  class="btn btn-sm btn-danger btn-ghost"
+                  (click)="askRemove(k)"
+                >
+                  <sas-icon name="trash" [size]="15" />Retirer
+                </button>
               </li>
             }
           </ul>
@@ -44,41 +63,94 @@ import { viewChild } from '@angular/core';
         <p class="muted">Copiez la clé publique depuis Rémus (Réglages › Signature des bundles).</p>
         <div class="field">
           <label for="label">Nom</label>
-          <input class="input" id="label" name="label" [(ngModel)]="label" placeholder="ex. Collecteur du bureau" maxlength="120" />
+          <input
+            class="input"
+            id="label"
+            name="label"
+            [(ngModel)]="label"
+            placeholder="ex. Collecteur du bureau"
+            maxlength="120"
+          />
         </div>
         <div class="field">
           <label for="key">Clé publique</label>
-          <input class="input mono" id="key" name="key" [(ngModel)]="publicKey" required spellcheck="false" autocomplete="off" placeholder="Base64, 44 caractères" />
+          <input
+            class="input mono"
+            id="key"
+            name="key"
+            [(ngModel)]="publicKey"
+            required
+            spellcheck="false"
+            autocomplete="off"
+            placeholder="Base64, 44 caractères"
+          />
         </div>
-        <div><button class="btn btn-primary" type="submit" [disabled]="!publicKey.trim()"><sas-icon name="plus" />Ajouter</button></div>
+        <div>
+          <button class="btn btn-primary" type="submit" [disabled]="!publicKey.trim()">
+            <sas-icon name="plus" />Ajouter
+          </button>
+        </div>
       </form>
 
       <section class="card" id="quarantaine">
         <header class="card-header">
           <div>
-            <div class="row"><sas-icon name="lock" /><h2>Liste noire et quarantaine</h2></div>
-            <p class="subtle">Reçue avec les bundles ; elle se modifie dans Rémus (Réglages › Liste noire). Les versions présentes ne sont plus servies.</p>
+            <div class="row">
+              <sas-icon name="lock" />
+              <h2>Liste noire et quarantaine</h2>
+            </div>
+            <p class="subtle">
+              Reçue avec les bundles ; elle se modifie dans Rémus (Réglages › Liste noire). Les
+              versions présentes ne sont plus servies.
+            </p>
           </div>
         </header>
         @if (quarantine(); as q) {
           @if (q.collectors.length) {
             <p class="card-body subtle sync">
-              @for (c of q.collectors; track c.id; let last = $last) { {{ c.collectorName }} : révision {{ c.revision }}, du {{ c.updatedAt | datetime }}{{ last ? '' : ' · ' }} }
+              @for (c of q.collectors; track c.id; let last = $last) {
+                {{ c.collectorName }} : révision {{ c.revision }}, du {{ c.updatedAt | datetime
+                }}{{ last ? '' : ' · ' }}
+              }
             </p>
           }
           @if (q.items.length === 0) {
-            <div class="empty"><sas-icon name="lock" [size]="28" /><h3>Aucune version interdite</h3><p>Aucune liste noire reçue, ou elle est vide.</p></div>
+            <div class="empty">
+              <sas-icon name="lock" [size]="28" />
+              <h3>Aucune version interdite</h3>
+              <p>Aucune liste noire reçue, ou elle est vide.</p>
+            </div>
           } @else {
             <div class="table-wrap">
               <table class="table">
-                <thead><tr><th>Paquet</th><th>Version</th><th>Motif</th><th>Dans le miroir</th></tr></thead>
+                <thead>
+                  <tr>
+                    <th>Paquet</th>
+                    <th>Version</th>
+                    <th>Motif</th>
+                    <th>Dans le miroir</th>
+                  </tr>
+                </thead>
                 <tbody>
                   @for (e of q.items; track e.id) {
                     <tr>
-                      <td><span class="row"><sas-eco [ecosystem]="e.ecosystem" [size]="22" /><span><strong>{{ e.name }}</strong><br><span class="subtle">{{ e.ecosystem | ecosystem }}</span></span></span></td>
+                      <td>
+                        <span class="row"
+                          ><sas-eco [ecosystem]="e.ecosystem" [size]="22" /><span
+                            ><strong>{{ e.name }}</strong
+                            ><br /><span class="subtle">{{ e.ecosystem | ecosystem }}</span></span
+                          ></span
+                        >
+                      </td>
                       <td class="mono">{{ e.version }}</td>
                       <td>{{ e.reason || '—' }}</td>
-                      <td>@if (e.present.length) { <span class="badge badge-danger">en quarantaine</span> } @else { <span class="subtle">absente</span> }</td>
+                      <td>
+                        @if (e.present.length) {
+                          <span class="badge badge-danger">en quarantaine</span>
+                        } @else {
+                          <span class="subtle">absente</span>
+                        }
+                      </td>
                     </tr>
                   }
                 </tbody>
@@ -90,7 +162,10 @@ import { viewChild } from '@angular/core';
     </div>
 
     <sas-dialog heading="Retirer ce collecteur ?">
-      <p>Les paquets déjà importés restent servis. Les prochains bundles de <strong>{{ removing()?.label }}</strong> seront refusés jusqu’à une nouvelle approbation.</p>
+      <p>
+        Les paquets déjà importés restent servis. Les prochains bundles de
+        <strong>{{ removing()?.label }}</strong> seront refusés jusqu’à une nouvelle approbation.
+      </p>
       <div dialog-actions>
         <button type="button" class="btn" (click)="dialog().close()">Annuler</button>
         <button type="button" class="btn btn-primary" (click)="remove()">Retirer</button>
@@ -98,12 +173,32 @@ import { viewChild } from '@angular/core';
     </sas-dialog>
   `,
   styles: `
-    .card-header p { margin: 4px 0 0; }
-    .sync { padding-bottom: 0; }
-    .keys { list-style: none; margin: 0; padding: 0; }
-    .keys li { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 14px 20px; border-bottom: 1px solid var(--border); }
-    .keys li:last-child { border-bottom: none; }
-    .small { font-size: 0.9rem; margin: 2px 0; }
+    .card-header p {
+      margin: 4px 0 0;
+    }
+    .sync {
+      padding-bottom: 0;
+    }
+    .keys {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+    }
+    .keys li {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      padding: 14px 20px;
+      border-bottom: 1px solid var(--border);
+    }
+    .keys li:last-child {
+      border-bottom: none;
+    }
+    .small {
+      font-size: 0.9rem;
+      margin: 2px 0;
+    }
   `,
 })
 export default class Settings implements OnInit {

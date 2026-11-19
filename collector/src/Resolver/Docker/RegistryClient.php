@@ -2,8 +2,8 @@
 
 namespace App\Resolver\Docker;
 
-use App\Http\DownloadException;
 use App\Http\Downloader;
+use App\Http\DownloadException;
 use App\Source\Sources;
 use Sas\Bundle\BlobStore;
 use Sas\Bundle\IntegrityException;

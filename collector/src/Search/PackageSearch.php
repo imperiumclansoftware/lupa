@@ -502,9 +502,6 @@ final class PackageSearch
     // ---------- Outils ----------
 
     /**
-     * @param array<string, mixed>  $query
-     * @param array<string, string> $headers
-     *
      * @return array<mixed>
      */
     /** Registre npm d'un paquet : celui de sa portée privée, ou le public */

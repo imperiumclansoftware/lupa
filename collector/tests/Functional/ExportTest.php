@@ -3,13 +3,13 @@
 namespace App\Tests\Functional;
 
 use App\Entity\Artifact;
-use App\Tests\Support\Csrf;
 use App\Entity\Blob;
 use App\Entity\Export;
 use App\Entity\Job;
 use App\Entity\User;
 use App\Identity\CollectorIdentity;
 use App\Resolver\ArtifactCatalog;
+use App\Tests\Support\Csrf;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Tools\SchemaTool;
 use Sas\Bundle\BlobStore;
@@ -192,7 +192,7 @@ final class ExportTest extends WebTestCase
 
     private function em(): EntityManagerInterface
     {
-        return static::getContainer()->get('doctrine')->getManager();
+        return static::getContainer()->get(EntityManagerInterface::class);
     }
 
     /** @return array<mixed> */

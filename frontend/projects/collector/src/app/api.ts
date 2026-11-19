@@ -1,6 +1,14 @@
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
-import { EcosystemId, Job, Page, SecurityCounts, Severity, Vulnerability, allPages } from '@sas/shared';
+import {
+  EcosystemId,
+  Job,
+  Page,
+  SecurityCounts,
+  Severity,
+  Vulnerability,
+  allPages,
+} from '@sas/shared';
 export type { Page } from '@sas/shared';
 import { firstValueFrom } from 'rxjs';
 
@@ -259,7 +267,11 @@ export class CollectorApi {
   }
 
   async lists(): Promise<PackageList[]> {
-    return (await allPages((page) => firstValueFrom(this.http.get<Page<PackageList>>('/api/lists', { params: { page } })))).items;
+    return (
+      await allPages((page) =>
+        firstValueFrom(this.http.get<Page<PackageList>>('/api/lists', { params: { page } })),
+      )
+    ).items;
   }
 
   list(id: number): Promise<PackageList> {
@@ -283,7 +295,10 @@ export class CollectorApi {
   }
 
   /** Contenu d'une liste, filtré et paginé par le serveur */
-  listArtifacts(id: number, filters: { q?: string; pending?: boolean; vulnerable?: boolean; page?: number }): Promise<Page<Artifact>> {
+  listArtifacts(
+    id: number,
+    filters: { q?: string; pending?: boolean; vulnerable?: boolean; page?: number },
+  ): Promise<Page<Artifact>> {
     let params = new HttpParams().set('page', filters.page ?? 1);
     if (filters.q) params = params.set('q', filters.q);
     if (filters.pending) params = params.set('pending', '1');
@@ -291,7 +306,12 @@ export class CollectorApi {
     return firstValueFrom(this.http.get<Page<Artifact>>(`/api/lists/${id}/artifacts`, { params }));
   }
 
-  artifacts(filters: { ecosystem?: string; q?: string; pending?: boolean; page?: number }): Promise<Page<Artifact>> {
+  artifacts(filters: {
+    ecosystem?: string;
+    q?: string;
+    pending?: boolean;
+    page?: number;
+  }): Promise<Page<Artifact>> {
     let params = new HttpParams();
     if (filters.ecosystem) params = params.set('ecosystem', filters.ecosystem);
     if (filters.q) params = params.set('q', filters.q);
@@ -313,20 +333,43 @@ export class CollectorApi {
   }
 
   search(ecosystem: EcosystemId, q: string, distribution?: string | null): Promise<SearchResult[]> {
-    return firstValueFrom(this.http.get<SearchResult[]>('/api/search', { params: { ecosystem, q, ...(distribution ? { distribution } : {}) } }));
+    return firstValueFrom(
+      this.http.get<SearchResult[]>('/api/search', {
+        params: { ecosystem, q, ...(distribution ? { distribution } : {}) },
+      }),
+    );
   }
 
-  versions(ecosystem: EcosystemId, name: string, distribution?: string | null): Promise<{ versions: string[]; latest: string | null }> {
-    return firstValueFrom(this.http.get<{ versions: string[]; latest: string | null }>('/api/search/versions', { params: { ecosystem, name, ...(distribution ? { distribution } : {}) } }));
+  versions(
+    ecosystem: EcosystemId,
+    name: string,
+    distribution?: string | null,
+  ): Promise<{ versions: string[]; latest: string | null }> {
+    return firstValueFrom(
+      this.http.get<{ versions: string[]; latest: string | null }>('/api/search/versions', {
+        params: { ecosystem, name, ...(distribution ? { distribution } : {}) },
+      }),
+    );
   }
 
   /** Aperçu d'un motif : paquets correspondants avec leur contrainte */
-  expand(ecosystem: EcosystemId, line: string, distribution?: string | null): Promise<{ lines: string[]; skipped: string[]; pattern: boolean }> {
-    return firstValueFrom(this.http.post<{ lines: string[]; skipped: string[]; pattern: boolean }>('/api/search/expand', { ecosystem, line, distribution }));
+  expand(
+    ecosystem: EcosystemId,
+    line: string,
+    distribution?: string | null,
+  ): Promise<{ lines: string[]; skipped: string[]; pattern: boolean }> {
+    return firstValueFrom(
+      this.http.post<{ lines: string[]; skipped: string[]; pattern: boolean }>(
+        '/api/search/expand',
+        { ecosystem, line, distribution },
+      ),
+    );
   }
 
   security(level: AlertLevel = 'all', page = 1): Promise<SecurityReport> {
-    return firstValueFrom(this.http.get<SecurityReport>('/api/security', { params: { level, page } }));
+    return firstValueFrom(
+      this.http.get<SecurityReport>('/api/security', { params: { level, page } }),
+    );
   }
 
   audit(listId?: number): Promise<Job> {
@@ -334,15 +377,28 @@ export class CollectorApi {
   }
 
   settings(): Promise<{ identity: Identity; exportDir: string; storageDir: string }> {
-    return firstValueFrom(this.http.get<{ identity: Identity; exportDir: string; storageDir: string }>('/api/settings'));
+    return firstValueFrom(
+      this.http.get<{ identity: Identity; exportDir: string; storageDir: string }>('/api/settings'),
+    );
   }
 
-  saveSettings(name: string): Promise<{ identity: Identity; exportDir: string; storageDir: string }> {
-    return firstValueFrom(this.http.put<{ identity: Identity; exportDir: string; storageDir: string }>('/api/settings', { name }));
+  saveSettings(
+    name: string,
+  ): Promise<{ identity: Identity; exportDir: string; storageDir: string }> {
+    return firstValueFrom(
+      this.http.put<{ identity: Identity; exportDir: string; storageDir: string }>(
+        '/api/settings',
+        { name },
+      ),
+    );
   }
 
   async blacklist(): Promise<Blacklist> {
-    const { first, items } = await allPages((page) => firstValueFrom(this.http.get<Blacklist & Page<BlacklistEntry>>('/api/blacklist', { params: { page } })));
+    const { first, items } = await allPages((page) =>
+      firstValueFrom(
+        this.http.get<Blacklist & Page<BlacklistEntry>>('/api/blacklist', { params: { page } }),
+      ),
+    );
     return { ...first, items };
   }
 
@@ -355,11 +411,19 @@ export class CollectorApi {
   }
 
   async sources(): Promise<Source[]> {
-    return (await allPages((page) => firstValueFrom(this.http.get<Page<Source>>('/api/sources', { params: { page } })))).items;
+    return (
+      await allPages((page) =>
+        firstValueFrom(this.http.get<Page<Source>>('/api/sources', { params: { page } })),
+      )
+    ).items;
   }
 
   saveSource(input: SourceInput): Promise<Source> {
-    return firstValueFrom(input.id ? this.http.put<Source>(`/api/sources/${input.id}`, input) : this.http.post<Source>('/api/sources', input));
+    return firstValueFrom(
+      input.id
+        ? this.http.put<Source>(`/api/sources/${input.id}`, input)
+        : this.http.post<Source>('/api/sources', input),
+    );
   }
 
   deleteSource(id: number): Promise<unknown> {
@@ -367,6 +431,8 @@ export class CollectorApi {
   }
 
   testSource(input: SourceInput): Promise<{ ok: boolean; message: string }> {
-    return firstValueFrom(this.http.post<{ ok: boolean; message: string }>('/api/sources/test', input));
+    return firstValueFrom(
+      this.http.post<{ ok: boolean; message: string }>('/api/sources/test', input),
+    );
   }
 }

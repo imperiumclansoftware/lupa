@@ -3,10 +3,10 @@
 namespace App\Controller;
 
 use App\Blacklist\Blacklist;
+use App\Dto\ArtifactsQuery;
 use App\Entity\Artifact;
 use App\Repository\ArtifactRepository;
 use Symfony\Component\HttpFoundation\JsonResponse;
-use App\Dto\ArtifactsQuery;
 use Symfony\Component\HttpKernel\Attribute\MapQueryString;
 use Symfony\Component\Routing\Attribute\Route;
 

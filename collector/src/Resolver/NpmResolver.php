@@ -277,7 +277,7 @@ final readonly class NpmResolver implements Resolver
 
     /**
      * @param array{name: string, version: string, resolved: string|null, integrity: string|null} $entry
-     * @param array<string, mixed>|null                                                            $document
+     * @param array<string, mixed>|null                                                           $document
      */
     private function download(array $entry, ?array $document): Artifact
     {

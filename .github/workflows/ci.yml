@@ -1,0 +1,115 @@
+# Intégration continue : chaque contrôle bloque la fusion (règles de sécurité de l'équipe, docs/adr)
+name: CI
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+  schedule:
+    # Chaque lundi : nouvelles failles dans les dépendances et les images, sans attendre un commit
+    - cron: '0 5 * * 1'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  php:
+    name: PHP (${{ matrix.app }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        app: [collector, mirror]
+    steps:
+      - uses: actions/checkout@v7
+      # Même image que l'environnement de développement (PHP, extensions, gpgv, Python, npm)
+      - name: Image PHP de développement
+        run: docker build -q -t sas-php:ci docker/php
+      - name: Cache Composer
+        uses: actions/cache@v6
+        with:
+          path: ~/.cache/composer
+          key: composer-${{ matrix.app }}-${{ hashFiles(format('{0}/composer.lock', matrix.app)) }}
+      - name: Contrôles
+        run: |
+          mkdir -p ~/.cache/composer
+          docker run --rm -v "$PWD:/srv/sas" -v ~/.cache/composer:/home/app/.composer/cache \
+            -w /srv/sas/${{ matrix.app }} -e APP_ENV=dev sas-php:ci sh -euc '
+              composer install --no-interaction --no-progress
+              composer validate --no-check-publish
+              composer audit
+              php bin/console cache:warmup
+              php bin/console lint:container
+              php bin/console lint:yaml config
+              vendor/bin/phpstan analyse --no-progress --memory-limit=2G
+              vendor/bin/php-cs-fixer fix --dry-run --diff
+              php bin/phpunit
+            '
+
+  front:
+    name: Angular
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - run: npm ci
+      - run: npm audit --audit-level=high
+      - run: npm run lint
+      - run: npx prettier --check "projects/**/*.{ts,html,css}"
+      - run: npm run test:unit
+      - run: npx ng build collector
+      - run: npx ng build mirror
+
+  semgrep:
+    name: Semgrep
+    runs-on: ubuntu-latest
+    container: semgrep/semgrep
+    steps:
+      - uses: actions/checkout@v7
+      # missing-user : faux positif, l'étape intermédiaire « runtime » n'est pas une image publiée ;
+      # les images finales (collector, mirror) se terminent par « USER app »
+      - run: >-
+          semgrep scan --error --metrics=off
+          --config p/php --config p/typescript --config p/owasp-top-ten
+          --exclude promo
+          --exclude-rule dockerfile.security.missing-user-entrypoint.missing-user-entrypoint
+          --exclude-rule dockerfile.security.missing-user.missing-user
+
+  gitleaks:
+    name: Secrets
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - run: docker run --rm -v "$PWD:/repo" ghcr.io/gitleaks/gitleaks:latest git /repo --redact --no-banner -v
+
+  images:
+    name: Image ${{ matrix.target }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        target: [collector, mirror]
+    steps:
+      - uses: actions/checkout@v7
+      - run: docker build --pull -f docker/prod/Dockerfile --target ${{ matrix.target }} -t sas-${{ matrix.target }}:ci .
+      - name: Trivy (HIGH, CRITICAL)
+        uses: aquasecurity/trivy-action@v0.36.0
+        with:
+          image-ref: sas-${{ matrix.target }}:ci
+          severity: HIGH,CRITICAL
+          ignore-unfixed: true
+          trivyignores: .trivyignore
+          exit-code: '1'

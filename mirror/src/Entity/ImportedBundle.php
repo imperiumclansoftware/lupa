@@ -39,7 +39,7 @@ class ImportedBundle
     private int $newBlobCount;
 
     #[ORM\Column(type: Types::BIGINT)]
-    private string $size;
+    private int|string $size;
 
     /** @var array<string, int> */
     #[ORM\Column(type: Types::JSON)]
@@ -62,7 +62,7 @@ class ImportedBundle
         $this->source = $source;
         $this->artifactCount = $artifactCount;
         $this->newBlobCount = $newBlobCount;
-        $this->size = (string) $size;
+        $this->size = $size;
         $this->summary = $summary;
         $this->createdAt = $createdAt;
         $this->importedAt = new \DateTimeImmutable();

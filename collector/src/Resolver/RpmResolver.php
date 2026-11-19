@@ -272,6 +272,7 @@ final readonly class RpmResolver implements Resolver
         if (null === $node) {
             return true;
         }
+
         return match ($node[0]) {
             'dep' => $install ? $this->require($repository, $node[1], $node[2], $node[3], $state, $allowed, $by) : $this->provided($repository, $node[1], $node[2], $node[3], $state),
             'and', 'with' => array_reduce(\array_slice($node, 1), fn (bool $ok, array $n) => $this->evaluate($repository, $n, $state, $allowed, $by, $install) && $ok, true),

@@ -2,13 +2,13 @@
 
 namespace App\Controller;
 
+use App\Dto\UploadInput;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpKernel\Attribute\MapRequestPayload;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
-use App\Dto\UploadInput;
-use Symfony\Component\HttpKernel\Attribute\MapRequestPayload;
 use Symfony\Component\Routing\Attribute\Route;
 
 /**
@@ -19,7 +19,6 @@ use Symfony\Component\Routing\Attribute\Route;
 #[Route('/api/uploads')]
 final class UploadController
 {
-
     public function __construct(private readonly string $uploadDir)
     {
     }

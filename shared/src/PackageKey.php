@@ -47,6 +47,7 @@ final class PackageKey
     private static function dockerName(string $name): string
     {
         $name = (string) preg_replace('#^(docker\.io|index\.docker\.io|registry-1\.docker\.io)/#', '', $name);
+
         return str_contains($name, '/') ? $name : 'library/'.$name;
     }
 }

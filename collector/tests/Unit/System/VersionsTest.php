@@ -4,8 +4,8 @@ namespace App\Tests\Unit\System;
 
 use PHPUnit\Framework\TestCase;
 use Sas\Bundle\DebVersion;
-use Sas\Bundle\PackageKey;
 use Sas\Bundle\Ecosystem;
+use Sas\Bundle\PackageKey;
 use Sas\Bundle\RpmVersion;
 
 /** Comparaisons de versions conformes à dpkg et rpmvercmp. */

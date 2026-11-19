@@ -4,10 +4,10 @@ namespace App\Controller;
 
 use App\Entity\Artifact;
 use App\Entity\BlacklistEntry;
-use App\Entity\Source;
 use App\Entity\Export;
 use App\Entity\Job;
 use App\Entity\PackageList;
+use App\Entity\Source;
 
 /** Représentation JSON des entités pour le front. */
 final class Presenter

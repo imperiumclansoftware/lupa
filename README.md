@@ -137,6 +137,7 @@ docker run --rm --network sas_isolated node:24-alpine sh -c \
 ```
 
 Commandes utiles : `make test` (PHPUnit des deux applications + compilation des fronts),
+`make lint` (PHPStan, PHP-CS-Fixer, ESLint, Prettier, comme la CI) et `make fix` (corrige le style),
 `make workers` (à lancer après avoir modifié le code exécuté par les tâches de fond),
 `make logs s=collector-worker`, `make console app=mirror c="debug:router"`. `make` seul liste tout.
 

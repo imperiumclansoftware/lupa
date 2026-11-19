@@ -12,3 +12,4 @@ Chaque ADR : contexte, décision, conséquences. Un ADR remplacé n'est pas supp
 | [0005](0005-administrateurs-sans-voter.md) | Comptes tous administrateurs, sans Voter par ressource | Accepté (provisoire) |
 | [0006](0006-identifiants-entiers-provisoires.md) | Identifiants entiers en attendant la migration en UUID v7 | Accepté (provisoire) |
 | [0007](0007-csrf-jeton-de-session.md) | Protection CSRF par jeton de session (double envoi cookie / en-tête) | Accepté |
+| [0008](0008-outillage-ci.md) | Outillage de la CI : ligne de base PHPStan et exceptions documentées | Accepté |

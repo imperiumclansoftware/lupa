@@ -2,10 +2,16 @@ import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { NavItem, Shell } from '@sas/shared';
 
 @Component({
-  selector: 'app-layout',
+  selector: 'sas-layout',
   imports: [Shell],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  template: `<sas-shell brand="Romulus" product="Miroir hors ligne" logo="romulus" [nav]="nav" [online]="false" />`,
+  template: `<sas-shell
+    brand="Romulus"
+    product="Miroir hors ligne"
+    logo="romulus"
+    [nav]="nav"
+    [online]="false"
+  />`,
 })
 export class Layout {
   protected readonly nav: NavItem[] = [

@@ -1,0 +1,3 @@
+# setuptools vendu dans pip (/opt/pip, image Rémus) : pip 26.3, dernière version, embarque encore cette
+# copie. La faille touche PackageIndex.download (easy_install), absent de la copie de pip et jamais appelé.
+CVE-2025-47273

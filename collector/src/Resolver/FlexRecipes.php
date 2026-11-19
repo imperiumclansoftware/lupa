@@ -3,8 +3,8 @@
 namespace App\Resolver;
 
 use App\Entity\Artifact;
-use App\Http\DownloadException;
 use App\Http\Downloader;
+use App\Http\DownloadException;
 use App\Job\JobContext;
 use Sas\Bundle\BlobStore;
 use Sas\Bundle\Ecosystem;
@@ -29,7 +29,11 @@ final readonly class FlexRecipes
     ) {
     }
 
-    /** Version de recette retenue par Flex pour une version de paquet (même règle que Flex). */
+    /**
+     * Version de recette retenue par Flex pour une version de paquet (même règle que Flex).
+     *
+     * @param list<string> $recipeVersions
+     */
     public static function recipeVersion(string $packageVersion, array $recipeVersions): ?string
     {
         $parts = explode('.', (string) preg_replace('/^dev-|^v|\.x-dev$|-dev$/', '', $packageVersion));

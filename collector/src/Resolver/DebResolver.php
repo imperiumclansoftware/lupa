@@ -125,7 +125,12 @@ final readonly class DebResolver implements Resolver
         return $selected;
     }
 
-    /** Une alternative est-elle déjà satisfaite par un paquet retenu ? */
+    /**
+     * Une alternative est-elle déjà satisfaite par un paquet retenu ?
+     *
+     * @param array<string, mixed>                  $selected
+     * @param list<array{string, ?string, ?string}> $alternatives
+     */
     private function satisfied(DebRepository $repository, array $selected, array $alternatives): bool
     {
         foreach ($alternatives as [$name, $op, $version]) {

@@ -76,8 +76,8 @@ final readonly class Auditor
     }
 
     /**
-     * @param list<array{id: string, modified: string}> $found
-     * @param array<string, array<string, mixed>>       $records
+     * @param list<array{id: string, modified: string}>               $found
+     * @param array<string, array<string, mixed>>                     $records
      * @param array{ecosystem: string, name: string, version: string} $query
      *
      * @return list<array{id: string, aliases: list<string>, summary: string, severity: string, fixed: list<string>, url: string}>

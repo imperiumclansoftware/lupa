@@ -1,4 +1,11 @@
-import { ChangeDetectionStrategy, Component, inject, output, signal, viewChild } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  inject,
+  output,
+  signal,
+  viewChild,
+} from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Dialog, ECOSYSTEMS, EcosystemId, Toasts, errorMessage } from '@sas/shared';
 import { BlacklistEntry, BlacklistInput, CollectorApi } from './api';
@@ -11,37 +18,79 @@ import { BlacklistEntry, BlacklistInput, CollectorApi } from './api';
   template: `
     <sas-dialog #dialog heading="Ajouter à la liste noire">
       <form id="blacklist-form" class="stack" (ngSubmit)="submit()">
-        <p class="muted">Cette version ne sera plus téléchargée ni exportée par Rémus. Au prochain import, Romulus la met en quarantaine : ses registres cessent de la servir.</p>
-        @if (error()) { <div class="alert alert-danger">{{ error() }}</div> }
+        <p class="muted">
+          Cette version ne sera plus téléchargée ni exportée par Rémus. Au prochain import, Romulus
+          la met en quarantaine : ses registres cessent de la servir.
+        </p>
+        @if (error()) {
+          <div class="alert alert-danger">{{ error() }}</div>
+        }
         <div class="grid two">
           <div class="field">
             <label for="bl-eco">Écosystème</label>
             <select class="select" id="bl-eco" name="ecosystem" [(ngModel)]="input.ecosystem">
-              @for (e of ecosystems; track e.id) { <option [value]="e.id">{{ e.label }}</option> }
+              @for (e of ecosystems; track e.id) {
+                <option [value]="e.id">{{ e.label }}</option>
+              }
             </select>
           </div>
           <div class="field">
             <label for="bl-version">Version précise</label>
-            <input class="input mono" id="bl-version" name="version" required [(ngModel)]="input.version" [placeholder]="versionPlaceholder()" />
+            <input
+              class="input mono"
+              id="bl-version"
+              name="version"
+              required
+              [(ngModel)]="input.version"
+              [placeholder]="versionPlaceholder()"
+            />
           </div>
         </div>
         <div class="field">
           <label for="bl-name">{{ input.ecosystem === 'docker' ? 'Image' : 'Paquet' }}</label>
-          <input class="input mono" id="bl-name" name="name" required [(ngModel)]="input.name" [placeholder]="placeholder()" />
+          <input
+            class="input mono"
+            id="bl-name"
+            name="name"
+            required
+            [(ngModel)]="input.name"
+            [placeholder]="placeholder()"
+          />
         </div>
         <div class="field">
           <label for="bl-reason">Motif <span class="subtle">(affiché dans Romulus)</span></label>
-          <input class="input" id="bl-reason" name="reason" maxlength="500" [(ngModel)]="input.reason" placeholder="CVE-2021-23337, licence non validée…" />
+          <input
+            class="input"
+            id="bl-reason"
+            name="reason"
+            maxlength="500"
+            [(ngModel)]="input.reason"
+            placeholder="CVE-2021-23337, licence non validée…"
+          />
         </div>
-        <span class="hint">Pas d’intervalle ni de motif : une entrée vise une seule version (4.17.20, pas ^4.17).</span>
+        <span class="hint"
+          >Pas d’intervalle ni de motif : une entrée vise une seule version (4.17.20, pas
+          ^4.17).</span
+        >
       </form>
       <ng-container dialog-actions>
         <button type="button" class="btn btn-ghost" (click)="dialog.close()">Annuler</button>
-        <button type="submit" form="blacklist-form" class="btn btn-danger" [disabled]="busy() || !input.name.trim() || !input.version.trim()">Interdire cette version</button>
+        <button
+          type="submit"
+          form="blacklist-form"
+          class="btn btn-danger"
+          [disabled]="busy() || !input.name.trim() || !input.version.trim()"
+        >
+          Interdire cette version
+        </button>
       </ng-container>
     </sas-dialog>
   `,
-  styles: `.two { grid-template-columns: 1fr 1fr; }`,
+  styles: `
+    .two {
+      grid-template-columns: 1fr 1fr;
+    }
+  `,
 })
 export class BlacklistDialog {
   private readonly api = inject(CollectorApi);
@@ -60,17 +109,43 @@ export class BlacklistDialog {
   }
 
   protected versionPlaceholder(): string {
-    return ({ npm: '4.17.20', pypi: '4.2.1', composer: '3.5.0', docker: '1.27.3', deb: '3.0.15-1~deb12u1', rpm: '1:3.0.7-27.el9', galaxy: '8.2.0', terraform: '5.31.0' } as Record<EcosystemId, string>)[this.input.ecosystem];
+    return (
+      {
+        npm: '4.17.20',
+        pypi: '4.2.1',
+        composer: '3.5.0',
+        docker: '1.27.3',
+        deb: '3.0.15-1~deb12u1',
+        rpm: '1:3.0.7-27.el9',
+        galaxy: '8.2.0',
+        terraform: '5.31.0',
+      } as Record<EcosystemId, string>
+    )[this.input.ecosystem];
   }
 
   protected placeholder(): string {
-    return ({ npm: 'lodash', pypi: 'django', composer: 'monolog/monolog', docker: 'nginx ou ghcr.io/org/app', deb: 'openssl', rpm: 'openssl', galaxy: 'community.general', terraform: 'hashicorp/aws' } as Record<EcosystemId, string>)[this.input.ecosystem];
+    return (
+      {
+        npm: 'lodash',
+        pypi: 'django',
+        composer: 'monolog/monolog',
+        docker: 'nginx ou ghcr.io/org/app',
+        deb: 'openssl',
+        rpm: 'openssl',
+        galaxy: 'community.general',
+        terraform: 'hashicorp/aws',
+      } as Record<EcosystemId, string>
+    )[this.input.ecosystem];
   }
 
   protected async submit(): Promise<void> {
     this.busy.set(true);
     try {
-      const entry = await this.api.addBlacklist({ ...this.input, name: this.input.name.trim(), version: this.input.version.trim() });
+      const entry = await this.api.addBlacklist({
+        ...this.input,
+        name: this.input.name.trim(),
+        version: this.input.version.trim(),
+      });
       this.toasts.ok(`${entry.name} ${entry.version} ajouté à la liste noire.`);
       this.added.emit(entry);
       this.dialog().close();

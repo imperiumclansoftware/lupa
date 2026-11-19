@@ -9,8 +9,8 @@ use App\Repository\QuarantineEntryRepository;
 use Doctrine\DBAL\Connection;
 use Doctrine\ORM\EntityManagerInterface;
 use Sas\Bundle\Ecosystem;
-use Symfony\Contracts\Service\ResetInterface;
 use Sas\Bundle\PackageKey;
+use Symfony\Contracts\Service\ResetInterface;
 
 /**
  * Quarantaine : versions de la liste noire des collecteurs. Elles restent stockées (pour l'historique

@@ -7,7 +7,12 @@ export function mirrorBase(baseUrl?: string): { base: string; host: string; http
   return { base, host: url.host, http: url.protocol === 'http:' };
 }
 
-export function installCommand(ecosystem: EcosystemId, name: string, version: string, baseUrl?: string): string {
+export function installCommand(
+  ecosystem: EcosystemId,
+  name: string,
+  version: string,
+  baseUrl?: string,
+): string {
   const { host } = mirrorBase(baseUrl);
   switch (ecosystem) {
     case 'npm':
@@ -18,14 +23,18 @@ export function installCommand(ecosystem: EcosystemId, name: string, version: st
       return `composer require ${name}:${version}`;
     case 'docker': {
       const short = name.startsWith('library/') ? name.slice(8) : name;
-      return version.startsWith('sha256:') ? `docker pull ${host}/${short}@${version}` : `docker pull ${host}/${short}:${version}`;
+      return version.startsWith('sha256:')
+        ? `docker pull ${host}/${short}@${version}`
+        : `docker pull ${host}/${short}:${version}`;
     }
     case 'galaxy':
       return `ansible-galaxy collection install '${name}:==${version}'`;
     case 'terraform': {
-      if (name === 'terraform') return `curl -O ${mirrorBase(baseUrl).base}/terraform/releases/terraform_${version}_linux_amd64.zip`;
+      if (name === 'terraform')
+        return `curl -O ${mirrorBase(baseUrl).base}/terraform/releases/terraform_${version}_linux_amd64.zip`;
       const parts = name.split('/');
-      if (parts.length === 3 && !parts[0].includes('.')) return `source = "${mirrorBase(baseUrl).base}/terraform/modules/${name}/${version}.tar.gz"`;
+      if (parts.length === 3 && !parts[0].includes('.'))
+        return `source = "${mirrorBase(baseUrl).base}/terraform/modules/${name}/${version}.tar.gz"`;
       const short = parts.slice(-2).join('/');
       return `${parts.at(-1)} = { source = "${short}", version = "${version}" }`;
     }

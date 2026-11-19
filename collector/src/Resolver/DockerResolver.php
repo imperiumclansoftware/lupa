@@ -7,8 +7,8 @@ use App\Entity\Artifact;
 use App\Entity\PackageList;
 use App\Job\JobContext;
 use App\Resolver\Docker\ImageReference;
-use App\Search\Glob;
 use App\Resolver\Docker\RegistryClient;
+use App\Search\Glob;
 use Sas\Bundle\BlobStore;
 use Sas\Bundle\Ecosystem;
 

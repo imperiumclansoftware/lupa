@@ -2,10 +2,10 @@
 
 namespace App\Job;
 
+use App\Audit\Auditor;
 use App\Blacklist\Blacklist;
 use App\Entity\Job;
 use App\Resolver\Resolver;
-use App\Audit\Auditor;
 use App\Search\Glob;
 use App\Search\PatternExpander;
 use Doctrine\ORM\EntityManagerInterface;

@@ -28,7 +28,7 @@ final class RpmRepository
 
     /**
      * @param list<array{name: string, base: string, sqlite: string}> $sources
-     * @param list<string>                                             $arches  architectures retenues (x86_64, noarch)
+     * @param list<string>                                            $arches  architectures retenues (x86_64, noarch)
      */
     public function __construct(public array $sources, private readonly array $arches)
     {

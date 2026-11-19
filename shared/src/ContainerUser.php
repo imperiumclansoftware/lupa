@@ -47,7 +47,7 @@ final class ContainerUser
                 .'Réglez SAS_UID=0 dans le fichier .env (./configure.sh le détecte), puis « docker compose up -d ».', $app, $uid);
         }
         $owner = @fileowner($path);
-        if (false !== $owner && $owner !== $uid && $owner !== 65534) {
+        if (false !== $owner && $owner !== $uid && 65534 !== $owner) {
             return sprintf('%s appartient à l\'UID %d alors que %s tourne avec l\'UID %d : réglez SAS_UID=%d dans le fichier .env, puis « docker compose up -d ».',
                 $path, $owner, $app, $uid, $owner);
         }

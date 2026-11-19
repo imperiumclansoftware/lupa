@@ -8,6 +8,7 @@ use Sas\Bundle\Ecosystem;
 
 /**
  * Remplace les lignes à motif d'une liste par les paquets correspondants, en gardant la contrainte de version :
+ *
  *   @syncfusion/ej2-*angular*@^29   →  @syncfusion/ej2-angular-grids@^29, @syncfusion/ej2-angular-base@^29…
  *   symfony/*-bundle:^7.3           →  symfony/framework-bundle:^7.3, symfony/twig-bundle:^7.3…
  *   django-rest-*>=3                →  django-rest-framework>=3, …
@@ -67,9 +68,7 @@ final class PatternExpander
             Ecosystem::Galaxy, Ecosystem::Terraform => throw new \InvalidArgumentException('Les motifs (« * », « ? ») ne sont pas pris en charge pour cet écosystème : saisissez les noms exacts.'),
         };
         if ([] === $lines) {
-            throw new \InvalidArgumentException([] === $this->skipped
-                ? sprintf('Motif « %s » : aucun paquet ne correspond.', $line)
-                : sprintf('Motif « %s » : %d paquet(s) trouvé(s), mais aucun n\'a de version respectant la contrainte.', $line, \count($this->skipped)));
+            throw new \InvalidArgumentException([] === $this->skipped ? sprintf('Motif « %s » : aucun paquet ne correspond.', $line) : sprintf('Motif « %s » : %d paquet(s) trouvé(s), mais aucun n\'a de version respectant la contrainte.', $line, \count($this->skipped)));
         }
 
         return ['lines' => $lines, 'skipped' => $this->skipped];

@@ -1,6 +1,14 @@
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
-import { EcosystemId, Job, Page, SecurityCounts, Severity, Vulnerability, allPages } from '@sas/shared';
+import {
+  EcosystemId,
+  Job,
+  Page,
+  SecurityCounts,
+  Severity,
+  Vulnerability,
+  allPages,
+} from '@sas/shared';
 export type { Page } from '@sas/shared';
 import { firstValueFrom } from 'rxjs';
 
@@ -147,7 +155,9 @@ export class MirrorApi {
   private readonly http = inject(HttpClient);
 
   distributions(): Promise<{ items: SystemDistribution[]; keyFingerprint: string }> {
-    return firstValueFrom(this.http.get<{ items: SystemDistribution[]; keyFingerprint: string }>('/api/distributions'));
+    return firstValueFrom(
+      this.http.get<{ items: SystemDistribution[]; keyFingerprint: string }>('/api/distributions'),
+    );
   }
 
   overview(): Promise<Overview> {
@@ -163,7 +173,14 @@ export class MirrorApi {
   }
 
   importBundle(source: string, name: string, trust?: { fingerprint: string }): Promise<Job> {
-    return firstValueFrom(this.http.post<Job>('/api/inbox/import', { source, name, trust: !!trust, fingerprint: trust?.fingerprint }));
+    return firstValueFrom(
+      this.http.post<Job>('/api/inbox/import', {
+        source,
+        name,
+        trust: !!trust,
+        fingerprint: trust?.fingerprint,
+      }),
+    );
   }
 
   deleteUpload(name: string): Promise<unknown> {
@@ -171,10 +188,16 @@ export class MirrorApi {
   }
 
   imports(page = 1): Promise<Page<ImportedBundle>> {
-    return firstValueFrom(this.http.get<Page<ImportedBundle>>('/api/imports', { params: { page } }));
+    return firstValueFrom(
+      this.http.get<Page<ImportedBundle>>('/api/imports', { params: { page } }),
+    );
   }
 
-  packages(filters: { ecosystem?: string; q?: string; page?: number }): Promise<Page<PackageSummary>> {
+  packages(filters: {
+    ecosystem?: string;
+    q?: string;
+    page?: number;
+  }): Promise<Page<PackageSummary>> {
     let params = new HttpParams();
     if (filters.ecosystem) params = params.set('ecosystem', filters.ecosystem);
     if (filters.q) params = params.set('q', filters.q);
@@ -183,11 +206,17 @@ export class MirrorApi {
   }
 
   package(ecosystem: string, name: string, page = 1): Promise<PackageDetail> {
-    return firstValueFrom(this.http.get<PackageDetail>(`/api/packages/${ecosystem}/${name}`, { params: { page } }));
+    return firstValueFrom(
+      this.http.get<PackageDetail>(`/api/packages/${ecosystem}/${name}`, { params: { page } }),
+    );
   }
 
   async keys(): Promise<TrustedKey[]> {
-    return (await allPages((page) => firstValueFrom(this.http.get<Page<TrustedKey>>('/api/keys', { params: { page } })))).items;
+    return (
+      await allPages((page) =>
+        firstValueFrom(this.http.get<Page<TrustedKey>>('/api/keys', { params: { page } })),
+      )
+    ).items;
   }
 
   addKey(publicKey: string, label: string): Promise<TrustedKey> {
@@ -200,13 +229,25 @@ export class MirrorApi {
 
   /** Envoi par morceaux de 16 Mio, avec reprise ; progress reçoit les octets envoyés. */
   async quarantine(): Promise<Quarantine> {
-    const { first, items } = await allPages((page) => firstValueFrom(this.http.get<Quarantine & Page<Quarantine['items'][number]>>('/api/packages/-/quarantine', { params: { page } })));
+    const { first, items } = await allPages((page) =>
+      firstValueFrom(
+        this.http.get<Quarantine & Page<Quarantine['items'][number]>>(
+          '/api/packages/-/quarantine',
+          { params: { page } },
+        ),
+      ),
+    );
     return { ...first, items };
   }
 
   async upload(file: File, progress: (sent: number) => void, signal: AbortSignal): Promise<void> {
     const chunk = 16 * 2 ** 20;
-    const start = await firstValueFrom(this.http.post<{ id: string; received: number }>('/api/uploads', { filename: file.name, size: file.size }));
+    const start = await firstValueFrom(
+      this.http.post<{ id: string; received: number }>('/api/uploads', {
+        filename: file.name,
+        size: file.size,
+      }),
+    );
     let offset = start.received;
     progress(offset);
     while (offset < file.size) {

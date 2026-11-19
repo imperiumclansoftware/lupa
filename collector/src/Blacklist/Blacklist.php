@@ -9,8 +9,8 @@ use App\Repository\BlacklistEntryRepository;
 use Doctrine\DBAL\Connection;
 use Doctrine\ORM\EntityManagerInterface;
 use Sas\Bundle\Ecosystem;
-use Symfony\Contracts\Service\ResetInterface;
 use Sas\Bundle\PackageKey;
+use Symfony\Contracts\Service\ResetInterface;
 
 /**
  * Liste noire : versions précises interdites de téléchargement. Chaque modification incrémente la

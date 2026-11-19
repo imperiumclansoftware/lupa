@@ -1,7 +1,16 @@
 import { ChangeDetectionStrategy, Component, OnInit, inject, input, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
-import { BytesPipe, SeverityBadge, ECOSYSTEMS, EcosystemPipe, Icon, PluralPipe, errorMessage, Eco } from '@sas/shared';
+import {
+  BytesPipe,
+  SeverityBadge,
+  ECOSYSTEMS,
+  EcosystemPipe,
+  Icon,
+  PluralPipe,
+  errorMessage,
+  Eco,
+} from '@sas/shared';
 import { Artifact, CollectorApi, Page } from '../api';
 
 @Component({
@@ -18,40 +27,106 @@ import { Artifact, CollectorApi, Page } from '../api';
 
       <div class="toolbar">
         <div class="tabs" role="tablist" aria-label="Écosystème">
-          <button type="button" role="tab" [attr.aria-selected]="!ecosystem()" (click)="setEcosystem('')">Tous</button>
+          <button
+            type="button"
+            role="tab"
+            [attr.aria-selected]="!ecosystem()"
+            (click)="setEcosystem('')"
+          >
+            Tous
+          </button>
           @for (eco of ecosystems; track eco.id) {
-            <button type="button" role="tab" [attr.aria-selected]="ecosystem() === eco.id" (click)="setEcosystem(eco.id)">
+            <button
+              type="button"
+              role="tab"
+              [attr.aria-selected]="ecosystem() === eco.id"
+              (click)="setEcosystem(eco.id)"
+            >
               <sas-eco [ecosystem]="eco.id" [size]="22" />{{ eco.label }}
             </button>
           }
         </div>
         <div class="row">
           <label class="visually-hidden" for="q">Rechercher</label>
-          <input class="input" id="q" type="search" placeholder="Rechercher un nom…" [ngModel]="q()" (ngModelChange)="search($event)" />
-          <label class="check"><input type="checkbox" [ngModel]="pending()" (ngModelChange)="pending.set($event); load(1)" /> À exporter</label>
+          <input
+            class="input"
+            id="q"
+            type="search"
+            placeholder="Rechercher un nom…"
+            [ngModel]="q()"
+            (ngModelChange)="search($event)"
+          />
+          <label class="check"
+            ><input
+              type="checkbox"
+              [ngModel]="pending()"
+              (ngModelChange)="pending.set($event); load(1)"
+            />
+            À exporter</label
+          >
         </div>
       </div>
 
-      @if (error()) { <div class="alert alert-danger">{{ error() }}</div> }
+      @if (error()) {
+        <div class="alert alert-danger">{{ error() }}</div>
+      }
 
       <section class="card">
         @if (data(); as d) {
           @if (d.items.length === 0) {
-            <div class="empty"><sas-icon name="search" [size]="28" /><h3>Aucun paquet</h3></div>
+            <div class="empty">
+              <sas-icon name="search" [size]="28" />
+              <h3>Aucun paquet</h3>
+            </div>
           } @else {
             <div class="table-wrap">
               <table class="table">
-                <thead><tr><th>Nom</th><th>Version</th><th>Écosystème</th><th>Détail</th><th class="right">Taille</th><th>Sécurité</th><th>Export</th></tr></thead>
+                <thead>
+                  <tr>
+                    <th>Nom</th>
+                    <th>Version</th>
+                    <th>Écosystème</th>
+                    <th>Détail</th>
+                    <th class="right">Taille</th>
+                    <th>Sécurité</th>
+                    <th>Export</th>
+                  </tr>
+                </thead>
                 <tbody>
                   @for (a of d.items; track a.id) {
                     <tr>
-                      <td><strong class="name">{{ a.name }}</strong>@if (a.filename) { <div class="subtle mono">{{ a.filename }}</div> }</td>
+                      <td>
+                        <strong class="name">{{ a.name }}</strong>
+                        @if (a.filename) {
+                          <div class="subtle mono">{{ a.filename }}</div>
+                        }
+                      </td>
                       <td class="mono">{{ a.version }}</td>
-                      <td><span class="row"><sas-eco [ecosystem]="a.ecosystem" [size]="26" />{{ a.ecosystem | ecosystem }}</span></td>
+                      <td>
+                        <span class="row"
+                          ><sas-eco [ecosystem]="a.ecosystem" [size]="26" />{{
+                            a.ecosystem | ecosystem
+                          }}</span
+                        >
+                      </td>
                       <td class="detail">{{ a.detail }}</td>
                       <td class="right num">{{ a.size | bytes }}</td>
-                      <td><sas-severity [severity]="a.severity" [count]="a.vulnerabilityCount" /></td>
-                      <td>@if (a.blacklisted) { <span class="badge badge-danger" [title]="a.blacklisted.reason || 'Liste noire'">Liste noire</span> } @else if (a.exportSequence) { <span class="badge">n° {{ a.exportSequence }}</span> } @else { <span class="badge badge-accent">À exporter</span> }</td>
+                      <td>
+                        <sas-severity [severity]="a.severity" [count]="a.vulnerabilityCount" />
+                      </td>
+                      <td>
+                        @if (a.blacklisted) {
+                          <span
+                            class="badge badge-danger"
+                            [title]="a.blacklisted.reason || 'Liste noire'"
+                            >Liste noire</span
+                          >
+                        } @else if (a.exportSequence) {
+                          <span class="badge">n° {{ a.exportSequence }}</span>
+                        } @else {
+                          <span class="badge badge-accent">À exporter</span>
+                        }
+                      </td>
                     </tr>
                   }
                 </tbody>
@@ -60,9 +135,23 @@ import { Artifact, CollectorApi, Page } from '../api';
             <footer class="pager">
               <span class="subtle">{{ d.total | plural: 'résultat' }}</span>
               <div class="row">
-                <button type="button" class="btn btn-sm" [disabled]="d.page <= 1" (click)="load(d.page - 1)">Précédent</button>
+                <button
+                  type="button"
+                  class="btn btn-sm"
+                  [disabled]="d.page <= 1"
+                  (click)="load(d.page - 1)"
+                >
+                  Précédent
+                </button>
                 <span class="subtle num">Page {{ d.page }} / {{ pages(d) }}</span>
-                <button type="button" class="btn btn-sm" [disabled]="d.page >= pages(d)" (click)="load(d.page + 1)">Suivant</button>
+                <button
+                  type="button"
+                  class="btn btn-sm"
+                  [disabled]="d.page >= pages(d)"
+                  (click)="load(d.page + 1)"
+                >
+                  Suivant
+                </button>
               </div>
             </footer>
           }
@@ -71,15 +160,40 @@ import { Artifact, CollectorApi, Page } from '../api';
     </div>
   `,
   styles: `
-    .toolbar { display: flex; flex-wrap: wrap; gap: 12px; justify-content: space-between; align-items: center; }
-    .toolbar .input { width: 240px; }
-    .name { overflow-wrap: anywhere; }
-    .detail { color: var(--text-2); font-size: 0.86rem; max-width: 360px; overflow-wrap: anywhere; }
-    .pager { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 12px 16px; border-top: 1px solid var(--border); flex-wrap: wrap; }
+    .toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .toolbar .input {
+      width: 240px;
+    }
+    .name {
+      overflow-wrap: anywhere;
+    }
+    .detail {
+      color: var(--text-2);
+      font-size: 0.86rem;
+      max-width: 360px;
+      overflow-wrap: anywhere;
+    }
+    .pager {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 16px;
+      border-top: 1px solid var(--border);
+      flex-wrap: wrap;
+    }
   `,
 })
 export default class Artifacts implements OnInit {
   /** Filtre initial depuis l'URL (?ecosystem=npm) */
+  // Lié au paramètre d'URL ?ecosystem= (withComponentInputBinding) : l'alias est le nom du paramètre
+  // eslint-disable-next-line @angular-eslint/no-input-rename
   readonly ecosystemParam = input<string>('', { alias: 'ecosystem' });
   private readonly api = inject(CollectorApi);
   private readonly router = inject(Router);
@@ -114,7 +228,14 @@ export default class Artifacts implements OnInit {
 
   protected async load(page: number): Promise<void> {
     try {
-      this.data.set(await this.api.artifacts({ ecosystem: this.ecosystem(), q: this.q(), pending: this.pending(), page }));
+      this.data.set(
+        await this.api.artifacts({
+          ecosystem: this.ecosystem(),
+          q: this.q(),
+          pending: this.pending(),
+          page,
+        }),
+      );
       this.error.set('');
     } catch (e) {
       this.error.set(errorMessage(e));

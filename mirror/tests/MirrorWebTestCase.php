@@ -3,9 +3,9 @@
 namespace App\Tests;
 
 use App\Entity\Job;
-use App\Tests\Support\Csrf;
 use App\Entity\TrustedKey;
 use App\Entity\User;
+use App\Tests\Support\Csrf;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Tools\SchemaTool;
 use Symfony\Bundle\FrameworkBundle\KernelBrowser;
@@ -50,7 +50,7 @@ abstract class MirrorWebTestCase extends WebTestCase
 
     protected function em(): EntityManagerInterface
     {
-        return static::getContainer()->get('doctrine')->getManager();
+        return static::getContainer()->get(EntityManagerInterface::class);
     }
 
     protected function createUser(string $username = 'admin', string $password = 'secret-test'): User

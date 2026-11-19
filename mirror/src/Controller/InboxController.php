@@ -2,6 +2,7 @@
 
 namespace App\Controller;
 
+use App\Dto\ImportInput;
 use App\Entity\Job;
 use App\Entity\TrustedKey;
 use App\Import\BundleInspector;
@@ -12,11 +13,9 @@ use App\Repository\TrustedKeyRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Sas\Bundle\Signer;
 use Symfony\Component\HttpFoundation\JsonResponse;
-use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
-use App\Dto\ImportInput;
 use Symfony\Component\HttpKernel\Attribute\MapRequestPayload;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\Routing\Attribute\Route;
 
 /** Bundles présents sur la clé USB ou envoyés depuis le navigateur, et leur import. */

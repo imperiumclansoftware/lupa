@@ -11,7 +11,6 @@ use Sas\Bundle\Distributions;
  */
 final readonly class RpmIndex
 {
-
     public function __construct(
         private IndexFiles $files,
         private Signatures $signatures,
@@ -195,7 +194,7 @@ final readonly class RpmIndex
                 continue;
             }
             if ($inRequires && preg_match('/^      ([\w.+-]+):\s*\[(.*)\]\s*$/', $line, $r) && 'platform' !== $r[1]) {
-                $current[$r[1]] = array_values(array_filter(array_map(static fn ($v) => trim($v, " \"'"), explode(',', $r[2])), 'strlen'));
+                $current[$r[1]] = array_values(array_filter(array_map(static fn ($v) => trim($v, " \"'"), explode(',', $r[2])), static fn (string $v): bool => '' !== $v));
             }
         }
         null === $current || $entries[] = $current;

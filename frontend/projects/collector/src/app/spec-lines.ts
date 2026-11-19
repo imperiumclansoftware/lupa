@@ -23,9 +23,15 @@ export function lineKey(line: string, ecosystem: EcosystemId): string {
   const value = line.trim().replace(/\s+#.*$/, '');
   switch (ecosystem) {
     case 'pypi':
-      return value.split(/[\s<>=!~;[(@,]/)[0].toLowerCase().replace(/[-_.]+/g, '-');
+      return value
+        .split(/[\s<>=!~;[(@,]/)[0]
+        .toLowerCase()
+        .replace(/[-_.]+/g, '-');
     case 'docker': {
-      let ref = value.toLowerCase().replace(/^docker\.io\//, '').replace(/^index\.docker\.io\//, '');
+      let ref = value
+        .toLowerCase()
+        .replace(/^docker\.io\//, '')
+        .replace(/^index\.docker\.io\//, '');
       ref = ref.replace(/^library\//, '');
       const last = ref.split('/').pop() ?? ref;
       if (!last.includes(':') && !ref.includes('@')) ref += ':latest';
@@ -65,7 +71,12 @@ export function addLines(text: string, lines: string[], ecosystem: EcosystemId):
 }
 
 /** Retire les lignes de ces paquets, sauf ceux de $keep ; commentaires et autres lignes conservés. */
-export function removeLines(text: string, lines: string[], ecosystem: EcosystemId, keep: Set<string> = new Set()): string {
+export function removeLines(
+  text: string,
+  lines: string[],
+  ecosystem: EcosystemId,
+  keep = new Set<string>(),
+): string {
   const remove = new Set(lines.map((l) => lineKey(l, ecosystem)).filter((k) => !keep.has(k)));
   return text
     .split(/\r?\n/)

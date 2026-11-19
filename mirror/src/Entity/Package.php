@@ -38,7 +38,7 @@ class Package
     private array $blobs = [];
 
     #[ORM\Column(type: Types::BIGINT)]
-    private string $size = '0';
+    private int|string $size = 0;
 
     /** @var array<string, mixed> */
     #[ORM\Column(type: Types::JSON)]
@@ -136,7 +136,7 @@ class Package
             $this->updatedAt = new \DateTimeImmutable();
         }
         $this->blobs = $blobs;
-        $this->size = (string) $size;
+        $this->size = $size;
         $this->metadata = $metadata;
         $this->bundle = $bundle;
     }

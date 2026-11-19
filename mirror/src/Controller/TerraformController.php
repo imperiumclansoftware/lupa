@@ -198,7 +198,7 @@ final class TerraformController
             [$prefix, $name] = [substr($name, 0, $cut), substr($name, $cut + 1)];
         }
         $header = pack('a100a8a8a8a12a12', $name, '0000644', '0000000', '0000000', sprintf('%011o', $size), sprintf('%011o', time()))
-            .'        '.'0'.str_repeat("\0", 100).'ustar'."\0".'00'.pack('a32a32a8a8a155a12', 'root', 'root', '', '', $prefix, '');
+            .'        0'.str_repeat("\0", 100).'ustar'."\0".'00'.pack('a32a32a8a8a155a12', 'root', 'root', '', '', $prefix, '');
         $checksum = array_sum(array_map('ord', str_split($header)));
 
         return substr_replace($header, sprintf('%06o', $checksum)."\0 ", 148, 8);

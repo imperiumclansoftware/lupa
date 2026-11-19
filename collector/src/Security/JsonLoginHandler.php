@@ -40,6 +40,7 @@ final class JsonLoginHandler implements AuthenticationSuccessHandlerInterface, A
     public function start(Request $request, ?AuthenticationException $authException = null): Response
     {
         $this->audit->notice('Accès refusé sans session', AuditSubscriber::context($request));
+
         return new JsonResponse(['error' => 'Authentification requise.'], Response::HTTP_UNAUTHORIZED);
     }
 }

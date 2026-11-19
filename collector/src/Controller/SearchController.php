@@ -2,14 +2,14 @@
 
 namespace App\Controller;
 
+use App\Dto\ExpandInput;
+use App\Dto\SearchQuery;
 use App\Http\DownloadException;
 use App\Search\PackageSearch;
 use App\Search\PatternExpander;
 use Sas\Bundle\Ecosystem;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Response;
-use App\Dto\ExpandInput;
-use App\Dto\SearchQuery;
 use Symfony\Component\HttpKernel\Attribute\MapQueryString;
 use Symfony\Component\HttpKernel\Attribute\MapRequestPayload;
 use Symfony\Component\Routing\Attribute\Route;

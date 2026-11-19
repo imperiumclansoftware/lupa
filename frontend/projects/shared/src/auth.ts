@@ -17,7 +17,9 @@ export class Auth {
 
   async load(force = false): Promise<SessionUser | null> {
     if (!this.loaded || force) {
-      const session = await firstValueFrom(this.http.get<{ user: SessionUser | null; setupRequired?: boolean }>('/api/session'));
+      const session = await firstValueFrom(
+        this.http.get<{ user: SessionUser | null; setupRequired?: boolean }>('/api/session'),
+      );
       this.user.set(session.user);
       this.setupRequired.set(!!session.setupRequired);
       this.loaded = true;
@@ -27,14 +29,18 @@ export class Auth {
 
   /** Crée le premier compte (assistant d'installation) ; la session est ouverte dans la foulée. */
   async setup(payload: Record<string, string | null>): Promise<void> {
-    const result = await firstValueFrom(this.http.post<{ user: SessionUser }>('/api/setup', payload));
+    const result = await firstValueFrom(
+      this.http.post<{ user: SessionUser }>('/api/setup', payload),
+    );
     this.user.set(result.user);
     this.setupRequired.set(false);
     this.loaded = true;
   }
 
   async login(username: string, password: string): Promise<void> {
-    const user = await firstValueFrom(this.http.post<SessionUser>('/api/login', { username, password }));
+    const user = await firstValueFrom(
+      this.http.post<SessionUser>('/api/login', { username, password }),
+    );
     this.user.set(user);
     this.loaded = true;
   }
@@ -63,7 +69,9 @@ export const authGuard: CanActivateFn = async (_route, state) => {
   } catch {
     // Serveur injoignable : l'écran de connexion affichera l'erreur
   }
-  return router.createUrlTree(['/connexion'], { queryParams: state.url !== '/' ? { retour: state.url } : {} });
+  return router.createUrlTree(['/connexion'], {
+    queryParams: state.url !== '/' ? { retour: state.url } : {},
+  });
 };
 
 /** Assistant d'installation : seulement tant qu'aucun compte n'existe. */
@@ -98,7 +106,12 @@ export const sessionInterceptor: HttpInterceptorFn = (req, next) => {
   const router = inject(Router);
   return next(req).pipe(
     catchError((error: unknown) => {
-      if (error instanceof HttpErrorResponse && error.status === 401 && !req.url.endsWith('/api/login') && auth.user()) {
+      if (
+        error instanceof HttpErrorResponse &&
+        error.status === 401 &&
+        !req.url.endsWith('/api/login') &&
+        auth.user()
+      ) {
         auth.expire();
         void router.navigate(['/connexion'], { queryParams: { retour: router.url } });
       }

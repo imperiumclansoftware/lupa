@@ -44,8 +44,12 @@
   --radius-l: 18px;
 
   /* Ombres en couches : un liseré très léger (structure) + une diffusion douce (élévation) */
-  --shadow-card: 0 0 0 1px rgb(40 30 20 / 0.06), 0 1px 2px rgb(40 30 20 / 0.04), 0 6px 20px -6px rgb(40 30 20 / 0.08);
-  --shadow-hover: 0 0 0 1px rgb(40 30 20 / 0.08), 0 2px 4px rgb(40 30 20 / 0.05), 0 14px 32px -10px rgb(40 30 20 / 0.16);
+  --shadow-card:
+    0 0 0 1px rgb(40 30 20 / 0.06), 0 1px 2px rgb(40 30 20 / 0.04),
+    0 6px 20px -6px rgb(40 30 20 / 0.08);
+  --shadow-hover:
+    0 0 0 1px rgb(40 30 20 / 0.08), 0 2px 4px rgb(40 30 20 / 0.05),
+    0 14px 32px -10px rgb(40 30 20 / 0.16);
   --shadow-l: 0 0 0 1px rgb(40 30 20 / 0.06), 0 24px 48px -12px rgb(40 30 20 / 0.28);
 
   --ease: cubic-bezier(0.2, 0, 0, 1);
@@ -106,8 +110,7 @@ body {
   color: var(--text);
   /* Fond chaud, légèrement teinté par la couleur de l'application */
   background:
-    radial-gradient(900px 420px at 100% -8%, var(--accent-soft), transparent 70%),
-    var(--bg);
+    radial-gradient(900px 420px at 100% -8%, var(--accent-soft), transparent 70%), var(--bg);
   background-attachment: fixed;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -337,7 +340,11 @@ a.card:hover,
   color: #fff;
   background:
     radial-gradient(600px 300px at 0% 0%, rgb(255 255 255 / 0.14), transparent 70%),
-    linear-gradient(135deg, var(--sidebar-bg-2, var(--accent-strong)), var(--sidebar-bg, var(--accent)));
+    linear-gradient(
+      135deg,
+      var(--sidebar-bg-2, var(--accent-strong)),
+      var(--sidebar-bg, var(--accent))
+    );
   box-shadow: 0 18px 40px -18px var(--accent);
 }
 
@@ -423,7 +430,9 @@ a.card:hover,
   border: none;
   background: var(--surface);
   color: var(--text);
-  box-shadow: 0 0 0 1px var(--border-strong), 0 1px 2px rgb(40 30 20 / 0.05);
+  box-shadow:
+    0 0 0 1px var(--border-strong),
+    0 1px 2px rgb(40 30 20 / 0.05);
   font: inherit;
   font-size: 0.9rem;
   font-weight: 650;

@@ -45,19 +45,45 @@ const MARKS: Record<LogoName, { title: string; paths: string[] }> = {
   selector: 'sas-logo',
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <svg [attr.width]="size()" [attr.height]="size()" viewBox="0 0 48 48" role="img" [attr.aria-label]="mark().title">
-      @if (!bare()) { <rect width="48" height="48" rx="12" class="tile" /> }
+    <svg
+      [attr.width]="size()"
+      [attr.height]="size()"
+      viewBox="0 0 48 48"
+      role="img"
+      [attr.aria-label]="mark().title"
+    >
+      @if (!bare()) {
+        <rect width="48" height="48" rx="12" class="tile" />
+      }
       @for (d of mark().paths; track $index) {
-        <path [attr.d]="d" fill="none" [class.on-tile]="!bare()" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" />
+        <path
+          [attr.d]="d"
+          fill="none"
+          [class.on-tile]="!bare()"
+          stroke-width="2.8"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        />
       }
     </svg>
   `,
   styles: `
-    :host { display: inline-flex; flex: none; }
-    svg { display: block; }
-    .tile { fill: var(--accent); }
-    path { stroke: currentColor; }
-    path.on-tile { stroke: var(--on-accent, #fff); }
+    :host {
+      display: inline-flex;
+      flex: none;
+    }
+    svg {
+      display: block;
+    }
+    .tile {
+      fill: var(--accent);
+    }
+    path {
+      stroke: currentColor;
+    }
+    path.on-tile {
+      stroke: var(--on-accent, #fff);
+    }
   `,
 })
 export class Logo {

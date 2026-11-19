@@ -3,11 +3,11 @@
 namespace App\Controller;
 
 use App\Dto\SetupInput;
-use App\Entity\User;
 use App\Entity\TrustedKey;
-use Sas\Bundle\Signer;
+use App\Entity\User;
 use App\Setup\SetupToken;
 use Doctrine\ORM\EntityManagerInterface;
+use Sas\Bundle\Signer;
 use Symfony\Bundle\SecurityBundle\Security;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Response;
@@ -35,6 +35,7 @@ final class SetupController
         if (!$this->token->isRequired()) {
             return new JsonResponse(['required' => false]);
         }
+
         return new JsonResponse(['required' => true, 'defaults' => new \stdClass()]);
     }
 

@@ -24,7 +24,10 @@ export interface Page<T> {
  * Toutes les pages d'une petite collection (listes, dépôts, clés…) : chaque requête reste bornée
  * côté serveur. Renvoie la première réponse (métadonnées) et l'ensemble des éléments.
  */
-export async function allPages<P extends Page<unknown>>(load: (page: number) => Promise<P>, maxPages = 50): Promise<{ first: P; items: P['items'] }> {
+export async function allPages<P extends Page<unknown>>(
+  load: (page: number) => Promise<P>,
+  maxPages = 50,
+): Promise<{ first: P; items: P['items'] }> {
   const first = await load(1);
   const items = [...first.items];
   for (let page = 2; items.length < first.total && page <= maxPages; page++) {

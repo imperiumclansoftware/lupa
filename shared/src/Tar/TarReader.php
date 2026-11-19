@@ -95,11 +95,7 @@ final class TarReader
                     if ($allowEof && '' === $data) {
                         return null;
                     }
-                    throw new IntegrityException(sprintf(
-                        'Archive incomplète après %s (%d partie(s) lue(s)) : une partie manque ou a été tronquée pendant la copie.',
-                        basename($this->parts[\count($this->parts) - 1]),
-                        \count($this->parts),
-                    ));
+                    throw new IntegrityException(sprintf('Archive incomplète après %s (%d partie(s) lue(s)) : une partie manque ou a été tronquée pendant la copie.', basename($this->parts[\count($this->parts) - 1]), \count($this->parts)));
                 }
                 continue;
             }

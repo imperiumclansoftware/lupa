@@ -1,4 +1,11 @@
-import { ChangeDetectionStrategy, Component, ElementRef, input, output, viewChild } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  ElementRef,
+  input,
+  output,
+  viewChild,
+} from '@angular/core';
 import { Icon } from './icon';
 
 /** Boîte de dialogue modale native (<dialog> : focus piégé, Échap, fond inerte). */
@@ -7,10 +14,23 @@ import { Icon } from './icon';
   imports: [Icon],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <dialog #dialog class="sas-dialog" [attr.aria-labelledby]="id + '-title'" (close)="closed.emit()" (click)="backdrop($event)">
+    <!-- Clic sur le fond : fermeture à la souris ; au clavier, Échap ferme nativement le <dialog> -->
+    <!-- eslint-disable-next-line @angular-eslint/template/click-events-have-key-events, @angular-eslint/template/interactive-supports-focus -->
+    <dialog
+      #dialog
+      class="sas-dialog"
+      [attr.aria-labelledby]="id + '-title'"
+      (close)="closed.emit()"
+      (click)="backdrop($event)"
+    >
       <header>
         <h2 [id]="id + '-title'">{{ heading() }}</h2>
-        <button type="button" class="btn btn-ghost btn-icon btn-sm" (click)="close()" aria-label="Fermer">
+        <button
+          type="button"
+          class="btn btn-ghost btn-icon btn-sm"
+          (click)="close()"
+          aria-label="Fermer"
+        >
           <sas-icon name="x" />
         </button>
       </header>
@@ -19,10 +39,27 @@ import { Icon } from './icon';
     </dialog>
   `,
   styles: `
-    header { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 18px 20px 0; }
-    .content { padding: 16px 20px; display: grid; gap: 14px; }
-    footer { display: flex; justify-content: flex-end; gap: 8px; padding: 0 20px 18px; }
-    footer:empty { display: none; }
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 18px 20px 0;
+    }
+    .content {
+      padding: 16px 20px;
+      display: grid;
+      gap: 14px;
+    }
+    footer {
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+      padding: 0 20px 18px;
+    }
+    footer:empty {
+      display: none;
+    }
   `,
 })
 export class Dialog {

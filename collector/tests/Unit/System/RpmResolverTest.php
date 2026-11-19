@@ -145,7 +145,7 @@ final class RpmResolverTest extends TestCase
     }
 
     /**
-     * @param list<list<string>> $requires [nom, flags, époque, version, release]
+     * @param list<list<string>> $requires   [nom, flags, époque, version, release]
      * @param list<list<string>> $provides
      * @param list<list<string>> $recommends
      * @param list<string>       $files

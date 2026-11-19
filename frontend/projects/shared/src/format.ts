@@ -1,6 +1,7 @@
 import { Pipe, PipeTransform } from '@angular/core';
 
-export type EcosystemId = 'npm' | 'pypi' | 'composer' | 'docker' | 'deb' | 'rpm' | 'galaxy' | 'terraform';
+export type EcosystemId =
+  'npm' | 'pypi' | 'composer' | 'docker' | 'deb' | 'rpm' | 'galaxy' | 'terraform';
 
 export const ECOSYSTEMS: { id: EcosystemId; label: string; noun: string }[] = [
   { id: 'npm', label: 'npm', noun: 'paquets npm' },
@@ -19,7 +20,12 @@ export function ecosystemLabel(id: string): string {
 
 export function formatBytes(bytes: number | null | undefined): string {
   if (bytes === null || bytes === undefined) return '—';
-  const units: [string, number][] = [['To', 2 ** 40], ['Go', 2 ** 30], ['Mo', 2 ** 20], ['ko', 2 ** 10]];
+  const units: [string, number][] = [
+    ['To', 2 ** 40],
+    ['Go', 2 ** 30],
+    ['Mo', 2 ** 20],
+    ['ko', 2 ** 10],
+  ];
   for (const [unit, size] of units) {
     if (bytes >= size) {
       const value = bytes / size;
@@ -39,7 +45,11 @@ export function formatRelative(iso: string | null | undefined): string {
   if (abs < 3600) return relative.format(Math.round(seconds / 60), 'minute');
   if (abs < 86400) return relative.format(Math.round(seconds / 3600), 'hour');
   if (abs < 86400 * 30) return relative.format(Math.round(seconds / 86400), 'day');
-  return new Date(iso).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' });
+  return new Date(iso).toLocaleDateString('fr-FR', {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+  });
 }
 
 export function formatDateTime(iso: string | null | undefined): string {

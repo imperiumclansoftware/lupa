@@ -1,0 +1,4 @@
+# Secret de développement généré par la recette Symfony (collector/.env.dev, mirror/.env.dev), jamais
+# utilisé : compose.yaml fournit APP_SECRET. Retiré des fichiers ; conservé ici pour l'historique.
+47edb0600b1865c891430ea46a9f0232e38fb64a:collector/.env.dev:generic-api-key:3
+47edb0600b1865c891430ea46a9f0232e38fb64a:mirror/.env.dev:generic-api-key:3

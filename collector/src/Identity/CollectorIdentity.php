@@ -88,22 +88,14 @@ final class CollectorIdentity
 
         if (null === $secret) {
             if (null !== $identity && (null === $provided || Signer::publicKeyFromSecret($provided) !== $identity['publicKey'])) {
-                throw new IdentityException(sprintf(
-                    'Clé secrète absente de %s alors que l\'identité « %s » (empreinte %s) existe : les miroirs n\'accepteraient plus les bundles. '
-                    .'Restaurez secret.key depuis une sauvegarde, ou fournissez-la dans REMUS_SIGNING_KEY. Pour repartir avec une nouvelle clé, supprimez aussi identity.json.',
-                    $this->identityDir, $identity['name'], Signer::fingerprint($identity['publicKey']),
-                ));
+                throw new IdentityException(sprintf('Clé secrète absente de %s alors que l\'identité « %s » (empreinte %s) existe : les miroirs n\'accepteraient plus les bundles. Restaurez secret.key depuis une sauvegarde, ou fournissez-la dans REMUS_SIGNING_KEY. Pour repartir avec une nouvelle clé, supprimez aussi identity.json.', $this->identityDir, $identity['name'], Signer::fingerprint($identity['publicKey'])));
             }
             // Première installation : clé fournie (migration) ou nouvelle clé
             $secret = $provided ?? Signer::generateKeyPair()['secretKey'];
             $this->writeSecret($secret);
             $this->notices[] = null !== $provided ? 'Clé de signature importée depuis REMUS_SIGNING_KEY.' : 'Nouvelle clé de signature créée.';
         } elseif (null !== $provided && $provided !== $secret) {
-            throw new IdentityException(sprintf(
-                'REMUS_SIGNING_KEY diffère de la clé déjà installée dans %s (empreinte %s). La clé installée n\'est jamais remplacée automatiquement : '
-                .'retirez la variable, ou supprimez secret.key et identity.json pour utiliser la clé fournie.',
-                $this->identityDir, Signer::fingerprint(Signer::publicKeyFromSecret($secret)),
-            ));
+            throw new IdentityException(sprintf('REMUS_SIGNING_KEY diffère de la clé déjà installée dans %s (empreinte %s). La clé installée n\'est jamais remplacée automatiquement : retirez la variable, ou supprimez secret.key et identity.json pour utiliser la clé fournie.', $this->identityDir, Signer::fingerprint(Signer::publicKeyFromSecret($secret))));
         }
 
         // La clé secrète fait foi : identity.json n'en est qu'un résumé (id, nom, clé publique)

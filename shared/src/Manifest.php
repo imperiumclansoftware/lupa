@@ -24,8 +24,8 @@ final readonly class Manifest
 
     /**
      * @param list<array{ecosystem: string, name: string, version: string, filename?: string|null, blobs: list<string>, metadata?: array<string, mixed>}> $artifacts
-     * @param list<array{sha256: string, size: int}>                                                                                                $blobs
-     * @param array{revision: int, updatedAt: string, entries: list<array{ecosystem: string, name: string, version: string, reason: string}>}|null $blacklist
+     * @param list<array{sha256: string, size: int}>                                                                                                      $blobs
+     * @param array{revision: int, updatedAt: string, entries: list<array{ecosystem: string, name: string, version: string, reason: string}>}|null        $blacklist
      */
     public function __construct(
         public string $id,

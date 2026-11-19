@@ -35,6 +35,7 @@ final class SetupController
         if (!$this->token->isRequired()) {
             return new JsonResponse(['required' => false]);
         }
+
         return new JsonResponse(['required' => true, 'defaults' => ['name' => $this->identity->name()]]);
     }
 

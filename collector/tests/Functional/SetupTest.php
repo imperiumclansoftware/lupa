@@ -3,9 +3,9 @@
 namespace App\Tests\Functional;
 
 use App\Entity\User;
-use App\Tests\Support\Csrf;
 use App\Identity\CollectorIdentity;
 use App\Setup\SetupToken;
+use App\Tests\Support\Csrf;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Tools\SchemaTool;
 use Symfony\Bundle\FrameworkBundle\KernelBrowser;

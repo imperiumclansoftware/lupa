@@ -1,0 +1,1363 @@
+parameters:
+	ignoreErrors:
+		-
+			message: '#^Parameter \#1 \$stream of function fclose expects resource, resource\|false given\.$#'
+			identifier: argument.type
+			count: 2
+			path: ../shared/src/BlobStore.php
+
+		-
+			message: '#^Parameter \#1 \$stream of function fwrite expects resource, resource\|false given\.$#'
+			identifier: argument.type
+			count: 1
+			path: ../shared/src/BlobStore.php
+
+		-
+			message: '#^Parameter \#2 \$sha256 of method Sas\\Bundle\\BlobStore\:\:commit\(\) expects string, string\|false given\.$#'
+			identifier: argument.type
+			count: 1
+			path: ../shared/src/BlobStore.php
+
+		-
+			message: '#^Parameter \#1 \.\.\.\$arg1 of function max expects non\-empty\-array, list\<int\<min, \-1\>\|int\<1, max\>\> given\.$#'
+			identifier: argument.type
+			count: 1
+			path: ../shared/src/BundleFiles.php
+
+		-
+			message: '#^Binary operation "\." between non\-falsy\-string and mixed results in an error\.$#'
+			identifier: binaryOp.invalid
+			count: 1
+			path: ../shared/src/Distributions.php
+
+		-
+			message: '#^Method Sas\\Bundle\\Distributions\:\:all\(\) should return array\<string, array\{ecosystem\: Sas\\Bundle\\Ecosystem, label\: string, codename\: string, release\: string, eol\: bool, architectures\: array\<string, string\>, sections\: array\<string, array\{label\: string, default\: bool\}\>, suites\?\: list\<array\{url\: string, suite\: string, keys\: list\<string\>\}\>, \.\.\.\}\> but returns array\{debian\-12\: array\{ecosystem\: Sas\\Bundle\\Ecosystem\:\:Deb, label\: non\-falsy\-string, codename\: string, release\: string, eol\: false, architectures\: array\{amd64\: ''amd64 \(x86_64\)'', arm64\: ''arm64 \(aarch64\)''\}, sections\: array\{main\: array\{label\: ''main'', default\: true\}, contrib\: array\{label\: ''contrib'', default\: false\}, non\-free\: array\{label\: ''non\-free'', default\: false\}, non\-free\-firmware\: array\{label\: ''non\-free\-firmware …'', default\: false\}\}, suites\: array\{array\{url\: ''https\://deb\.debian…'', suite\: string, keys\: array\{non\-falsy\-string, non\-falsy\-string\}\}, array\{url\: ''https\://deb\.debian…'', suite\: non\-falsy\-string, keys\: array\{non\-falsy\-string, non\-falsy\-string\}\}, array\{url\: ''https\://security…'', suite\: non\-falsy\-string, keys\: array\{non\-falsy\-string\}\}\}\}, debian\-13\: array\{ecosystem\: Sas\\Bundle\\Ecosystem\:\:Deb, label\: non\-falsy\-string, codename\: string, release\: string, eol\: false, architectures\: array\{amd64\: ''amd64 \(x86_64\)'', arm64\: ''arm64 \(aarch64\)''\}, sections\: array\{main\: array\{label\: ''main'', default\: true\}, contrib\: array\{label\: ''contrib'', default\: false\}, non\-free\: array\{label\: ''non\-free'', default\: false\}, non\-free\-firmware\: array\{label\: ''non\-free\-firmware …'', default\: false\}\}, suites\: array\{array\{url\: ''https\://deb\.debian…'', suite\: string, keys\: array\{non\-falsy\-string, non\-falsy\-string\}\}, array\{url\: ''https\://deb\.debian…'', suite\: non\-falsy\-string, keys\: array\{non\-falsy\-string, non\-falsy\-string\}\}, array\{url\: ''https\://security…'', suite\: non\-falsy\-string, keys\: array\{non\-falsy\-string\}\}\}\}, almalinux\-8\: array\{ecosystem\: Sas\\Bundle\\Ecosystem\:\:Rpm, label\: string, codename\: string, release\: string, eol\: bool, architectures\: array, sections\: array\<array\{label\: mixed, default\: mixed\}\>, repos\: array\<array\{url\: non\-falsy\-string, keys\: array\}\>, \.\.\.\}, almalinux\-9\: array\{ecosystem\: Sas\\Bundle\\Ecosystem\:\:Rpm, label\: string, codename\: string, release\: string, eol\: bool, architectures\: array, sections\: array\<array\{label\: mixed, default\: mixed\}\>, repos\: array\<array\{url\: non\-falsy\-string, keys\: array\}\>, \.\.\.\}, almalinux\-10\: array\{ecosystem\: Sas\\Bundle\\Ecosystem\:\:Rpm, label\: string, codename\: string, release\: string, eol\: bool, architectures\: array, sections\: array\<array\{label\: mixed, default\: mixed\}\>, repos\: array\<array\{url\: non\-falsy\-string, keys\: array\}\>, \.\.\.\}, centos\-stream\-9\: array\{ecosystem\: Sas\\Bundle\\Ecosystem\:\:Rpm, label\: string, codename\: string, release\: string, eol\: bool, architectures\: array, sections\: array\<array\{label\: mixed, default\: mixed\}\>, repos\: array\<array\{url\: non\-falsy\-string, keys\: array\}\>, \.\.\.\}, centos\-stream\-10\: array\{ecosystem\: Sas\\Bundle\\Ecosystem\:\:Rpm, label\: string, codename\: string, release\: string, eol\: bool, architectures\: array, sections\: array\<array\{label\: mixed, default\: mixed\}\>, repos\: array\<array\{url\: non\-falsy\-string, keys\: array\}\>, \.\.\.\}, centos\-8\: array\{ecosystem\: Sas\\Bundle\\Ecosystem\:\:Rpm, label\: string, codename\: string, release\: string, eol\: bool, architectures\: array, sections\: array\<array\{label\: mixed, default\: mixed\}\>, repos\: array\<array\{url\: non\-falsy\-string, keys\: array\}\>, \.\.\.\}, \.\.\.\}\.$#'
+			identifier: return.type
+			count: 1
+			path: ../shared/src/Distributions.php
+
+		-
+			message: '#^Parameter \#1 \$callback of function array_map expects \(callable\(mixed\)\: mixed\)\|null, Closure\(array\)\: array\{label\: mixed, default\: mixed\} given\.$#'
+			identifier: argument.type
+			count: 1
+			path: ../shared/src/Distributions.php
+
+		-
+			message: '#^Parameter \#1 \$callback of function array_map expects \(callable\(mixed\)\: mixed\)\|null, Closure\(array\)\: array\{url\: non\-falsy\-string, keys\: array\} given\.$#'
+			identifier: argument.type
+			count: 1
+			path: ../shared/src/Distributions.php
+
+		-
+			message: '#^Argument of an invalid type mixed supplied for foreach, only iterables are supported\.$#'
+			identifier: foreach.nonIterable
+			count: 2
+			path: ../shared/src/Manifest.php
+
+		-
+			message: '#^Binary operation "\+" between mixed and 1 results in an error\.$#'
+			identifier: binaryOp.invalid
+			count: 1
+			path: ../shared/src/Manifest.php
+
+		-
+			message: '#^Cannot access offset ''id'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: ../shared/src/Manifest.php
+
+		-
+			message: '#^Cannot access offset ''name'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: ../shared/src/Manifest.php
+
+		-
+			message: '#^Cannot access offset ''publicKey'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: ../shared/src/Manifest.php
+
+		-
+			message: '#^Cannot cast mixed to int\.$#'
+			identifier: cast.int
+			count: 1
+			path: ../shared/src/Manifest.php
+
+		-
+			message: '#^Cannot cast mixed to string\.$#'
+			identifier: cast.string
+			count: 9
+			path: ../shared/src/Manifest.php
+
+		-
+			message: '#^Parameter \#10 \$blacklist of class Sas\\Bundle\\Manifest constructor expects array\{revision\: int, updatedAt\: string, entries\: list\<array\{ecosystem\: string, name\: string, version\: string, reason\: string\}\>\}\|null, array\{revision\: int, updatedAt\: string, entries\: list\<array\{ecosystem\: mixed, name\: string, version\: non\-empty\-string, reason\: string\}\>\}\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: ../shared/src/Manifest.php
+
+		-
+			message: '#^Parameter \#8 \$artifacts of class Sas\\Bundle\\Manifest constructor expects list\<array\{ecosystem\: string, name\: string, version\: string, filename\?\: string\|null, blobs\: list\<string\>, metadata\?\: array\<string, mixed\>\}\>, list\<non\-empty\-array\<mixed\>\> given\.$#'
+			identifier: argument.type
+			count: 1
+			path: ../shared/src/Manifest.php
+
+		-
+			message: '#^Parameter \#1 \$secret_key of function sodium_crypto_sign_publickey_from_secretkey expects non\-empty\-string, string given\.$#'
+			identifier: argument.type
+			count: 1
+			path: ../shared/src/Signer.php
+
+		-
+			message: '#^Parameter \#2 \$secret_key of function sodium_crypto_sign_detached expects non\-empty\-string, string given\.$#'
+			identifier: argument.type
+			count: 1
+			path: ../shared/src/Signer.php
+
+		-
+			message: '#^Parameter \#3 \$public_key of function sodium_crypto_sign_verify_detached expects non\-empty\-string, string given\.$#'
+			identifier: argument.type
+			count: 1
+			path: ../shared/src/Signer.php
+
+		-
+			message: '#^Cannot access offset 1 on array\|false\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: ../shared/src/Tar/TarReader.php
+
+		-
+			message: '#^Method Sas\\Bundle\\Tar\\TarReader\:\:parseHeader\(\) should return array\{string, int, string\} but returns array\{string, mixed, non\-empty\-string\}\.$#'
+			identifier: return.type
+			count: 1
+			path: ../shared/src/Tar/TarReader.php
+
+		-
+			message: '#^Parameter \#2 \$length of function fread expects int\<1, max\>, int given\.$#'
+			identifier: argument.type
+			count: 1
+			path: ../shared/src/Tar/TarReader.php
+
+		-
+			message: '#^Parameter \#1 \$stream of function fwrite expects resource, resource\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: ../shared/src/Tar/TarWriter.php
+
+		-
+			message: '#^Parameter \#2 \$plainPassword of method Symfony\\Component\\PasswordHasher\\Hasher\\UserPasswordHasherInterface\:\:hashPassword\(\) expects string, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Command/UserCreateCommand.php
+
+		-
+			message: '#^Parameter \#2 \$validator of method Symfony\\Component\\Console\\Style\\SymfonyStyle\:\:askHidden\(\) expects \(callable\(mixed\)\: mixed\)\|null, Closure\(string\|null\)\: string given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Command/UserCreateCommand.php
+
+		-
+			message: '#^Cannot cast mixed to string\.$#'
+			identifier: cast.string
+			count: 3
+			path: src/Controller/DockerRegistryController.php
+
+		-
+			message: '#^Argument of an invalid type mixed supplied for foreach, only iterables are supported\.$#'
+			identifier: foreach.nonIterable
+			count: 1
+			path: src/Controller/FlexController.php
+
+		-
+			message: '#^Cannot access offset ''contents'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 2
+			path: src/Controller/FlexController.php
+
+		-
+			message: '#^Cannot access offset ''manifests'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: src/Controller/FlexController.php
+
+		-
+			message: '#^Cannot access offset mixed on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: src/Controller/FlexController.php
+
+		-
+			message: '#^Cannot access offset non\-falsy\-string on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: src/Controller/FlexController.php
+
+		-
+			message: '#^Cannot access offset string on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: src/Controller/FlexController.php
+
+		-
+			message: '#^Cannot cast mixed to string\.$#'
+			identifier: cast.string
+			count: 4
+			path: src/Controller/FlexController.php
+
+		-
+			message: '#^Method App\\Controller\\FlexController\:\:indexes\(\) should return array\<string, array\<string, mixed\>\> but returns array\<string, mixed\>\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Controller/FlexController.php
+
+		-
+			message: '#^Method App\\Controller\\FlexController\:\:merged\(\) should return array\<string, mixed\> but returns array\<mixed\>\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Controller/FlexController.php
+
+		-
+			message: '#^Parameter \#1 \$array of function array_reverse expects array, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Controller/FlexController.php
+
+		-
+			message: '#^Parameter \#2 \$array of function implode expects array\<string\>, array\<mixed, mixed\> given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Controller/FlexController.php
+
+		-
+			message: '#^Property App\\Controller\\FlexController\:\:\$indexes \(array\<string, array\<string, mixed\>\>\|null\) does not accept array\<string, mixed\>\.$#'
+			identifier: assign.propertyType
+			count: 1
+			path: src/Controller/FlexController.php
+
+		-
+			message: '#^Cannot cast mixed to string\.$#'
+			identifier: cast.string
+			count: 1
+			path: src/Controller/GalaxyController.php
+
+		-
+			message: '#^Cannot access offset ''tarball'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: src/Controller/NpmRegistryController.php
+
+		-
+			message: '#^Cannot access offset ''tarballName'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 3
+			path: src/Controller/NpmRegistryController.php
+
+		-
+			message: '#^Parameter \#4 \.\.\.\$values of function sprintf expects bool\|float\|int\|string\|null, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Controller/NpmRegistryController.php
+
+		-
+			message: '#^Binary operation "\+\=" between \(float\|int\) and mixed results in an error\.$#'
+			identifier: assignOp.invalid
+			count: 1
+			path: src/Controller/OverviewController.php
+
+		-
+			message: '#^Cannot call method getSize\(\) on mixed\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: src/Controller/OverviewController.php
+
+		-
+			message: '#^Cannot cast mixed to int\.$#'
+			identifier: cast.int
+			count: 5
+			path: src/Controller/OverviewController.php
+
+		-
+			message: '#^Cannot cast mixed to string\.$#'
+			identifier: cast.string
+			count: 4
+			path: src/Controller/OverviewController.php
+
+		-
+			message: '#^Possibly invalid array key type mixed\.$#'
+			identifier: offsetAccess.invalidOffset
+			count: 1
+			path: src/Controller/OverviewController.php
+
+		-
+			message: '#^Binary operation "\+" between array\{id\: string\} and mixed results in an error\.$#'
+			identifier: binaryOp.invalid
+			count: 1
+			path: src/Controller/PackageController.php
+
+		-
+			message: '#^Binary operation "\." between mixed and ''\|'' results in an error\.$#'
+			identifier: binaryOp.invalid
+			count: 1
+			path: src/Controller/PackageController.php
+
+		-
+			message: '#^Binary operation "\." between non\-falsy\-string and mixed results in an error\.$#'
+			identifier: binaryOp.invalid
+			count: 1
+			path: src/Controller/PackageController.php
+
+		-
+			message: '#^Cannot access offset ''severity'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: src/Controller/PackageController.php
+
+		-
+			message: '#^Cannot cast mixed to int\.$#'
+			identifier: cast.int
+			count: 5
+			path: src/Controller/PackageController.php
+
+		-
+			message: '#^Cannot cast mixed to string\.$#'
+			identifier: cast.string
+			count: 2
+			path: src/Controller/PackageController.php
+
+		-
+			message: '#^Parameter \#1 \$datetime of class DateTimeImmutable constructor expects string, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Controller/PackageController.php
+
+		-
+			message: '#^Binary operation "\." between ''Binaire · '' and mixed results in an error\.$#'
+			identifier: binaryOp.invalid
+			count: 1
+			path: src/Controller/Presenter.php
+
+		-
+			message: '#^Binary operation "\." between ''Provider · '' and mixed results in an error\.$#'
+			identifier: binaryOp.invalid
+			count: 1
+			path: src/Controller/Presenter.php
+
+		-
+			message: '#^Binary operation "\." between ''Python '' and mixed results in an error\.$#'
+			identifier: binaryOp.invalid
+			count: 1
+			path: src/Controller/Presenter.php
+
+		-
+			message: '#^Binary operation "\." between non\-falsy\-string and mixed results in an error\.$#'
+			identifier: binaryOp.invalid
+			count: 2
+			path: src/Controller/Presenter.php
+
+		-
+			message: '#^Cannot access offset ''auditedAt'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: src/Controller/Presenter.php
+
+		-
+			message: '#^Cannot access offset ''severity'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: src/Controller/Presenter.php
+
+		-
+			message: '#^Cannot access offset ''vulnerabilities'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: src/Controller/Presenter.php
+
+		-
+			message: '#^Cannot cast mixed to string\.$#'
+			identifier: cast.string
+			count: 1
+			path: src/Controller/Presenter.php
+
+		-
+			message: '#^Parameter \#1 \$array of function array_column expects array, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Controller/Presenter.php
+
+		-
+			message: '#^Parameter \#1 \$array of function array_diff expects an array of values castable to string, list given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Controller/Presenter.php
+
+		-
+			message: '#^Parameter \#2 \$array of function implode expects array\<string\>, array\<int\<0, max\>, mixed\> given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Controller/Presenter.php
+
+		-
+			message: '#^Parameter \#2 \.\.\.\$values of function sprintf expects bool\|float\|int\|string\|null, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Controller/Presenter.php
+
+		-
+			message: '#^Parameter \#3 \.\.\.\$values of function sprintf expects bool\|float\|int\|string\|null, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Controller/Presenter.php
+
+		-
+			message: '#^Parameter \#1 \$string of function htmlspecialchars expects string, mixed given\.$#'
+			identifier: argument.type
+			count: 2
+			path: src/Controller/PypiRegistryController.php
+
+		-
+			message: '#^Binary operation "\." between '' \: '' and mixed results in an error\.$#'
+			identifier: binaryOp.invalid
+			count: 1
+			path: src/Controller/SystemRegistryController.php
+
+		-
+			message: '#^Cannot access offset 0 on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: src/Controller/SystemRegistryController.php
+
+		-
+			message: '#^Cannot call method getName\(\) on mixed\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: src/Controller/SystemRegistryController.php
+
+		-
+			message: '#^Cannot call method getReason\(\) on mixed\.$#'
+			identifier: method.nonObject
+			count: 2
+			path: src/Controller/SystemRegistryController.php
+
+		-
+			message: '#^Cannot call method getVersion\(\) on mixed\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: src/Controller/SystemRegistryController.php
+
+		-
+			message: '#^Cannot cast mixed to string\.$#'
+			identifier: cast.string
+			count: 2
+			path: src/Controller/SystemRegistryController.php
+
+		-
+			message: '#^Parameter \#2 \.\.\.\$values of function sprintf expects bool\|float\|int\|string\|null, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Controller/SystemRegistryController.php
+
+		-
+			message: '#^Parameter \#3 \.\.\.\$values of function sprintf expects bool\|float\|int\|string\|null, mixed given\.$#'
+			identifier: argument.type
+			count: 2
+			path: src/Controller/SystemRegistryController.php
+
+		-
+			message: '#^Parameter \#4 \.\.\.\$values of function sprintf expects bool\|float\|int\|string\|null, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Controller/SystemRegistryController.php
+
+		-
+			message: '#^Parameter \#5 \.\.\.\$values of function sprintf expects bool\|float\|int\|string\|null, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Controller/SystemRegistryController.php
+
+		-
+			message: '#^Binary operation "\." between mixed and ''_'' results in an error\.$#'
+			identifier: binaryOp.invalid
+			count: 2
+			path: src/Controller/TerraformController.php
+
+		-
+			message: '#^Binary operation "\." between non\-falsy\-string and mixed results in an error\.$#'
+			identifier: binaryOp.invalid
+			count: 2
+			path: src/Controller/TerraformController.php
+
+		-
+			message: '#^Parameter \#1 \$from of function stream_copy_to_stream expects resource, resource\|false given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Controller/TerraformController.php
+
+		-
+			message: '#^Parameter \#1 \$stream of function fclose expects resource, resource\|false given\.$#'
+			identifier: argument.type
+			count: 2
+			path: src/Controller/TerraformController.php
+
+		-
+			message: '#^Parameter \#1 \$stream of function fwrite expects resource, resource\|false given\.$#'
+			identifier: argument.type
+			count: 3
+			path: src/Controller/TerraformController.php
+
+		-
+			message: '#^Parameter \#2 \$to of function stream_copy_to_stream expects resource, resource\|false given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Controller/TerraformController.php
+
+		-
+			message: '#^Parameter \#2 \.\.\.\$values of function sprintf expects bool\|float\|int\|string\|null, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Controller/TerraformController.php
+
+		-
+			message: '#^Parameter \#3 \.\.\.\$values of function sprintf expects bool\|float\|int\|string\|null, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Controller/TerraformController.php
+
+		-
+			message: '#^Parameter \#4 \.\.\.\$values of function sprintf expects bool\|float\|int\|string\|null, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Controller/TerraformController.php
+
+		-
+			message: '#^Method App\\Controller\\UploadController\:\:meta\(\) should return array\{filename\: string, size\: int\} but returns mixed\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Controller/UploadController.php
+
+		-
+			message: '#^Parameter \#1 \$stream of function fclose expects resource, resource\|false given\.$#'
+			identifier: argument.type
+			count: 2
+			path: src/Controller/UploadController.php
+
+		-
+			message: '#^Parameter \#1 \$stream of function ftruncate expects resource, resource\|false given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Controller/UploadController.php
+
+		-
+			message: '#^Parameter \#2 \$to of function stream_copy_to_stream expects resource, resource\|false given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Controller/UploadController.php
+
+		-
+			message: '#^Method App\\Entity\\User\:\:getUserIdentifier\(\) should return non\-empty\-string but returns string\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Entity/User.php
+
+		-
+			message: '#^Cannot access offset ''digest'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 5
+			path: src/Job/ImportRunner.php
+
+		-
+			message: '#^Cannot access offset ''fingerprint'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: src/Job/ImportRunner.php
+
+		-
+			message: '#^Cannot access offset ''mediaType'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: src/Job/ImportRunner.php
+
+		-
+			message: '#^Cannot access offset ''trusted'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: src/Job/ImportRunner.php
+
+		-
+			message: '#^Cannot cast mixed to string\.$#'
+			identifier: cast.string
+			count: 2
+			path: src/Job/ImportRunner.php
+
+		-
+			message: '#^Parameter \#1 \$digest of class App\\Entity\\OciManifest constructor expects string, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Job/ImportRunner.php
+
+		-
+			message: '#^Parameter \#2 \$array of function implode expects array, mixed given\.$#'
+			identifier: argument.type
+			count: 2
+			path: src/Job/ImportRunner.php
+
+		-
+			message: '#^Parameter \#2 \$mediaType of class App\\Entity\\OciManifest constructor expects string, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Job/ImportRunner.php
+
+		-
+			message: '#^Parameter \#2 \$subject of function preg_match expects string, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Job/ImportRunner.php
+
+		-
+			message: '#^Parameter \#2 \.\.\.\$arrays of function array_merge expects array, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Job/ImportRunner.php
+
+		-
+			message: '#^Parameter \#2 \.\.\.\$values of function sprintf expects bool\|float\|int\|string\|null, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Job/ImportRunner.php
+
+		-
+			message: '#^Parameter \#3 \.\.\.\$values of function sprintf expects bool\|float\|int\|string\|null, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Job/ImportRunner.php
+
+		-
+			message: '#^Possibly invalid array key type mixed\.$#'
+			identifier: offsetAccess.invalidOffset
+			count: 2
+			path: src/Job/ImportRunner.php
+
+		-
+			message: '#^Cannot access offset ''digest'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: src/Quarantine/Quarantine.php
+
+		-
+			message: '#^Cannot access offset ''manifests'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: src/Quarantine/Quarantine.php
+
+		-
+			message: '#^Cannot cast mixed to int\.$#'
+			identifier: cast.int
+			count: 1
+			path: src/Quarantine/Quarantine.php
+
+		-
+			message: '#^Cannot cast mixed to string\.$#'
+			identifier: cast.string
+			count: 5
+			path: src/Quarantine/Quarantine.php
+
+		-
+			message: '#^Method App\\Quarantine\\Quarantine\:\:revisionOf\(\) should return array\{revision\: int, updatedAt\: string, collectorName\: string\}\|null but returns mixed\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Quarantine/Quarantine.php
+
+		-
+			message: '#^Parameter \#1 \$array of function array_column expects array, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Quarantine/Quarantine.php
+
+		-
+			message: '#^Cannot cast mixed to int\.$#'
+			identifier: cast.int
+			count: 1
+			path: src/Registry/OpenPgp.php
+
+		-
+			message: '#^Parameter \#1 \$seed of function sodium_crypto_sign_seed_keypair expects non\-empty\-string, string given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Registry/OpenPgp.php
+
+		-
+			message: '#^Parameter \#1 \$string of function base64_decode expects string, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Registry/OpenPgp.php
+
+		-
+			message: '#^Parameter \#1 \$string of function substr expects string, string\|false given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Registry/OpenPgp.php
+
+		-
+			message: '#^Parameter \#2 \$secret_key of function sodium_crypto_sign_detached expects non\-empty\-string, string given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Registry/OpenPgp.php
+
+		-
+			message: '#^Binary operation "\." between ''Codename\: '' and mixed results in an error\.$#'
+			identifier: binaryOp.invalid
+			count: 1
+			path: src/Registry/SystemRepositories.php
+
+		-
+			message: '#^Binary operation "\." between ''Description\: Miroir…'' and mixed results in an error\.$#'
+			identifier: binaryOp.invalid
+			count: 1
+			path: src/Registry/SystemRepositories.php
+
+		-
+			message: '#^Binary operation "\." between ''Label\: Romulus '' and mixed results in an error\.$#'
+			identifier: binaryOp.invalid
+			count: 1
+			path: src/Registry/SystemRepositories.php
+
+		-
+			message: '#^Binary operation "\." between ''Suite\: '' and mixed results in an error\.$#'
+			identifier: binaryOp.invalid
+			count: 1
+			path: src/Registry/SystemRepositories.php
+
+		-
+			message: '#^Binary operation "\." between ''Version\: '' and mixed results in an error\.$#'
+			identifier: binaryOp.invalid
+			count: 1
+			path: src/Registry/SystemRepositories.php
+
+		-
+			message: '#^Binary operation "\." between mixed and ''\|'' results in an error\.$#'
+			identifier: binaryOp.invalid
+			count: 1
+			path: src/Registry/SystemRepositories.php
+
+		-
+			message: '#^Binary operation "\." between non\-falsy\-string and mixed results in an error\.$#'
+			identifier: binaryOp.invalid
+			count: 1
+			path: src/Registry/SystemRepositories.php
+
+		-
+			message: '#^Cannot access offset ''architecture'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 2
+			path: src/Registry/SystemRepositories.php
+
+		-
+			message: '#^Cannot access offset ''component'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: src/Registry/SystemRepositories.php
+
+		-
+			message: '#^Cannot access offset ''control'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: src/Registry/SystemRepositories.php
+
+		-
+			message: '#^Cannot access offset ''primary'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: src/Registry/SystemRepositories.php
+
+		-
+			message: '#^Cannot access offset string on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: src/Registry/SystemRepositories.php
+
+		-
+			message: '#^Cannot cast mixed to string\.$#'
+			identifier: cast.string
+			count: 10
+			path: src/Registry/SystemRepositories.php
+
+		-
+			message: '#^Method App\\Registry\\SystemRepositories\:\:cached\(\) should return array\<string, string\>\|null but returns array\<mixed, mixed\>\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Registry/SystemRepositories.php
+
+		-
+			message: '#^Method App\\Registry\\SystemRepositories\:\:package\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Registry/SystemRepositories.php
+
+		-
+			message: '#^Parameter \#1 \$array of function array_key_first expects array, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Registry/SystemRepositories.php
+
+		-
+			message: '#^Parameter \#1 \$string of function strlen expects string, string\|false given\.$#'
+			identifier: argument.type
+			count: 2
+			path: src/Registry/SystemRepositories.php
+
+		-
+			message: '#^Parameter \#2 \$array of function implode expects array\<string\>, list\<mixed\> given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Registry/SystemRepositories.php
+
+		-
+			message: '#^Parameter \#2 \$data of function hash expects string, string\|false given\.$#'
+			identifier: argument.type
+			count: 2
+			path: src/Registry/SystemRepositories.php
+
+		-
+			message: '#^Parameter \#3 \$build of method App\\Registry\\SystemRepositories\:\:cached\(\) expects callable\(list\<array\<string, mixed\>\>\)\: array\<string, string\>, Closure\(array\)\: non\-empty\-array\<lowercase\-string&non\-falsy\-string, string\|false\> given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Registry/SystemRepositories.php
+
+		-
+			message: '#^Parameter \#3 \$build of method App\\Registry\\SystemRepositories\:\:cached\(\) expects callable\(list\<array\<string, mixed\>\>\)\: array\<string, string\>, Closure\(array\)\: non\-empty\-array\<non\-falsy\-string, string\|false\> given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Registry/SystemRepositories.php
+
+		-
+			message: '#^Part \$arch \(mixed\) of encapsed string cannot be cast to string\.$#'
+			identifier: encapsedStringPart.nonString
+			count: 2
+			path: src/Registry/SystemRepositories.php
+
+		-
+			message: '#^Possibly invalid array key type mixed\.$#'
+			identifier: offsetAccess.invalidOffset
+			count: 4
+			path: src/Registry/SystemRepositories.php
+
+		-
+			message: '#^Cannot call method getSameSite\(\) on Symfony\\Component\\BrowserKit\\Cookie\|null\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: tests/Functional/AdminAuthTest.php
+
+		-
+			message: '#^Cannot call method isHttpOnly\(\) on Symfony\\Component\\BrowserKit\\Cookie\|null\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: tests/Functional/AdminAuthTest.php
+
+		-
+			message: '#^Cannot access offset ''bin/console'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: tests/Functional/FlexEndpointTest.php
+
+		-
+			message: '#^Cannot access offset ''config/services\.yaml'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: tests/Functional/FlexEndpointTest.php
+
+		-
+			message: '#^Cannot access offset ''contents'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 2
+			path: tests/Functional/FlexEndpointTest.php
+
+		-
+			message: '#^Cannot access offset ''files'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 2
+			path: tests/Functional/FlexEndpointTest.php
+
+		-
+			message: '#^Cannot access offset ''is_contrib'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: tests/Functional/FlexEndpointTest.php
+
+		-
+			message: '#^Cannot access offset ''origin'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: tests/Functional/FlexEndpointTest.php
+
+		-
+			message: '#^Cannot access offset ''symfony/console'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 2
+			path: tests/Functional/FlexEndpointTest.php
+
+		-
+			message: '#^Cannot access offset ''symfony/framework\-bundle'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: tests/Functional/FlexEndpointTest.php
+
+		-
+			message: '#^Cannot access offset ''version'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: tests/Functional/FlexEndpointTest.php
+
+		-
+			message: '#^Parameter \#1 \$array of function array_keys expects array, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: tests/Functional/FlexEndpointTest.php
+
+		-
+			message: '#^Parameter \#2 \$haystack of static method PHPUnit\\Framework\\Assert\:\:assertNotContains\(\) expects iterable, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: tests/Functional/FlexEndpointTest.php
+
+		-
+			message: '#^Cannot access offset ''count'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: tests/Functional/GalaxyTerraformTest.php
+
+		-
+			message: '#^Cannot access offset ''dependencies'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: tests/Functional/GalaxyTerraformTest.php
+
+		-
+			message: '#^Cannot access offset ''linux_amd64'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: tests/Functional/GalaxyTerraformTest.php
+
+		-
+			message: '#^Cannot access offset ''name'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: tests/Functional/GalaxyTerraformTest.php
+
+		-
+			message: '#^Cannot access offset ''next'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: tests/Functional/GalaxyTerraformTest.php
+
+		-
+			message: '#^Cannot access offset ''sha256'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: tests/Functional/GalaxyTerraformTest.php
+
+		-
+			message: '#^Cannot access offset ''version'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: tests/Functional/GalaxyTerraformTest.php
+
+		-
+			message: '#^Cannot access offset ''versions'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: tests/Functional/GalaxyTerraformTest.php
+
+		-
+			message: '#^Cannot access offset 0 on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: tests/Functional/GalaxyTerraformTest.php
+
+		-
+			message: '#^Cannot call method getPathname\(\) on mixed\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: tests/Functional/GalaxyTerraformTest.php
+
+		-
+			message: '#^Offset ''archives'' does not exist on array\{versions\: array\{''3\.6\.3''\: array\{\}\}\}\.$#'
+			identifier: offsetAccess.notFound
+			count: 1
+			path: tests/Functional/GalaxyTerraformTest.php
+
+		-
+			message: '#^Offset ''modules'' does not exist on array\{''modules\.v1''\: ''/terraform/modules…''\}\.$#'
+			identifier: offsetAccess.notFound
+			count: 1
+			path: tests/Functional/GalaxyTerraformTest.php
+
+		-
+			message: '#^Parameter \#1 \$array of function array_column expects array, mixed given\.$#'
+			identifier: argument.type
+			count: 2
+			path: tests/Functional/GalaxyTerraformTest.php
+
+		-
+			message: '#^Parameter \#1 \$array of function array_keys expects array, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: tests/Functional/GalaxyTerraformTest.php
+
+		-
+			message: '#^Parameter \#1 \$string of function substr expects string, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: tests/Functional/GalaxyTerraformTest.php
+
+		-
+			message: '#^Cannot access offset ''importable'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: tests/Functional/ImportSafetyTest.php
+
+		-
+			message: '#^Cannot access offset ''missingArtifacts'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: tests/Functional/ImportSafetyTest.php
+
+		-
+			message: '#^Cannot access offset ''missingSequences'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: tests/Functional/ImportSafetyTest.php
+
+		-
+			message: '#^Cannot access offset ''report'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: tests/Functional/ImportSafetyTest.php
+
+		-
+			message: '#^Cannot access offset ''signatureValid'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: tests/Functional/ImportSafetyTest.php
+
+		-
+			message: '#^Cannot access offset 0 on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: tests/Functional/ImportSafetyTest.php
+
+		-
+			message: '#^Parameter \#1 \$array of function array_column expects array, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: tests/Functional/InboxPermissionsTest.php
+
+		-
+			message: '#^Parameter \#2 \$haystack of static method PHPUnit\\Framework\\Assert\:\:assertCount\(\) expects Countable\|iterable, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: tests/Functional/InboxPermissionsTest.php
+
+		-
+			message: '#^Cannot access offset ''1\.2\.0'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 2
+			path: tests/Functional/RegistryEndToEndTest.php
+
+		-
+			message: '#^Cannot access offset ''acme/lib'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: tests/Functional/RegistryEndToEndTest.php
+
+		-
+			message: '#^Cannot access offset ''artifactCount'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: tests/Functional/RegistryEndToEndTest.php
+
+		-
+			message: '#^Cannot access offset ''autoload'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: tests/Functional/RegistryEndToEndTest.php
+
+		-
+			message: '#^Cannot access offset ''code'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 7
+			path: tests/Functional/RegistryEndToEndTest.php
+
+		-
+			message: '#^Cannot access offset ''dependencies'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: tests/Functional/RegistryEndToEndTest.php
+
+		-
+			message: '#^Cannot access offset ''dist'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 2
+			path: tests/Functional/RegistryEndToEndTest.php
+
+		-
+			message: '#^Cannot access offset ''filename'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: tests/Functional/RegistryEndToEndTest.php
+
+		-
+			message: '#^Cannot access offset ''files'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: tests/Functional/RegistryEndToEndTest.php
+
+		-
+			message: '#^Cannot access offset ''hashes'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: tests/Functional/RegistryEndToEndTest.php
+
+		-
+			message: '#^Cannot access offset ''latest'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: tests/Functional/RegistryEndToEndTest.php
+
+		-
+			message: '#^Cannot access offset ''packages'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: tests/Functional/RegistryEndToEndTest.php
+
+		-
+			message: '#^Cannot access offset ''present'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: tests/Functional/RegistryEndToEndTest.php
+
+		-
+			message: '#^Cannot access offset ''pypi'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 2
+			path: tests/Functional/RegistryEndToEndTest.php
+
+		-
+			message: '#^Cannot access offset ''reason'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: tests/Functional/RegistryEndToEndTest.php
+
+		-
+			message: '#^Cannot access offset ''requires\-python'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: tests/Functional/RegistryEndToEndTest.php
+
+		-
+			message: '#^Cannot access offset ''revision'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: tests/Functional/RegistryEndToEndTest.php
+
+		-
+			message: '#^Cannot access offset ''sequence'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: tests/Functional/RegistryEndToEndTest.php
+
+		-
+			message: '#^Cannot access offset ''shasum'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: tests/Functional/RegistryEndToEndTest.php
+
+		-
+			message: '#^Cannot access offset ''size'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: tests/Functional/RegistryEndToEndTest.php
+
+		-
+			message: '#^Cannot access offset ''summary'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: tests/Functional/RegistryEndToEndTest.php
+
+		-
+			message: '#^Cannot access offset ''tarball'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 2
+			path: tests/Functional/RegistryEndToEndTest.php
+
+		-
+			message: '#^Cannot access offset ''version'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: tests/Functional/RegistryEndToEndTest.php
+
+		-
+			message: '#^Cannot access offset 0 on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 18
+			path: tests/Functional/RegistryEndToEndTest.php
+
+		-
+			message: '#^Parameter \#1 \$array of function array_column expects array, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: tests/Functional/RegistryEndToEndTest.php
+
+		-
+			message: '#^Parameter \#1 \$array of function array_filter expects array, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: tests/Functional/RegistryEndToEndTest.php
+
+		-
+			message: '#^Parameter \#1 \$array of function array_keys expects array, mixed given\.$#'
+			identifier: argument.type
+			count: 2
+			path: tests/Functional/RegistryEndToEndTest.php
+
+		-
+			message: '#^Parameter \#1 \$name of method App\\Tests\\MirrorWebTestCase\:\:import\(\) expects string, string\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: tests/Functional/RegistryEndToEndTest.php
+
+		-
+			message: '#^Parameter \#2 \$array of static method PHPUnit\\Framework\\Assert\:\:assertArrayNotHasKey\(\) expects array\<mixed\>\|ArrayAccess\<\(int\|string\), covariant mixed\>, mixed given\.$#'
+			identifier: argument.type
+			count: 3
+			path: tests/Functional/RegistryEndToEndTest.php
+
+		-
+			message: '#^Parameter \#2 \$haystack of static method PHPUnit\\Framework\\Assert\:\:assertCount\(\) expects Countable\|iterable, mixed given\.$#'
+			identifier: argument.type
+			count: 4
+			path: tests/Functional/RegistryEndToEndTest.php
+
+		-
+			message: '#^Parameter \#2 \$haystack of static method PHPUnit\\Framework\\Assert\:\:assertStringContainsString\(\) expects string, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: tests/Functional/RegistryEndToEndTest.php
+
+		-
+			message: '#^Parameter \#2 \$uri of method Symfony\\Component\\BrowserKit\\AbstractBrowser\<Symfony\\Component\\HttpFoundation\\Request,Symfony\\Component\\HttpFoundation\\Response\>\:\:request\(\) expects string, string\|false\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: tests/Functional/RegistryEndToEndTest.php
+
+		-
+			message: '#^Parameter \#3 \$data of method App\\Tests\\Functional\\RegistryEndToEndTest\:\:add\(\) expects string, string\|false given\.$#'
+			identifier: argument.type
+			count: 3
+			path: tests/Functional/RegistryEndToEndTest.php
+
+		-
+			message: '#^You should use assertCount\(\$expectedCount, \$variable\) instead of assertSame\(\$expectedCount, count\(\$variable\)\)\.$#'
+			identifier: phpunit.assertCount
+			count: 1
+			path: tests/Functional/RegistryEndToEndTest.php
+
+		-
+			message: '#^Cannot access offset ''architectures'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 2
+			path: tests/Functional/SystemRepositoriesTest.php
+
+		-
+			message: '#^Cannot access property \$textContent on DOMElement\|null\.$#'
+			identifier: property.nonObject
+			count: 1
+			path: tests/Functional/SystemRepositoriesTest.php
+
+		-
+			message: '#^Cannot call method getAttribute\(\) on DOMElement\|null\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: tests/Functional/SystemRepositoriesTest.php
+
+		-
+			message: '#^Offset 0 might not exist on array\{\}\|array\{non\-falsy\-string\}\.$#'
+			identifier: offsetAccess.notFound
+			count: 1
+			path: tests/Functional/SystemRepositoriesTest.php
+
+		-
+			message: '#^Parameter \#1 \$array of function array_column expects array, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: tests/Functional/SystemRepositoriesTest.php
+
+		-
+			message: '#^Cannot access offset ''importable'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: tests/Functional/UploadTest.php
+
+		-
+			message: '#^Cannot access offset ''report'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: tests/Functional/UploadTest.php
+
+		-
+			message: '#^Cannot access offset ''source'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: tests/Functional/UploadTest.php
+
+		-
+			message: '#^Cannot access offset 0 on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 2
+			path: tests/Functional/UploadTest.php
+
+		-
+			message: '#^Method App\\Tests\\Functional\\UploadTest\:\:start\(\) should return string but returns mixed\.$#'
+			identifier: return.type
+			count: 1
+			path: tests/Functional/UploadTest.php
+
+		-
+			message: '#^Parameter \#2 \$haystack of static method PHPUnit\\Framework\\Assert\:\:assertCount\(\) expects Countable\|iterable, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: tests/Functional/UploadTest.php
+
+		-
+			message: '#^Method App\\Tests\\MirrorWebTestCase\:\:import\(\) should return App\\Entity\\Job but returns App\\Entity\\Job\|null\.$#'
+			identifier: return.type
+			count: 1
+			path: tests/MirrorWebTestCase.php
+
+		-
+			message: '#^Method App\\Tests\\MirrorWebTestCase\:\:json\(\) should return array\<mixed\> but returns mixed\.$#'
+			identifier: return.type
+			count: 1
+			path: tests/MirrorWebTestCase.php
+
+		-
+			message: '#^Parameter \#1 \$className of method Doctrine\\ORM\\EntityManagerInterface\:\:getRepository\(\) expects class\-string\<object\>, string given\.$#'
+			identifier: argument.type
+			count: 1
+			path: tests/MirrorWebTestCase.php
+
+		-
+			message: '#^Unable to resolve the template type T in call to method Doctrine\\ORM\\EntityManagerInterface\:\:getRepository\(\)$#'
+			identifier: argument.templateType
+			count: 1
+			path: tests/MirrorWebTestCase.php
+
+		-
+			message: '#^Parameter \#10 \$blacklist of class Sas\\Bundle\\Manifest constructor expects array\{revision\: int, updatedAt\: string, entries\: list\<array\{ecosystem\: string, name\: string, version\: string, reason\: string\}\>\}\|null, array\<string, mixed\>\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: tests/Support/BundleBuilder.php
+
+		-
+			message: '#^Parameter \#8 \$artifacts of class Sas\\Bundle\\Manifest constructor expects list\<array\{ecosystem\: string, name\: string, version\: string, filename\?\: string\|null, blobs\: list\<string\>, metadata\?\: array\<string, mixed\>\}\>, list\<array\<string, mixed\>\> given\.$#'
+			identifier: argument.type
+			count: 1
+			path: tests/Support/BundleBuilder.php

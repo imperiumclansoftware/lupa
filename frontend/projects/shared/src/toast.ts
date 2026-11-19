@@ -45,7 +45,12 @@ export class Toasts {
         <div class="toast" [class]="'toast toast-' + toast.kind">
           <sas-icon [name]="toast.kind === 'error' ? 'alert' : 'check'" />
           <span>{{ toast.text }}</span>
-          <button type="button" class="btn btn-ghost btn-sm btn-icon" (click)="toasts.dismiss(toast.id)" aria-label="Fermer">
+          <button
+            type="button"
+            class="btn btn-ghost btn-sm btn-icon"
+            (click)="toasts.dismiss(toast.id)"
+            aria-label="Fermer"
+          >
             <sas-icon name="x" [size]="15" />
           </button>
         </div>
@@ -53,14 +58,40 @@ export class Toasts {
     </div>
   `,
   styles: `
-    .toasts { position: fixed; right: 20px; bottom: 20px; z-index: 50; display: grid; gap: 8px; width: min(420px, calc(100vw - 40px)); }
-    .toast { display: flex; align-items: center; gap: 10px; padding: 10px 10px 10px 14px; border-radius: var(--radius);
-      background: var(--surface); border: 1px solid var(--border); box-shadow: var(--shadow-l); font-size: 0.9rem;
-      white-space: pre-line; animation: sas-pop 160ms ease-out; }
-    .toast span { flex: 1; }
-    .toast-ok sas-icon { color: var(--ok); }
-    .toast-error { border-color: var(--danger); }
-    .toast-error sas-icon:first-child { color: var(--danger); }
+    .toasts {
+      position: fixed;
+      right: 20px;
+      bottom: 20px;
+      z-index: 50;
+      display: grid;
+      gap: 8px;
+      width: min(420px, calc(100vw - 40px));
+    }
+    .toast {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 10px 10px 14px;
+      border-radius: var(--radius);
+      background: var(--surface);
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow-l);
+      font-size: 0.9rem;
+      white-space: pre-line;
+      animation: sas-pop 160ms ease-out;
+    }
+    .toast span {
+      flex: 1;
+    }
+    .toast-ok sas-icon {
+      color: var(--ok);
+    }
+    .toast-error {
+      border-color: var(--danger);
+    }
+    .toast-error sas-icon:first-child {
+      color: var(--danger);
+    }
   `,
 })
 export class ToastHost {

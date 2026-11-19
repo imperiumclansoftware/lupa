@@ -1,0 +1,21 @@
+# Mises à jour hebdomadaires des dépendances (règles de l'équipe : Renovate ou Dependabot)
+version: 2
+updates:
+  - package-ecosystem: composer
+    directories: [/collector, /mirror]
+    schedule: { interval: weekly }
+    groups:
+      symfony: { patterns: ['symfony/*'] }
+      outils: { patterns: ['phpstan/*', 'friendsofphp/*', 'phpunit/*'] }
+  - package-ecosystem: npm
+    directory: /frontend
+    schedule: { interval: weekly }
+    groups:
+      angular: { patterns: ['@angular/*', 'angular-eslint'] }
+      outils: { patterns: ['eslint', '@eslint/*', 'typescript-eslint', 'prettier', 'typescript'] }
+  - package-ecosystem: docker
+    directories: [/docker/prod, /docker/php, /docker/node]
+    schedule: { interval: weekly }
+  - package-ecosystem: github-actions
+    directory: /
+    schedule: { interval: weekly }

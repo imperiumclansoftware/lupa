@@ -7,7 +7,7 @@
 # Chaque image contient le front Angular, l'API Symfony et son worker (FrankenPHP = Caddy + PHP).
 
 # Versions figées : une mise à jour de sécurité se fait ici, puis on reconstruit (make images)
-ARG FRANKENPHP_VERSION=1.13.2
+ARG FRANKENPHP_VERSION=1.13.5
 ARG PHP_VERSION=8.4.27
 ARG NODE_VERSION=24
 

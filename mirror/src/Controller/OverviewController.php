@@ -2,6 +2,8 @@
 
 namespace App\Controller;
 
+use App\Dto\KeyInput;
+use App\Dto\PageQuery;
 use App\Entity\Job;
 use App\Entity\TrustedKey;
 use App\Quarantine\Quarantine;
@@ -14,11 +16,9 @@ use Sas\Bundle\Signer;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
-use App\Dto\KeyInput;
-use App\Dto\PageQuery;
 use Symfony\Component\HttpKernel\Attribute\MapQueryString;
 use Symfony\Component\HttpKernel\Attribute\MapRequestPayload;
+use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Contracts\Cache\CacheInterface;
 use Symfony\Contracts\Cache\ItemInterface;

@@ -6,10 +6,18 @@ import { Icon } from './icon';
   imports: [Icon],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <button type="button" class="btn btn-sm" [class.btn-icon]="!label()" (click)="copy()"
-      [attr.aria-label]="label() ? null : 'Copier'" [title]="copied() ? 'Copié' : 'Copier'">
+    <button
+      type="button"
+      class="btn btn-sm"
+      [class.btn-icon]="!label()"
+      (click)="copy()"
+      [attr.aria-label]="label() ? null : 'Copier'"
+      [title]="copied() ? 'Copié' : 'Copier'"
+    >
       <sas-icon [name]="copied() ? 'check' : 'copy'" [size]="15" />
-      @if (label()) { <span>{{ copied() ? 'Copié' : label() }}</span> }
+      @if (label()) {
+        <span>{{ copied() ? 'Copié' : label() }}</span>
+      }
     </button>
   `,
 })

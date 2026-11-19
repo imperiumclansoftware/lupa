@@ -134,10 +134,14 @@ final readonly class ExportRunner implements JobRunner
 
         $size = array_sum(array_map(filesize(...), $files));
         foreach ($artifacts as $artifact) {
-            $artifact->getExport() ?? $artifact->setExport($export);
+            if (null === $artifact->getExport()) {
+                $artifact->setExport($export);
+            }
         }
         foreach ($blobs as $blob) {
-            $blob->getExport() ?? $blob->setExport($export);
+            if (null === $blob->getExport()) {
+                $blob->setExport($export);
+            }
         }
         if (null !== $blacklist) {
             $this->blacklist->markExported($blacklist['revision']);

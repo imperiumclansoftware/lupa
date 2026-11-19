@@ -24,7 +24,7 @@ class Export
     private bool $full;
 
     #[ORM\Column(type: Types::BIGINT, nullable: true)]
-    private ?string $maxPartSize;
+    private int|string|null $maxPartSize;
 
     #[ORM\Column(length: 120)]
     private string $baseName = '';
@@ -34,7 +34,7 @@ class Export
     private array $files = [];
 
     #[ORM\Column(type: Types::BIGINT)]
-    private string $size = '0';
+    private int|string $size = 0;
 
     #[ORM\Column]
     private int $artifactCount = 0;
@@ -58,7 +58,7 @@ class Export
         $this->sequence = $sequence;
         $this->uuid = self::uuid();
         $this->full = $full;
-        $this->maxPartSize = null === $maxPartSize ? null : (string) $maxPartSize;
+        $this->maxPartSize = $maxPartSize;
         $this->createdAt = new \DateTimeImmutable();
     }
 
@@ -115,7 +115,7 @@ class Export
     {
         $this->baseName = $baseName;
         $this->files = $files;
-        $this->size = (string) $size;
+        $this->size = $size;
         $this->artifactCount = $artifactCount;
         $this->blobCount = $blobCount;
         $this->summary = $summary;

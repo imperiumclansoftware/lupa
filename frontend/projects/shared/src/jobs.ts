@@ -1,5 +1,15 @@
 import { HttpClient } from '@angular/common/http';
-import { ChangeDetectionStrategy, Component, DestroyRef, OnInit, computed, inject, input, signal, viewChild } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  DestroyRef,
+  OnInit,
+  computed,
+  inject,
+  input,
+  signal,
+  viewChild,
+} from '@angular/core';
 import { firstValueFrom } from 'rxjs';
 import { errorMessage } from './api';
 import { Dialog } from './dialog';
@@ -54,8 +64,18 @@ export function poll(refresh: () => Promise<boolean>, destroyRef = inject(Destro
 })
 export class JobStatus {
   readonly status = input.required<Job['status']>();
-  protected readonly label = computed(() => ({ queued: 'En attente', running: 'En cours', succeeded: 'Terminée', failed: 'Échec' })[this.status()]);
-  protected readonly css = computed(() => ({ queued: '', running: 'badge-accent', succeeded: 'badge-ok', failed: 'badge-danger' })[this.status()]);
+  protected readonly label = computed(
+    () =>
+      ({ queued: 'En attente', running: 'En cours', succeeded: 'Terminée', failed: 'Échec' })[
+        this.status()
+      ],
+  );
+  protected readonly css = computed(
+    () =>
+      ({ queued: '', running: 'badge-accent', succeeded: 'badge-ok', failed: 'badge-danger' })[
+        this.status()
+      ],
+  );
 }
 
 /** Progression d'une tâche active (barre + étape en cours), ou son résultat. */
@@ -71,8 +91,15 @@ export class JobStatus {
         <sas-job-status [status]="j.status" />
       </div>
       @if (j.status === 'queued' || j.status === 'running') {
-        <div class="progress" [class.indeterminate]="j.progress === null" role="progressbar"
-          [attr.aria-valuenow]="j.progress" aria-valuemin="0" aria-valuemax="100" [attr.aria-label]="j.title">
+        <div
+          class="progress"
+          [class.indeterminate]="j.progress === null"
+          role="progressbar"
+          [attr.aria-valuenow]="j.progress"
+          aria-valuemin="0"
+          aria-valuemax="100"
+          [attr.aria-label]="j.title"
+        >
           <span [style.width.%]="j.progress ?? 0"></span>
         </div>
       }
@@ -80,9 +107,17 @@ export class JobStatus {
     </div>
   `,
   styles: `
-    .job { display: grid; gap: 8px; }
-    .head { justify-content: space-between; }
-    .step { white-space: pre-line; overflow-wrap: anywhere; }
+    .job {
+      display: grid;
+      gap: 8px;
+    }
+    .head {
+      justify-content: space-between;
+    }
+    .step {
+      white-space: pre-line;
+      overflow-wrap: anywhere;
+    }
   `,
 })
 export class JobProgress {
@@ -103,26 +138,47 @@ export class JobProgress {
         </div>
       </header>
 
-      @if (error()) { <div class="alert alert-danger">{{ error() }}</div> }
+      @if (error()) {
+        <div class="alert alert-danger">{{ error() }}</div>
+      }
 
       <section class="card">
         @if (jobs().length === 0) {
-          <div class="empty"><sas-icon name="activity" [size]="28" /><h3>Aucune tâche pour l’instant</h3></div>
+          <div class="empty">
+            <sas-icon name="activity" [size]="28" />
+            <h3>Aucune tâche pour l’instant</h3>
+          </div>
         } @else {
           <div class="table-wrap">
             <table class="table">
-              <thead><tr><th>Tâche</th><th>État</th><th>Détail</th><th>Lancée</th><th></th></tr></thead>
+              <thead>
+                <tr>
+                  <th>Tâche</th>
+                  <th>État</th>
+                  <th>Détail</th>
+                  <th>Lancée</th>
+                  <th></th>
+                </tr>
+              </thead>
               <tbody>
                 @for (job of jobs(); track job.id) {
                   <tr>
-                    <td><strong>{{ job.title }}</strong></td>
+                    <td>
+                      <strong>{{ job.title }}</strong>
+                    </td>
                     <td><sas-job-status [status]="job.status" /></td>
                     <td class="detail">
-                      @if (job.status === 'running' && job.progress !== null) { <span class="num">{{ job.progress }} %</span> · }
+                      @if (job.status === 'running' && job.progress !== null) {
+                        <span class="num">{{ job.progress }} %</span> ·
+                      }
                       {{ job.status === 'failed' ? job.error : job.step }}
                     </td>
-                    <td class="subtle" [title]="job.createdAt | datetime">{{ job.createdAt | relative }}</td>
-                    <td class="right"><button type="button" class="btn btn-sm" (click)="open(job)">Journal</button></td>
+                    <td class="subtle" [title]="job.createdAt | datetime">
+                      {{ job.createdAt | relative }}
+                    </td>
+                    <td class="right">
+                      <button type="button" class="btn btn-sm" (click)="open(job)">Journal</button>
+                    </td>
                   </tr>
                 }
               </tbody>
@@ -134,15 +190,29 @@ export class JobProgress {
 
     <sas-dialog [heading]="selected()?.title ?? 'Journal'" (closed)="selected.set(null)">
       @if (selected(); as job) {
-        <div class="row"><sas-job-status [status]="job.status" /><span class="subtle">{{ job.startedAt | datetime }}</span></div>
-        @if (job.error) { <div class="alert alert-danger">{{ job.error }}</div> }
+        <div class="row">
+          <sas-job-status [status]="job.status" /><span class="subtle">{{
+            job.startedAt | datetime
+          }}</span>
+        </div>
+        @if (job.error) {
+          <div class="alert alert-danger">{{ job.error }}</div>
+        }
         <pre class="log">{{ job.log || 'Journal vide.' }}</pre>
       }
     </sas-dialog>
   `,
   styles: `
-    .detail { max-width: 460px; color: var(--text-2); font-size: 0.86rem; overflow-wrap: anywhere; white-space: pre-line; }
-    :host ::ng-deep dialog.sas-dialog { width: min(820px, calc(100vw - 32px)); }
+    .detail {
+      max-width: 460px;
+      color: var(--text-2);
+      font-size: 0.86rem;
+      overflow-wrap: anywhere;
+      white-space: pre-line;
+    }
+    :host ::ng-deep dialog.sas-dialog {
+      width: min(820px, calc(100vw - 32px));
+    }
   `,
 })
 export class JobsPage implements OnInit {
@@ -160,7 +230,8 @@ export class JobsPage implements OnInit {
         this.jobs.set(await firstValueFrom(this.http.get<Job[]>('/api/jobs')));
         this.error.set('');
         const current = this.selected();
-        if (current) this.selected.set(await firstValueFrom(this.http.get<Job>(`/api/jobs/${current.id}`)));
+        if (current)
+          this.selected.set(await firstValueFrom(this.http.get<Job>(`/api/jobs/${current.id}`)));
       } catch (e) {
         this.error.set(errorMessage(e));
       }

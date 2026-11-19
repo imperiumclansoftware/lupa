@@ -57,7 +57,7 @@ final readonly class TerraformResolver implements Resolver
 
     /**
      * @return array{kind: string, host: string, address: string, constraint: string}
-     *   kind : provider (ns/type), module (ns/nom/fournisseur) ou cli (terraform)
+     *                                                                                kind : provider (ns/type), module (ns/nom/fournisseur) ou cli (terraform)
      */
     public static function parseSpec(string $line): array
     {

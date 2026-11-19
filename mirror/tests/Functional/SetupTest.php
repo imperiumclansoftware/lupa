@@ -3,10 +3,10 @@
 namespace App\Tests\Functional;
 
 use App\Entity\TrustedKey;
-use App\Tests\Support\Csrf;
 use App\Entity\User;
 use App\Setup\SetupToken;
 use App\Tests\MirrorWebTestCase;
+use App\Tests\Support\Csrf;
 use Sas\Bundle\Signer;
 
 /** Assistant d'installation de Romulus : premier compte et, en option, collecteur approuvé. */

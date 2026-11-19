@@ -1,22 +1,49 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { BytesPipe, DateTimePipe, EcosystemPipe, Icon, JobProgress, PluralPipe, RelativePipe, Toasts, errorMessage, isActive, poll } from '@sas/shared';
+import {
+  BytesPipe,
+  DateTimePipe,
+  EcosystemPipe,
+  Icon,
+  JobProgress,
+  PluralPipe,
+  RelativePipe,
+  Toasts,
+  errorMessage,
+  isActive,
+  poll,
+} from '@sas/shared';
 import { CollectorApi, Export, Exports } from '../api';
 import { KeyValuePipe } from '@angular/common';
 
 @Component({
-  imports: [FormsModule, Icon, JobProgress, BytesPipe, RelativePipe, DateTimePipe, PluralPipe, EcosystemPipe, KeyValuePipe],
+  imports: [
+    FormsModule,
+    Icon,
+    JobProgress,
+    BytesPipe,
+    RelativePipe,
+    DateTimePipe,
+    PluralPipe,
+    EcosystemPipe,
+    KeyValuePipe,
+  ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="page">
       <header class="page-header">
         <div>
           <h1>Exports</h1>
-          <p>Un export écrit un bundle signé dans le dossier d’export (la clé USB). Copiez-le vers Romulus et importez-le.</p>
+          <p>
+            Un export écrit un bundle signé dans le dossier d’export (la clé USB). Copiez-le vers
+            Romulus et importez-le.
+          </p>
         </div>
       </header>
 
-      @if (error()) { <div class="alert alert-danger">{{ error() }}</div> }
+      @if (error()) {
+        <div class="alert alert-danger">{{ error() }}</div>
+      }
 
       @if (data(); as d) {
         @if (activeJob(); as job) {
@@ -30,43 +57,90 @@ import { KeyValuePipe } from '@angular/common';
               <label class="mode" [class.selected]="!full()">
                 <input type="radio" name="mode" [checked]="!full()" (change)="full.set(false)" />
                 <span class="mode-title">Nouveautés</span>
-                <span class="muted">Uniquement ce qui n’a jamais été exporté. À utiliser à chaque passage.</span>
-                <span class="mode-stats num">{{ d.pending.artifacts | plural: 'paquet' }} · {{ d.pending.size | bytes }}</span>
+                <span class="muted"
+                  >Uniquement ce qui n’a jamais été exporté. À utiliser à chaque passage.</span
+                >
+                <span class="mode-stats num"
+                  >{{ d.pending.artifacts | plural: 'paquet' }} · {{ d.pending.size | bytes }}</span
+                >
               </label>
               <label class="mode" [class.selected]="full()">
                 <input type="radio" name="mode" [checked]="full()" (change)="full.set(true)" />
                 <span class="mode-title">Complet</span>
-                <span class="muted">Tout le contenu du collecteur. Pour un nouveau miroir ou après une clé perdue.</span>
-                <span class="mode-stats num">{{ d.full.artifacts | plural: 'paquet' }} · {{ d.full.size | bytes }}</span>
+                <span class="muted"
+                  >Tout le contenu du collecteur. Pour un nouveau miroir ou après une clé
+                  perdue.</span
+                >
+                <span class="mode-stats num"
+                  >{{ d.full.artifacts | plural: 'paquet' }} · {{ d.full.size | bytes }}</span
+                >
               </label>
             </div>
 
             <div class="field split">
               <label for="split">Découpage</label>
-              <select class="select" id="split" [ngModel]="split()" (ngModelChange)="split.set($event)">
+              <select
+                class="select"
+                id="split"
+                [ngModel]="split()"
+                (ngModelChange)="split.set($event)"
+              >
                 <option [ngValue]="null">Un seul fichier (clé exFAT, NTFS ou ext4)</option>
                 <option [ngValue]="4095">Parties de 4 Go (clé FAT32)</option>
                 <option [ngValue]="2048">Parties de 2 Go</option>
                 <option [ngValue]="1024">Parties de 1 Go</option>
               </select>
-              <span class="hint">Une clé FAT32 refuse les fichiers de plus de 4 Go. Les parties sont réassemblées à l’import.</span>
+              <span class="hint"
+                >Une clé FAT32 refuse les fichiers de plus de 4 Go. Les parties sont réassemblées à
+                l’import.</span
+              >
             </div>
 
             @if (d.blacklist.pending) {
-              <div class="alert alert-info"><sas-icon name="lock" /><span>Liste noire modifiée (révision {{ d.blacklist.revision }}) : elle partira dans ce bundle et Romulus mettra en quarantaine les versions interdites.@if (d.pending.artifacts === 0 && !full()) { Aucun nouveau paquet : le bundle ne contiendra que la liste. }</span></div>
+              <div class="alert alert-info">
+                <sas-icon name="lock" /><span
+                  >Liste noire modifiée (révision {{ d.blacklist.revision }}) : elle partira dans ce
+                  bundle et Romulus mettra en quarantaine les versions interdites.
+                  @if (d.pending.artifacts === 0 && !full()) {
+                    Aucun nouveau paquet : le bundle ne contiendra que la liste.
+                  }
+                </span>
+              </div>
             } @else if (d.blacklist.entries > 0) {
-              <p class="subtle">La liste noire ({{ d.blacklist.entries | plural: 'version' }}) est incluse dans chaque bundle ; ces versions ne sont jamais exportées.</p>
+              <p class="subtle">
+                La liste noire ({{ d.blacklist.entries | plural: 'version' }}) est incluse dans
+                chaque bundle ; ces versions ne sont jamais exportées.
+              </p>
             }
             @if (d.problem) {
-              <div class="alert alert-danger" role="alert"><sas-icon name="alert" /><span>{{ d.problem }}</span></div>
+              <div class="alert alert-danger" role="alert">
+                <sas-icon name="alert" /><span>{{ d.problem }}</span>
+              </div>
             }
             @if (tooBig()) {
-              <div class="alert alert-warn"><sas-icon name="alert" />Espace libre insuffisant dans le dossier d’export ({{ d.freeSpace | bytes }}).</div>
+              <div class="alert alert-warn">
+                <sas-icon name="alert" />Espace libre insuffisant dans le dossier d’export ({{
+                  d.freeSpace | bytes
+                }}).
+              </div>
             }
 
             <div class="row footer">
-              <span class="subtle">Destination : <code>{{ d.exportDir }}</code> · {{ d.freeSpace | bytes }} libres</span>
-              <button type="button" class="btn btn-primary" (click)="create()" [disabled]="busy() || !!activeJob() || (selectedCount() === 0 && !d.blacklist.pending) || !!d.problem">
+              <span class="subtle"
+                >Destination : <code>{{ d.exportDir }}</code> ·
+                {{ d.freeSpace | bytes }} libres</span
+              >
+              <button
+                type="button"
+                class="btn btn-primary"
+                (click)="create()"
+                [disabled]="
+                  busy() ||
+                  !!activeJob() ||
+                  (selectedCount() === 0 && !d.blacklist.pending) ||
+                  !!d.problem
+                "
+              >
                 <sas-icon name="usb" />Créer le bundle
               </button>
             </div>
@@ -76,18 +150,38 @@ import { KeyValuePipe } from '@angular/common';
         <section class="card">
           <header class="card-header"><h2>Historique</h2></header>
           @if (d.items.length === 0) {
-            <div class="empty"><sas-icon name="usb" [size]="28" /><h3>Aucun export</h3><p>Le premier export contiendra tout ce qui a été téléchargé.</p></div>
+            <div class="empty">
+              <sas-icon name="usb" [size]="28" />
+              <h3>Aucun export</h3>
+              <p>Le premier export contiendra tout ce qui a été téléchargé.</p>
+            </div>
           } @else {
             <div class="table-wrap">
               <table class="table">
-                <thead><tr><th>N°</th><th>Contenu</th><th class="right">Taille</th><th>Fichiers</th><th>Créé</th><th></th></tr></thead>
+                <thead>
+                  <tr>
+                    <th>N°</th>
+                    <th>Contenu</th>
+                    <th class="right">Taille</th>
+                    <th>Fichiers</th>
+                    <th>Créé</th>
+                    <th></th>
+                  </tr>
+                </thead>
                 <tbody>
                   @for (e of d.items; track e.id) {
                     <tr>
-                      <td><span class="badge badge-accent">{{ e.sequence }}</span></td>
                       <td>
-                        <strong>{{ e.full ? 'Complet' : 'Nouveautés' }}</strong> · {{ e.artifactCount | plural: 'paquet' }}
-                        <div class="subtle">@for (s of e.summary | keyvalue; track s.key; let last = $last) { {{ s.value }} {{ s.key | ecosystem }}{{ last ? '' : ', ' }} }</div>
+                        <span class="badge badge-accent">{{ e.sequence }}</span>
+                      </td>
+                      <td>
+                        <strong>{{ e.full ? 'Complet' : 'Nouveautés' }}</strong> ·
+                        {{ e.artifactCount | plural: 'paquet' }}
+                        <div class="subtle">
+                          @for (s of e.summary | keyvalue; track s.key; let last = $last) {
+                            {{ s.value }} {{ s.key | ecosystem }}{{ last ? '' : ', ' }}
+                          }
+                        </div>
                       </td>
                       <td class="right num">{{ e.size | bytes }}</td>
                       <td>
@@ -95,18 +189,34 @@ import { KeyValuePipe } from '@angular/common';
                           @for (f of e.files; track f.name) {
                             <li>
                               @if (f.present) {
-                                <a [href]="'/api/exports/' + e.id + '/files/' + f.name" download class="mono">{{ f.name }}</a>
+                                <a
+                                  [href]="'/api/exports/' + e.id + '/files/' + f.name"
+                                  download
+                                  class="mono"
+                                  >{{ f.name }}</a
+                                >
                               } @else {
-                                <span class="mono subtle" title="Fichier retiré du dossier d’export">{{ f.name }}</span>
+                                <span
+                                  class="mono subtle"
+                                  title="Fichier retiré du dossier d’export"
+                                  >{{ f.name }}</span
+                                >
                               }
                             </li>
                           }
                         </ul>
                       </td>
-                      <td class="subtle" [title]="e.createdAt | datetime">{{ e.createdAt | relative }}</td>
+                      <td class="subtle" [title]="e.createdAt | datetime">
+                        {{ e.createdAt | relative }}
+                      </td>
                       <td class="right">
                         @if (hasFiles(e)) {
-                          <button type="button" class="btn btn-sm btn-ghost" (click)="clean(e)" title="Supprimer les fichiers du dossier d’export">
+                          <button
+                            type="button"
+                            class="btn btn-sm btn-ghost"
+                            (click)="clean(e)"
+                            title="Supprimer les fichiers du dossier d’export"
+                          >
                             <sas-icon name="trash" [size]="15" />Retirer
                           </button>
                         }
@@ -117,7 +227,11 @@ import { KeyValuePipe } from '@angular/common';
               </table>
             </div>
             @if (d.items.length < d.total) {
-              <div class="more"><button type="button" class="btn btn-sm" (click)="more()">Afficher plus ({{ d.total - d.items.length }} restants)</button></div>
+              <div class="more">
+                <button type="button" class="btn btn-sm" (click)="more()">
+                  Afficher plus ({{ d.total - d.items.length }} restants)
+                </button>
+              </div>
             }
           }
         </section>
@@ -125,30 +239,98 @@ import { KeyValuePipe } from '@angular/common';
         <section class="card card-body steps">
           <h2>Transporter un bundle</h2>
           <ol>
-            <li>Copiez tous les fichiers du bundle (<code>sas-….tar</code> ou <code>sas-….tar.001</code>, <code>.002</code>…) sur la clé USB, ou téléchargez-les ci-dessus.</li>
-            <li>Branchez la clé sur le serveur du miroir, ouvrez <strong>Import</strong> dans Romulus et choisissez le bundle.</li>
-            <li>À la première fois, comparez l’empreinte affichée par Romulus avec celle des <strong>Réglages</strong> de Rémus.</li>
+            <li>
+              Copiez tous les fichiers du bundle (<code>sas-….tar</code> ou
+              <code>sas-….tar.001</code>, <code>.002</code>…) sur la clé USB, ou téléchargez-les
+              ci-dessus.
+            </li>
+            <li>
+              Branchez la clé sur le serveur du miroir, ouvrez <strong>Import</strong> dans Romulus
+              et choisissez le bundle.
+            </li>
+            <li>
+              À la première fois, comparez l’empreinte affichée par Romulus avec celle des
+              <strong>Réglages</strong> de Rémus.
+            </li>
           </ol>
-          <p class="subtle">Importez les bundles dans l’ordre des numéros : un bundle « Nouveautés » s’appuie sur les précédents.</p>
+          <p class="subtle">
+            Importez les bundles dans l’ordre des numéros : un bundle « Nouveautés » s’appuie sur
+            les précédents.
+          </p>
         </section>
       }
     </div>
   `,
   styles: `
-    .more { display: flex; justify-content: center; padding: 14px; border-top: 1px solid var(--border); }
-    .modes { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px; }
-    .mode { position: relative; display: grid; gap: 4px; padding: 16px 16px 16px 44px; border-radius: 14px; background: var(--surface-2); box-shadow: inset 0 0 0 1px var(--border); cursor: pointer;
-      transition-property: background-color, box-shadow; transition-duration: 140ms; }
-    .mode input { position: absolute; left: 16px; top: 19px; margin: 0; }
-    .mode.selected { background: var(--accent-soft); box-shadow: inset 0 0 0 1.5px var(--accent); }
-    .mode-title { font-weight: 700; }
-    .mode-stats { font-weight: 600; margin-top: 4px; }
-    .split { max-width: 420px; }
-    .footer { justify-content: space-between; flex-wrap: wrap; }
-    .files { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; font-size: 0.82rem; }
-    .files a { overflow-wrap: anywhere; }
-    .steps { display: grid; gap: 10px; }
-    .steps ol { margin: 0; padding-left: 20px; display: grid; gap: 6px; color: var(--text-2); }
+    .more {
+      display: flex;
+      justify-content: center;
+      padding: 14px;
+      border-top: 1px solid var(--border);
+    }
+    .modes {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 12px;
+    }
+    .mode {
+      position: relative;
+      display: grid;
+      gap: 4px;
+      padding: 16px 16px 16px 44px;
+      border-radius: 14px;
+      background: var(--surface-2);
+      box-shadow: inset 0 0 0 1px var(--border);
+      cursor: pointer;
+      transition-property: background-color, box-shadow;
+      transition-duration: 140ms;
+    }
+    .mode input {
+      position: absolute;
+      left: 16px;
+      top: 19px;
+      margin: 0;
+    }
+    .mode.selected {
+      background: var(--accent-soft);
+      box-shadow: inset 0 0 0 1.5px var(--accent);
+    }
+    .mode-title {
+      font-weight: 700;
+    }
+    .mode-stats {
+      font-weight: 600;
+      margin-top: 4px;
+    }
+    .split {
+      max-width: 420px;
+    }
+    .footer {
+      justify-content: space-between;
+      flex-wrap: wrap;
+    }
+    .files {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      display: grid;
+      gap: 2px;
+      font-size: 0.82rem;
+    }
+    .files a {
+      overflow-wrap: anywhere;
+    }
+    .steps {
+      display: grid;
+      gap: 10px;
+    }
+    .steps ol {
+      margin: 0;
+      padding-left: 20px;
+      display: grid;
+      gap: 6px;
+      color: var(--text-2);
+    }
   `,
 })
 export default class ExportsPage {
@@ -159,8 +341,12 @@ export default class ExportsPage {
   protected readonly busy = signal(false);
   protected readonly full = signal(false);
   protected readonly split = signal<number | null>(null);
-  protected readonly activeJob = computed(() => this.data()?.items.find((e) => isActive(e.job))?.job ?? null);
-  protected readonly selectedCount = computed(() => (this.full() ? this.data()?.full.artifacts : this.data()?.pending.artifacts) ?? 0);
+  protected readonly activeJob = computed(
+    () => this.data()?.items.find((e) => isActive(e.job))?.job ?? null,
+  );
+  protected readonly selectedCount = computed(
+    () => (this.full() ? this.data()?.full.artifacts : this.data()?.pending.artifacts) ?? 0,
+  );
   protected readonly tooBig = computed(() => {
     const d = this.data();
     const size = this.full() ? d?.full.size : d?.pending.size;
@@ -181,7 +367,11 @@ export default class ExportsPage {
     try {
       const next = await this.api.exports(Math.floor(current.items.length / current.pageSize) + 1);
       const seen = new Set(current.items.map((e) => e.id));
-      this.data.set({ ...current, total: next.total, items: [...current.items, ...next.items.filter((e) => !seen.has(e.id))] });
+      this.data.set({
+        ...current,
+        total: next.total,
+        items: [...current.items, ...next.items.filter((e) => !seen.has(e.id))],
+      });
     } catch (e) {
       this.error.set(errorMessage(e));
     }
@@ -196,13 +386,16 @@ export default class ExportsPage {
       const first = await this.api.exports();
       // Les pages déjà dépliées sont conservées au rafraîchissement
       const seen = new Set(first.items.map((e) => e.id));
-      const older = (this.data()?.items ?? []).filter((e) => !seen.has(e.id) && e.id < Math.min(...seen));
+      const older = (this.data()?.items ?? []).filter(
+        (e) => !seen.has(e.id) && e.id < Math.min(...seen),
+      );
       this.data.set({ ...first, items: [...first.items, ...older] });
       this.error.set('');
       const active = !!this.activeJob();
       if (this.wasActive && !active) {
         const last = this.data()?.items[0];
-        if (last?.job?.status === 'succeeded') this.toasts.ok(`Bundle n° ${last.sequence} prêt : ${last.files.length} fichier(s).`);
+        if (last?.job?.status === 'succeeded')
+          this.toasts.ok(`Bundle n° ${last.sequence} prêt : ${last.files.length} fichier(s).`);
       }
       this.wasActive = active;
     } catch (e) {

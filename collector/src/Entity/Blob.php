@@ -14,7 +14,7 @@ class Blob
     private string $sha256;
 
     #[ORM\Column(type: Types::BIGINT)]
-    private string $size;
+    private int|string $size;
 
     #[ORM\Column]
     private \DateTimeImmutable $createdAt;
@@ -26,7 +26,7 @@ class Blob
     public function __construct(string $sha256, int $size)
     {
         $this->sha256 = $sha256;
-        $this->size = (string) $size;
+        $this->size = $size;
         $this->createdAt = new \DateTimeImmutable();
     }
 

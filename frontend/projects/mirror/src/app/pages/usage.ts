@@ -17,17 +17,30 @@ interface Snippet {
       <header class="page-header">
         <div>
           <h1>Utilisation</h1>
-          <p>Configuration des postes du réseau isolé. Les adresses ci-dessous utilisent <code>{{ m.base }}</code>, l’adresse par laquelle vous consultez ce miroir.</p>
+          <p>
+            Configuration des postes du réseau isolé. Les adresses ci-dessous utilisent
+            <code>{{ m.base }}</code
+            >, l’adresse par laquelle vous consultez ce miroir.
+          </p>
         </div>
       </header>
 
       @if (m.http) {
-        <div class="alert alert-info"><sas-icon name="lock" />Le miroir est servi en HTTP : chaque outil doit l’accepter explicitement (options incluses ci-dessous). Derrière un reverse proxy HTTPS, ces options deviennent inutiles.</div>
+        <div class="alert alert-info">
+          <sas-icon name="lock" />Le miroir est servi en HTTP : chaque outil doit l’accepter
+          explicitement (options incluses ci-dessous). Derrière un reverse proxy HTTPS, ces options
+          deviennent inutiles.
+        </div>
       }
 
       <div class="tabs" role="tablist" aria-label="Outil">
         @for (t of tabs; track t.id) {
-          <button type="button" role="tab" [attr.aria-selected]="tab() === t.id" (click)="tab.set(t.id)">
+          <button
+            type="button"
+            role="tab"
+            [attr.aria-selected]="tab() === t.id"
+            (click)="tab.set(t.id)"
+          >
             <sas-eco [ecosystem]="t.id" [size]="22" />{{ t.label }}
           </button>
         }
@@ -35,13 +48,28 @@ interface Snippet {
 
       @if (tab() === 'deb' || tab() === 'rpm') {
         @if (systemDistributions().length === 0) {
-          <div class="card empty"><sas-icon name="package" [size]="28" /><h3>Aucune distribution importée</h3>
-            <p>Créez dans Rémus une liste {{ tab() === 'deb' ? 'Debian' : 'RPM' }}, exportez-la puis importez le bundle.</p></div>
+          <div class="card empty">
+            <sas-icon name="package" [size]="28" />
+            <h3>Aucune distribution importée</h3>
+            <p>
+              Créez dans Rémus une liste {{ tab() === 'deb' ? 'Debian' : 'RPM' }}, exportez-la puis
+              importez le bundle.
+            </p>
+          </div>
         } @else {
           <div class="field dist">
             <label for="dist">Distribution</label>
-            <select class="select" id="dist" [value]="currentDistribution()?.id" (change)="distribution.set($any($event.target).value)">
-              @for (d of systemDistributions(); track d.id) { <option [value]="d.id">{{ d.label }} · {{ d.packages }} paquets · {{ d.architectures.join(', ') }}</option> }
+            <select
+              class="select"
+              id="dist"
+              [value]="currentDistribution()?.id"
+              (change)="distribution.set($any($event.target).value)"
+            >
+              @for (d of systemDistributions(); track d.id) {
+                <option [value]="d.id">
+                  {{ d.label }} · {{ d.packages }} paquets · {{ d.architectures.join(', ') }}
+                </option>
+              }
             </select>
           </div>
         }
@@ -50,19 +78,33 @@ interface Snippet {
       <section class="stack">
         @for (s of snippets(); track s.title) {
           <article class="card card-body snippet">
-            <div class="row head"><h2>{{ s.title }}</h2><sas-copy [text]="s.code" label="Copier" /></div>
+            <div class="row head">
+              <h2>{{ s.title }}</h2>
+              <sas-copy [text]="s.code" label="Copier" />
+            </div>
             <pre class="kbd-block">{{ s.code }}</pre>
-            @if (s.hint) { <p class="subtle">{{ s.hint }}</p> }
+            @if (s.hint) {
+              <p class="subtle">{{ s.hint }}</p>
+            }
           </article>
         }
       </section>
     </div>
   `,
   styles: `
-    .snippet { display: grid; gap: 10px; }
-    .dist { max-width: 520px; }
-    .head { justify-content: space-between; }
-    .kbd-block { padding-right: 16px; }
+    .snippet {
+      display: grid;
+      gap: 10px;
+    }
+    .dist {
+      max-width: 520px;
+    }
+    .head {
+      justify-content: space-between;
+    }
+    .kbd-block {
+      padding-right: 16px;
+    }
   `,
 })
 export default class Usage {
@@ -82,14 +124,24 @@ export default class Usage {
   protected readonly distributions = signal<SystemDistribution[]>([]);
   protected readonly fingerprint = signal('');
   protected readonly distribution = signal('');
-  protected readonly systemDistributions = computed(() => this.distributions().filter((d) => d.ecosystem === this.tab()));
-  protected readonly currentDistribution = computed(() => this.systemDistributions().find((d) => d.id === this.distribution()) ?? this.systemDistributions().at(0) ?? null);
+  protected readonly systemDistributions = computed(() =>
+    this.distributions().filter((d) => d.ecosystem === this.tab()),
+  );
+  protected readonly currentDistribution = computed(
+    () =>
+      this.systemDistributions().find((d) => d.id === this.distribution()) ??
+      this.systemDistributions().at(0) ??
+      null,
+  );
 
   constructor() {
-    this.api.distributions().then((r) => {
-      this.distributions.set(r.items);
-      this.fingerprint.set(r.keyFingerprint);
-    }).catch(() => undefined);
+    this.api
+      .distributions()
+      .then((r) => {
+        this.distributions.set(r.items);
+        this.fingerprint.set(r.keyFingerprint);
+      })
+      .catch(() => undefined);
   }
 
   protected readonly snippets = computed<Snippet[]>(() => {
@@ -100,7 +152,10 @@ export default class Usage {
           {
             title: 'ansible.cfg (projet) ou ~/.ansible.cfg',
             code: `[galaxy]\nserver_list = romulus\n\n[galaxy_server.romulus]\nurl = ${base}/galaxy/`,
-            hint: 'Ponctuellement : ansible-galaxy collection install -s ' + base + '/galaxy/ community.general',
+            hint:
+              'Ponctuellement : ansible-galaxy collection install -s ' +
+              base +
+              '/galaxy/ community.general',
           },
           {
             title: 'Collections',
@@ -116,17 +171,25 @@ export default class Usage {
       case 'terraform':
         return [
           {
-            title: http ? 'Providers : miroir local (miroir en HTTP)' : 'Providers : ~/.terraformrc',
+            title: http
+              ? 'Providers : miroir local (miroir en HTTP)'
+              : 'Providers : ~/.terraformrc',
             code: http
               ? `mkdir -p ~/.terraform.d/plugins\ncurl -s "${base}/terraform/providers.tar?platform=linux_amd64" | tar -x -C ~/.terraform.d/plugins`
               : `provider_installation {\n  network_mirror {\n    url = "${base}/terraform/providers/"\n  }\n}`,
             hint: http
               ? 'Terraform n’accepte un miroir réseau qu’en HTTPS : en HTTP, les providers sont copiés dans ~/.terraform.d/plugins, que Terraform consulte automatiquement (relancez après chaque import). Windows : %APPDATA%\\terraform.d\\plugins.'
-              : 'Les adresses des providers ne changent pas (hashicorp/aws). En HTTP, utilisez plutôt l’archive : ' + base + '/terraform/providers.tar',
+              : 'Les adresses des providers ne changent pas (hashicorp/aws). En HTTP, utilisez plutôt l’archive : ' +
+                base +
+                '/terraform/providers.tar',
           },
           {
             title: 'Modules',
-            code: `module "vpc" {\n  source = "${base}/terraform/modules/terraform-aws-modules/vpc/aws/5.8.1.tar.gz"\n}` + (http ? '' : `\n\n# ou, par le registre du miroir :\nmodule "vpc2" {\n  source  = "${host}/terraform-aws-modules/vpc/aws"\n  version = "5.8.1"\n}`),
+            code:
+              `module "vpc" {\n  source = "${base}/terraform/modules/terraform-aws-modules/vpc/aws/5.8.1.tar.gz"\n}` +
+              (http
+                ? ''
+                : `\n\n# ou, par le registre du miroir :\nmodule "vpc2" {\n  source  = "${host}/terraform-aws-modules/vpc/aws"\n  version = "5.8.1"\n}`),
             hint: 'Les modules qu’un module appelle doivent aussi être collectés.',
           },
           {
@@ -138,7 +201,9 @@ export default class Usage {
       case 'deb': {
         const d = this.currentDistribution();
         if (!d) return [];
-        const fp = this.fingerprint().replace(/(.{4})/g, '$1 ').trim();
+        const fp = this.fingerprint()
+          .replace(/(.{4})/g, '$1 ')
+          .trim();
         return [
           {
             title: 'Clé du miroir (une fois par poste)',
@@ -169,13 +234,19 @@ export default class Usage {
           },
           {
             title: 'Désactiver les dépôts Internet',
-            code: tool === 'yum' ? `sudo yum-config-manager --disable \\* && sudo yum-config-manager --enable romulus-${d.id}` : `sudo dnf config-manager --set-disabled '*'\nsudo dnf config-manager --set-enabled romulus-${d.id}`,
+            code:
+              tool === 'yum'
+                ? `sudo yum-config-manager --disable \\* && sudo yum-config-manager --enable romulus-${d.id}`
+                : `sudo dnf config-manager --set-disabled '*'\nsudo dnf config-manager --set-enabled romulus-${d.id}`,
             hint: `Ou déplacez les autres fichiers de /etc/yum.repos.d. Ponctuellement : ${tool} --disablerepo='*' --enablerepo=romulus-${d.id} install …`,
           },
           {
             title: 'Installer',
             code: `sudo ${tool} install nginx`,
-            hint: d.release === '8' ? 'EL8 : seuls les streams de modules collectés sont présents (module_hotfixes=1 évite le filtrage modulaire).' : undefined,
+            hint:
+              d.release === '8'
+                ? 'EL8 : seuls les streams de modules collectés sont présents (module_hotfixes=1 évite le filtrage modulaire).'
+                : undefined,
           },
         ];
       }
@@ -200,7 +271,8 @@ export default class Usage {
             code: `pip config set global.index-url ${base}/pypi/simple/${http ? `\npip config set global.trusted-host ${host.split(':')[0]}` : ''}`,
           },
           {
-            title: 'pip : fichier pip.conf (Linux ~/.config/pip/pip.conf, Windows %APPDATA%\\pip\\pip.ini)',
+            title:
+              'pip : fichier pip.conf (Linux ~/.config/pip/pip.conf, Windows %APPDATA%\\pip\\pip.ini)',
             code: `[global]\nindex-url = ${base}/pypi/simple/${http ? `\ntrusted-host = ${host.split(':')[0]}` : ''}`,
           },
           {
@@ -228,7 +300,13 @@ export default class Usage {
           {
             title: 'Ou dans le composer.json du projet',
             code: JSON.stringify(
-              { repositories: [{ type: 'composer', url: `${base}/composer` }, { 'packagist.org': false }], ...(http ? { config: { 'secure-http': false } } : {}) },
+              {
+                repositories: [
+                  { type: 'composer', url: `${base}/composer` },
+                  { 'packagist.org': false },
+                ],
+                ...(http ? { config: { 'secure-http': false } } : {}),
+              },
               null,
               4,
             ),
@@ -243,7 +321,11 @@ export default class Usage {
         return [
           {
             title: 'Démon Docker : /etc/docker/daemon.json',
-            code: JSON.stringify({ 'registry-mirrors': [base], ...(http ? { 'insecure-registries': [host] } : {}) }, null, 2),
+            code: JSON.stringify(
+              { 'registry-mirrors': [base], ...(http ? { 'insecure-registries': [host] } : {}) },
+              null,
+              2,
+            ),
             hint: 'Puis « sudo systemctl restart docker ». Les images Docker Hub se tirent alors sans changer leur nom : docker pull nginx:1.27. En Docker rootless : ~/.config/docker/daemon.json.',
           },
           {

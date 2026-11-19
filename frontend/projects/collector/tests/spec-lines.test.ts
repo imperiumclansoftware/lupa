@@ -1,7 +1,14 @@
 // Tests de la combinaison des listes prédéfinies : node --test projects/collector/tests/spec-lines.test.ts
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { addLines, containsAll, duplicates, lineKey, removeDuplicates, removeLines } from '../src/app/spec-lines.ts';
+import {
+  addLines,
+  containsAll,
+  duplicates,
+  lineKey,
+  removeDuplicates,
+  removeLines,
+} from '../src/app/spec-lines.ts';
 
 const django = ['django', 'psycopg[binary]', 'gunicorn', 'python-dotenv'];
 const flask = ['flask', 'gunicorn', 'python-dotenv'];
@@ -27,7 +34,10 @@ test('cliquer deux fois sur une liste ne crée pas de doublon', () => {
 
 test('un paquet déjà saisi autrement n’est pas ajouté une seconde fois', () => {
   const text = addLines('Django>=5\n# mes paquets\nrequests', django, 'pypi');
-  assert.equal(text, 'Django>=5\n# mes paquets\nrequests\npsycopg[binary]\ngunicorn\npython-dotenv');
+  assert.equal(
+    text,
+    'Django>=5\n# mes paquets\nrequests\npsycopg[binary]\ngunicorn\npython-dotenv',
+  );
   assert.ok(containsAll(text, django, 'pypi'));
 });
 
@@ -68,5 +78,8 @@ test('Ansible Galaxy et Terraform : nom sans contrainte', () => {
   assert.equal(lineKey('community.general >=8.0.0', 'galaxy'), 'community.general');
   assert.equal(lineKey('role:geerlingguy.docker 7.4.1', 'galaxy'), 'role:geerlingguy.docker');
   assert.equal(lineKey('hashicorp/aws ~> 5.0', 'terraform'), 'hashicorp/aws');
-  assert.equal(addLines('hashicorp/aws', ['hashicorp/aws ~> 5.0', 'terraform ~> 1.9'], 'terraform'), 'hashicorp/aws\nterraform ~> 1.9');
+  assert.equal(
+    addLines('hashicorp/aws', ['hashicorp/aws ~> 5.0', 'terraform ~> 1.9'], 'terraform'),
+    'hashicorp/aws\nterraform ~> 1.9',
+  );
 });
