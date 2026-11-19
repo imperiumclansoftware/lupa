@@ -2,7 +2,7 @@
 
 <p align="center">
   <a href="https://github.com/imperiumclansoftware/lupa/releases/download/v1.4.0/lupa.mp4">
-    <img src="https://github.com/imperiumclansoftware/lupa/releases/download/v1.4.0/lupa-poster.png" width="860" alt="Lupa : Rémus collecte sur Internet, un bundle signé traverse la clé USB, Romulus sert neuf écosystèmes sur le réseau isolé">
+    <img src="docs/lupa-poster.png" width="860" alt="Lupa : Rémus collecte sur Internet, un bundle signé traverse la clé USB, Romulus sert neuf écosystèmes sur le réseau isolé">
   </a>
   <br>
   <sub>▶ <a href="https://github.com/imperiumclansoftware/lupa/releases/download/v1.4.0/lupa.mp4">Vidéo de présentation</a> (1 min 55, 1080p)</sub>
