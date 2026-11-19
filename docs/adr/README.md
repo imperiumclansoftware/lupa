@@ -15,3 +15,4 @@ Chaque ADR : contexte, décision, conséquences. Un ADR remplacé n'est pas supp
 | [0008](0008-outillage-ci.md) | Outillage de la CI : ligne de base PHPStan et exceptions documentées | Accepté |
 | [0009](0009-double-authentification-facultative.md) | Double authentification facultative (TOTP, codes de secours) | Accepté |
 | [0010](0010-roles.md) | Rôles : lecteur, opérateur, administrateur | Accepté |
+| [0011](0011-extensions-vscode.md) | Extensions VS Code : sources, choix des versions et marketplace | Accepté |

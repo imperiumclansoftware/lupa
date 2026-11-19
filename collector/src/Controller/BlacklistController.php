@@ -67,7 +67,7 @@ final class BlacklistController
         }
         $exact = match ($ecosystem) {
             Ecosystem::Docker => '/^(sha256:[a-f0-9]{64}|[\w][\w.-]{0,127})$/',
-            Ecosystem::Galaxy, Ecosystem::Terraform => '/^v?\d+(\.\d+){0,3}([-+][0-9a-z.]+)?$/i',
+            Ecosystem::Galaxy, Ecosystem::Terraform, Ecosystem::Vscode => '/^v?\d+(\.\d+){0,3}([-+][0-9a-z.]+)?$/i',
             Ecosystem::Composer => '/^v?\d+(\.\d+){0,3}([-.+]?[a-z0-9.]+)?$|^dev-[\w.\/-]+$/i',
             // Debian : [époque:]amont[-révision] ; RPM : [époque:]version-release (release obligatoire)
             Ecosystem::Deb => '/^(\d+:)?\d[A-Za-z0-9.+~-]*$/',

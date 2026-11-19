@@ -65,6 +65,12 @@ const HELP: Record<
     lockfile: '',
     accept: '',
   },
+  vscode: {
+    placeholder: 'redhat.vscode-yaml\nms-python.python@2024.2.0\ndbaeumer.vscode-eslint >=3.0.0',
+    hint: 'Une extension par ligne, par son identifiant éditeur.nom (affiché dans VS Code), avec @version ou une contrainte facultative. Dépendances et packs sont ajoutés.',
+    lockfile: '.vscode/extensions.json',
+    accept: '.json',
+  },
   galaxy: {
     placeholder: 'community.general >=8.0.0\nansible.posix\nrole:geerlingguy.docker 7.4.1',
     hint: 'Une ligne par collection (espace.nom, contrainte facultative : >=2.0.0,<3) ; les rôles avec « role: ». Les dépendances des collections sont ajoutées.',
@@ -300,10 +306,11 @@ const HELP: Record<
                 >
               </label>
             }
-            <span class="hint"
-              >Les versions exactes du fichier sont collectées, en plus des paquets saisis
-              ci-dessus.</span
-            >
+            <span class="hint">{{
+              ecosystem() === 'vscode'
+                ? 'Les extensions recommandées par le fichier sont collectées (dernière version stable), en plus de celles saisies ci-dessus.'
+                : 'Les versions exactes du fichier sont collectées, en plus des paquets saisis ci-dessus.'
+            }}</span>
           </div>
         }
       </section>
@@ -423,6 +430,60 @@ const HELP: Record<
                 >Linux amd64 par défaut. Les modules sont indépendants de la plateforme.</span
               >
             </fieldset>
+          }
+          @case ('vscode') {
+            <fieldset class="field">
+              <legend class="label">Plateformes</legend>
+              <div class="chips">
+                @for (p of choices()?.vscode?.platforms ?? []; track p.id) {
+                  <label class="chip"
+                    ><input
+                      type="checkbox"
+                      [name]="'vs-' + p.id"
+                      [checked]="vsPlatforms().includes(p.id)"
+                      (change)="toggle(vsPlatforms, p.id)"
+                    />{{ p.label }}</label
+                  >
+                }
+              </div>
+              <span class="hint"
+                >Linux x64 par défaut. Seules les extensions qui embarquent du code natif
+                (rust-analyzer, C/C++…) existent en une version par plateforme.</span
+              >
+            </fieldset>
+            <div class="field">
+              <label class="label" for="vs-source">Source</label>
+              <select class="input" id="vs-source" name="vsSource" [(ngModel)]="vsSource">
+                @for (s of choices()?.vscode?.sources ?? []; track s.id) {
+                  <option [value]="s.id">{{ s.label }}</option>
+                }
+              </select>
+              <span class="hint"
+                >Open VSX (licence libre) suffit le plus souvent. Le Visual Studio Marketplace
+                complète les extensions Microsoft absentes d’Open VSX (C# Dev Kit, Pylance, Remote…)
+                ; ses conditions en réservent l’usage à VS Code de Microsoft.</span
+              >
+            </div>
+            <div class="field">
+              <label class="label" for="vs-version"
+                >Version de VS Code des postes (facultatif)</label
+              >
+              <input
+                class="input"
+                id="vs-version"
+                name="vscodeVersion"
+                placeholder="1.95"
+                [(ngModel)]="vscodeVersion"
+              />
+              <span class="hint"
+                >Retient la dernière version de chaque extension compatible avec ce VS Code, utile
+                quand les postes ne sont pas à jour.</span
+              >
+            </div>
+            <label class="check"
+              ><input type="checkbox" name="preRelease" [(ngModel)]="preRelease" />
+              <span>Accepter les préversions</span></label
+            >
           }
           @case ('galaxy') {
             <p class="subtle">
@@ -741,6 +802,10 @@ export default class ListForm implements OnInit {
   protected readonly targets = signal<PypiTarget[]>([{ python: '3.12', platform: 'linux-x86_64' }]);
   protected readonly platforms = signal<string[]>(['linux/amd64']);
   protected readonly tfPlatforms = signal<string[]>(['linux_amd64']);
+  protected readonly vsPlatforms = signal<string[]>(['linux-x64']);
+  protected vsSource = 'openvsx';
+  protected vscodeVersion = '';
+  protected preRelease = false;
   protected readonly distribution = signal('');
   protected readonly architectures = signal<string[]>([]);
   protected readonly sections = signal<string[]>([]);
@@ -795,6 +860,11 @@ export default class ListForm implements OnInit {
       if (o.platforms?.length) this.platforms.set([...o.platforms]);
       if (o.platforms?.length && list.ecosystem === 'terraform')
         this.tfPlatforms.set([...o.platforms]);
+      if (o.platforms?.length && list.ecosystem === 'vscode')
+        this.vsPlatforms.set([...o.platforms]);
+      this.vsSource = o.source ?? 'openvsx';
+      this.vscodeVersion = o.vscodeVersion ?? '';
+      this.preRelease = o.preRelease ?? false;
       this.template.set(o.template ?? null);
       if (o.distribution) {
         this.setDistribution(o.distribution);
@@ -964,7 +1034,14 @@ export default class ListForm implements OnInit {
             ? this.tfPlatforms().length
               ? this.tfPlatforms()
               : ['linux_amd64']
-            : this.platforms(),
+            : this.ecosystem() === 'vscode'
+              ? this.vsPlatforms().length
+                ? this.vsPlatforms()
+                : ['linux-x64']
+              : this.platforms(),
+        source: this.vsSource,
+        vscodeVersion: this.vscodeVersion.trim(),
+        preRelease: this.preRelease,
         template: this.template(),
         ...(this.isSystem()
           ? {

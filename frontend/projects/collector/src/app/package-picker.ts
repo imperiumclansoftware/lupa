@@ -59,6 +59,11 @@ const MODES: Record<
     { id: 'minimum', label: 'Minimum (>=)', build: (n, v) => `${n} >= ${v}` },
     { id: 'latest', label: 'Toujours la dernière', build: (n) => n },
   ],
+  vscode: [
+    { id: 'latest', label: 'Toujours la dernière stable', build: (n) => n },
+    { id: 'exact', label: 'Exacte', build: (n, v) => `${n}@${v}` },
+    { id: 'minimum', label: 'Minimum (>=)', build: (n, v) => `${n} >=${v}` },
+  ],
   deb: [
     { id: 'latest', label: 'Toujours la dernière', build: (n) => n },
     { id: 'exact', label: 'Exacte (=)', build: (n, v) => `${n}=${v}` },
@@ -401,6 +406,7 @@ export class PackagePicker {
         terraform:
           'Rechercher un provider ou un module Terraform : aws, vpc, « terraform » pour le binaire',
         rpm: 'Rechercher un paquet RPM, ou un motif : perl-*',
+        vscode: 'Rechercher une extension VS Code : yaml, python, eslint (Open VSX et Marketplace)',
       })[this.ecosystem()],
   );
   protected readonly hint = computed(() =>

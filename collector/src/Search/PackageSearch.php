@@ -6,6 +6,7 @@ use App\Http\DownloadException;
 use App\Resolver\Docker\ImageReference;
 use App\Resolver\Docker\RegistryClient;
 use App\Resolver\PypiResolver;
+use App\Resolver\Vscode\Gallery;
 use App\Source\Sources;
 use Sas\Bundle\Ecosystem;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
@@ -33,6 +34,7 @@ final class PackageSearch
         private readonly string $cacheDir,
         private readonly ?Sources $sources = null,
         private readonly ?\App\System\SystemSearch $system = null,
+        private readonly ?Gallery $gallery = null,
     ) {
     }
 
@@ -52,6 +54,7 @@ final class PackageSearch
             Ecosystem::Deb, Ecosystem::Rpm => $this->system->search($ecosystem, $distribution, $query, $limit),
             Ecosystem::Galaxy => $this->galaxySearch($query, $limit),
             Ecosystem::Terraform => $this->terraformSearch($query, $limit),
+            Ecosystem::Vscode => $this->vscodeSearch($query, $limit),
         };
     }
 
@@ -70,6 +73,7 @@ final class PackageSearch
             Ecosystem::Deb, Ecosystem::Rpm => $this->system->versions($ecosystem, $distribution, $name),
             Ecosystem::Galaxy => $this->galaxyVersions($name),
             Ecosystem::Terraform => $this->terraformVersions($name),
+            Ecosystem::Vscode => $this->vscodeVersions($name),
         };
 
         return ['versions' => \array_slice($versions['versions'], 0, 200), 'latest' => $versions['latest']];
@@ -88,7 +92,7 @@ final class PackageSearch
             Ecosystem::Composer => $this->composerNames($pattern),
             Ecosystem::Docker => $this->dockerRepositories($pattern),
             Ecosystem::Deb, Ecosystem::Rpm => $this->system->names($ecosystem, $distribution, $pattern),
-            Ecosystem::Galaxy, Ecosystem::Terraform => throw new \InvalidArgumentException('Les motifs ne sont pas pris en charge pour cet écosystème.'),
+            Ecosystem::Galaxy, Ecosystem::Terraform, Ecosystem::Vscode => throw new \InvalidArgumentException('Les motifs ne sont pas pris en charge pour cet écosystème.'),
         };
         sort($names);
 
@@ -170,6 +174,53 @@ final class PackageSearch
         usort($versions, static fn (string $a, string $b) => self::compareVersions($b, $a));
 
         return ['versions' => $versions, 'latest' => $data['dist-tags']['latest'] ?? ($versions[0] ?? null)];
+    }
+
+    /**
+     * Extensions VS Code : Open VSX, puis le Visual Studio Marketplace (origine indiquée).
+     *
+     * @return list<array{name: string, description: ?string, version: ?string, info: ?string}>
+     */
+    private function vscodeSearch(string $query, int $limit): array
+    {
+        $results = [];
+        foreach ([Gallery::OPENVSX, Gallery::MARKETPLACE] as $source) {
+            try {
+                $found = $this->gallery?->search($source, $query, $limit) ?? [];
+            } catch (\Throwable) {
+                continue;
+            }
+            foreach ($found as $extension) {
+                $id = strtolower($extension->id);
+                // Dernière version publiée : affichée seulement si elle est stable (les préversions ne sont pas retenues)
+                $latest = $extension->versions[0] ?? null;
+                $results[$id] ??= self::result($id, trim($extension->displayName.' — '.$extension->description, ' —'), null !== $latest && !$latest->preRelease ? $latest->version : null, Gallery::label($source));
+            }
+        }
+
+        return \array_slice(array_values($results), 0, $limit);
+    }
+
+    /** @return array{versions: list<string>, latest: string|null} */
+    private function vscodeVersions(string $name): array
+    {
+        foreach ([Gallery::OPENVSX, Gallery::MARKETPLACE] as $source) {
+            $extension = $this->gallery?->extension($source, $name);
+            if (null === $extension) {
+                continue;
+            }
+            $versions = [];
+            foreach ($extension->versions as $v) {
+                if (!$v->preRelease) {
+                    $versions[$v->version] = $v->version;
+                }
+            }
+            $versions = array_values($versions);
+
+            return ['versions' => $versions, 'latest' => $versions[0] ?? null];
+        }
+
+        return ['versions' => [], 'latest' => null];
     }
 
     /** Collections (nom exact, puis mots-clés) et rôles Galaxy. */

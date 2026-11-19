@@ -38,6 +38,8 @@ export function installCommand(
       const short = parts.slice(-2).join('/');
       return `${parts.at(-1)} = { source = "${short}", version = "${version}" }`;
     }
+    case 'vscode':
+      return `code --install-extension ${name}@${version}`;
     case 'deb':
       return `sudo apt install ${name}=${version}`;
     case 'rpm':

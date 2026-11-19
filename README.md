@@ -15,7 +15,7 @@ https://github.com/user-attachments/assets/90a10748-f94f-4b35-b05c-b60e01dec34b
 
 Dépôts de paquets **hors ligne** pour un réseau isolé d'Internet : npm, Python (PyPI), Composer,
 images Docker, paquets système Debian (apt) et RPM (AlmaLinux, CentOS : dnf, yum), collections et rôles
-Ansible Galaxy, providers et modules Terraform. Deux applications web jumelles, reliées par une clé USB :
+Ansible Galaxy, providers et modules Terraform, extensions VS Code. Deux applications web jumelles, reliées par une clé USB :
 
 - **Rémus**, le collecteur : il franchit la limite et rapporte les paquets d'Internet ;
 - **Romulus**, le miroir : il garde l'enceinte du réseau isolé et ne laisse entrer que ce qui est signé.
@@ -56,6 +56,7 @@ Sources : [github.com/imperiumclansoftware/lupa](https://github.com/imperiumclan
 | Debian 12, 13 | paquets choisis et leurs dépendances (Depends, Pre-Depends, Recommends en option), amd64/arm64 | `deb [signed-by=…/romulus.gpg] http://miroir/deb/debian-12 bookworm main` |
 | Ansible Galaxy | collections (dépendances comprises, sha256 vérifié) et rôles ; requirements.yml accepté | `ansible-galaxy collection install -s http://miroir/galaxy/ …` |
 | Terraform | providers des plateformes choisies (SHA256SUMS signé vérifié), modules (GitHub), binaire terraform ; .terraform.lock.hcl accepté | `network_mirror` (HTTPS) ou `~/.terraform.d/plugins` ; modules par URL ou registre |
+| Extensions VS Code | Open VSX et/ou Visual Studio Marketplace, dépendances et packs, construction de chaque plateforme, sha256 vérifié ; .vscode/extensions.json accepté | galerie `extensionsGallery` (VS Code, VSCodium, code-server) ou `.vsix` |
 | AlmaLinux 8/9/10, CentOS Stream 9/10, CentOS 7/8 (vault) | paquets choisis et leurs dépendances (capacités, fichiers, dépendances booléennes, streams de modules EL8/EL9) | `baseurl=http://miroir/rpm/almalinux-9/$basearch/` (`/rpm/<distribution>/romulus.repo`) |
 
 ## Recherche, motifs et sécurité
@@ -81,6 +82,11 @@ Sources : [github.com/imperiumclansoftware/lupa](https://github.com/imperiumclan
   d'abord avec la clé HashiCorp livrée, sinon avec la clé de l'éditeur publiée par le registre. Les
   modules GitHub sont réempaquetés, module à la racine. Romulus (`TerraformController`) sert le
   protocole « network mirror », une archive « filesystem mirror » et le registre de modules.
+- **Extensions VS Code** (`VscodeResolver`, ADR 0011) : Open VSX et le Visual Studio Marketplace parlent le même
+  protocole de galerie (`extensionquery`, `Resolver/Vscode/Gallery`) ; la version retenue est la plus récente
+  stable compatible avec le moteur VS Code demandé, avec la construction propre à chaque plateforme (sinon
+  l'universelle, comme VS Code). README, icône et manifeste sont collectés avec le VSIX. Romulus
+  (`VscodeController`, `Registry/VscodeGallery`) sert ce même protocole : recherche, mises à jour, fichiers.
 - **Liste noire** (`collector/src/Blacklist/`) : versions précises refusées par les résolveurs et exclues
   des exports ; liste complète et révision dans le manifeste signé (`Manifest::$blacklist`). Romulus
   l'applique à l'import (`mirror/src/Quarantine/`) et ses registres filtrent les versions en quarantaine.
@@ -223,6 +229,9 @@ développement, `make up` fait de même avec le `.env` du projet.
   hors Galaxy (git, URL). Terraform : les modules qu'un module appelle ne sont pas suivis ; seuls les
   modules hébergés sur GitHub ou en archive .tar.gz sont pris en charge. Le miroir réseau de providers
   exige HTTPS ; en HTTP, utiliser l'archive /terraform/providers.tar.
+- VS Code : les extensions installées par une autre extension au premier lancement (serveurs de langage
+  téléchargés à part, comme certains outils de C# ou de Go) ne passent pas par la galerie et échouent hors
+  ligne ; VS Code de Microsoft se configure en modifiant son product.json, à refaire à chaque mise à jour.
 - Liste noire : une version interdite n'est pas remplacée automatiquement. Si npm, pip ou Composer
   l'avaient retenue comme dépendance, elle manque simplement (le journal la signale) ; fixez une autre
   version dans la liste. La quarantaine bloque les manifestes Docker, pas les couches partagées.

@@ -116,6 +116,7 @@ export default class Usage {
     { id: 'docker', label: 'Docker' },
     { id: 'galaxy', label: 'Ansible Galaxy' },
     { id: 'terraform', label: 'Terraform' },
+    { id: 'vscode', label: 'VS Code' },
     { id: 'deb', label: 'Debian (apt)' },
     { id: 'rpm', label: 'RPM (dnf, yum)' },
   ];
@@ -147,6 +148,49 @@ export default class Usage {
   protected readonly snippets = computed<Snippet[]>(() => {
     const { base, host, http } = this.m;
     switch (this.tab()) {
+      case 'vscode': {
+        const gallery = {
+          serviceUrl: `${base}/vscode/gallery`,
+          itemUrl: `${base}/vscode/item`,
+          resourceUrlTemplate: `${base}/vscode/unpkg/{publisher}/{name}/{version}/{path}`,
+          extensionUrlTemplate: `${base}/vscode/gallery/{publisher}/{name}/latest`,
+          controlUrl: '',
+        };
+        return [
+          {
+            title: 'VS Code (Microsoft) : product.json',
+            code: `"extensionsGallery": ${JSON.stringify(gallery, null, 2)}`,
+            hint:
+              'Remplacez le bloc « extensionsGallery » de product.json : /usr/share/code/resources/app/ (Linux), ' +
+              'C:\\Program Files\\Microsoft VS Code\\resources\\app\\ ou %LOCALAPPDATA%\\Programs\\Microsoft VS Code\\resources\\app\\ (Windows), ' +
+              '/Applications/Visual Studio Code.app/Contents/Resources/app/ (macOS). À refaire après chaque mise à jour de VS Code ; ' +
+              'VS Code peut alors signaler une installation « modifiée » : choisissez « Ne plus afficher ».',
+          },
+          {
+            title: 'VSCodium : variables d’environnement',
+            code:
+              `export VSCODE_GALLERY_SERVICE_URL=${gallery.serviceUrl}\n` +
+              `export VSCODE_GALLERY_ITEM_URL=${gallery.itemUrl}\n` +
+              `export VSCODE_GALLERY_RESOURCE_URL_TEMPLATE='${gallery.resourceUrlTemplate}'\n` +
+              `export VSCODE_GALLERY_EXTENSION_URL_TEMPLATE='${gallery.extensionUrlTemplate}'`,
+            hint: 'Dans ~/.profile (ou les variables d’environnement de Windows), puis redémarrez VSCodium. Aucune modification de l’application.',
+          },
+          {
+            title: 'code-server',
+            code: `export EXTENSIONS_GALLERY='${JSON.stringify({ serviceUrl: gallery.serviceUrl, itemUrl: gallery.itemUrl, resourceUrlTemplate: gallery.resourceUrlTemplate })}'\ncode-server`,
+            hint: 'Variable lue au démarrage de code-server (service systemd, conteneur…).',
+          },
+          {
+            title: 'Installer',
+            code: `code --install-extension redhat.vscode-yaml\ncode --install-extension ms-python.python@2024.2.0`,
+            hint:
+              'Ou depuis la vue Extensions de l’éditeur (recherche, mises à jour). Sans configuration : téléchargez le .vsix depuis Paquets, puis code --install-extension ./fichier.vsix.' +
+              (http
+                ? ' En HTTP, certains éditeurs n’affichent pas les images des README : préférez une adresse HTTPS (PUBLIC_URL derrière un proxy).'
+                : ''),
+          },
+        ];
+      }
       case 'galaxy':
         return [
           {

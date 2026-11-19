@@ -8,7 +8,7 @@ use Symfony\Component\Validator\Constraints as Assert;
 final readonly class SearchQuery
 {
     public function __construct(
-        #[Assert\NotBlank, Assert\Choice(choices: ['npm', 'pypi', 'composer', 'docker', 'deb', 'rpm', 'galaxy', 'terraform'], message: 'Écosystème inconnu.')]
+        #[Assert\NotBlank, Assert\Choice(choices: ['npm', 'pypi', 'composer', 'docker', 'deb', 'rpm', 'galaxy', 'terraform', 'vscode'], message: 'Écosystème inconnu.')]
         public string $ecosystem = '',
         #[Assert\Length(max: 200)]
         public string $q = '',

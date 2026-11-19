@@ -3,7 +3,7 @@
 **Romulus** est le miroir hors ligne de **Lupa**. Sur un réseau isolé d'Internet, il sert aux postes
 de travail des dépôts **npm**, **Python (PyPI)**, **Composer** (avec les recettes **Symfony Flex**), un
 registre **Docker**, des dépôts système **apt** (Debian) et **dnf/yum** (AlmaLinux, CentOS), un serveur
-**Ansible Galaxy** et un miroir **Terraform** (providers, modules, binaire). Son contenu arrive par clé USB, sous forme de **bundles signés** produits par son
+**Ansible Galaxy**, un miroir **Terraform** (providers, modules, binaire) et une **marketplace d'extensions VS Code**. Son contenu arrive par clé USB, sous forme de **bundles signés** produits par son
 jumeau [**Rémus**](https://hub.docker.com/r/iemperor/remus), le collecteur installé côté Internet.
 
 ```
@@ -43,6 +43,7 @@ d'aucun service externe : la base SQLite et les paquets sont dans le volume `/da
   - dépôts **dnf/yum** AlmaLinux et CentOS (`/rpm/<distribution>/<arch>`). Les paquets gardent la
     signature de leur distribution ;
   - **Ansible Galaxy** (`/galaxy/`, API v3) pour ansible-galaxy ;
+  - **extensions VS Code** (`/vscode/`, galerie au protocole d'Open VSX) pour VS Code, VSCodium et code-server ;
   - **Terraform** : miroir réseau de providers (`/terraform/providers/`), archive pour miroir local,
     modules (`/terraform/modules/`) et binaire (`/terraform/releases/`).
 - **Alertes de sécurité :** les vulnérabilités connues relevées par Rémus (OSV.dev) au moment de l'export
@@ -67,12 +68,11 @@ d'aucun service externe : la base SQLite et les paquets sont dans le volume `/da
 
 | Tag | Contenu |
 |---|---|
-| `1.4.0`, `latest` | Rôles (lecteur, opérateur, administrateur), double authentification facultative, identifiants UUID, Symfony 8.1.11 (17 avis de sécurité), FrankenPHP 1.13.5 ; `TRUSTED_PROXIES` à renseigner derrière un proxy HTTPS |
+| `1.4.0`, `latest` | Marketplace VS Code, rôles, double authentification, identifiants UUID, Symfony 8.1.11 (17 avis de sécurité) ; `TRUSTED_PROXIES` derrière un proxy HTTPS |
 | `1.3.1` | Sécurité : PHP 8.4.27 (CVE-2026-109618 et CVE-2026-109619, critiques), FrankenPHP 1.13.2 |
-| `1.3.0` | Dépôts apt (index signés par la clé de Romulus) et dnf/yum ; serveur Ansible Galaxy (API v3) ; miroir Terraform (providers en miroir réseau ou archive locale, modules, binaire) ; quarantaine étendue à ces dépôts |
-| `1.2.0` | Quarantaine des versions de la liste noire reçue de Rémus (plus servies par les registres npm, Python, Composer et Docker ; badges, tableau de bord, liste consultable dans Réglages) |
-| `1.1.0` | Alertes de sécurité transportées par les bundles (tableau de bord, paquets, détail des failles et versions corrigées), dossiers de clés illisibles signalés, détection de Docker rootless, tâches interrompues débloquées automatiquement ; docker rootless : le conteneur tourne sous l'UID de l'hôte (`SAS_UID`, détecté par `configure.sh`), clés USB lisibles quels que soient leurs droits de montage ; messages d'aide sur les droits |
-| `1.0.0` | Première version : npm, PyPI, Composer, Symfony Flex, Docker, import signé depuis clé USB ou navigateur |
+| `1.3.0` | Dépôts apt et dnf/yum, serveur Ansible Galaxy, miroir Terraform |
+
+Versions précédentes : [releases GitHub](https://github.com/imperiumclansoftware/lupa/releases).
 
 Plateforme : `linux/amd64`. Sources : [GitHub](https://github.com/imperiumclansoftware/lupa) (licence MIT). Image associée : [`iemperor/remus`](https://hub.docker.com/r/iemperor/remus)
 (même version recommandée).
@@ -339,6 +339,22 @@ Sur CentOS 7, remplacez `dnf config-manager` par `yum-config-manager --disable \
 streams de modules collectés sont présents et dnf ne doit pas les filtrer.
 - Podman et containerd passent par `/etc/containers/registries.conf`, avec un `[[registry.mirror]]` dont
   `location = "romulus:8080"` et `insecure = true`.
+
+### Extensions VS Code
+
+L'éditeur cherche, installe et met à jour ses extensions sur Romulus une fois sa galerie déclarée :
+
+```bash
+# VSCodium (~/.profile) ; code-server : EXTENSIONS_GALLERY au format JSON (page Utilisation)
+export VSCODE_GALLERY_SERVICE_URL=http://romulus:8080/vscode/gallery
+export VSCODE_GALLERY_ITEM_URL=http://romulus:8080/vscode/item
+export VSCODE_GALLERY_RESOURCE_URL_TEMPLATE='http://romulus:8080/vscode/unpkg/{publisher}/{name}/{version}/{path}'
+export VSCODE_GALLERY_EXTENSION_URL_TEMPLATE='http://romulus:8080/vscode/gallery/{publisher}/{name}/latest'
+```
+
+VS Code de Microsoft : mêmes adresses dans le bloc `extensionsGallery` de son `product.json` (dossier
+`resources/app` de l'installation), à refaire après chaque mise à jour de VS Code. La page Utilisation de
+Romulus donne le bloc complet. Sans configuration : `.vsix` à télécharger dans Paquets.
 
 Les options `trusted-host`, `secure-http false` et `insecure-registries` ne servent que parce que
 Romulus est en HTTP (voir [HTTPS](#https)).

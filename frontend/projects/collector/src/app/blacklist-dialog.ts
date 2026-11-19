@@ -119,6 +119,7 @@ export class BlacklistDialog {
         rpm: '1:3.0.7-27.el9',
         galaxy: '8.2.0',
         terraform: '5.31.0',
+        vscode: '1.15.0',
       } as Record<EcosystemId, string>
     )[this.input.ecosystem];
   }
@@ -134,6 +135,7 @@ export class BlacklistDialog {
         rpm: 'openssl',
         galaxy: 'community.general',
         terraform: 'hashicorp/aws',
+        vscode: 'redhat.vscode-yaml',
       } as Record<EcosystemId, string>
     )[this.input.ecosystem];
   }

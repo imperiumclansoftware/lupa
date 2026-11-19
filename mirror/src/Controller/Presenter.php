@@ -85,6 +85,11 @@ final class Presenter
                     'cli' => 'Binaire · '.($metadata['os'] ?? '').'_'.($metadata['arch'] ?? '').' · /terraform/releases/'.$package->getFilename(),
                     default => 'Module',
                 },
+                'vscode' => implode(' · ', array_filter([
+                    \is_string($metadata['displayName'] ?? null) ? $metadata['displayName'] : null,
+                    \is_string($metadata['targetPlatform'] ?? null) && 'universal' !== $metadata['targetPlatform'] ? $metadata['targetPlatform'] : null,
+                    '/vscode/asset/…/'.$package->getVersion(),
+                ])),
                 'deb', 'rpm' => trim(sprintf('%s · %s', \Sas\Bundle\Distributions::find((string) ($metadata['distribution'] ?? ''))['label'] ?? '', $metadata['architecture'] ?? ''), ' ·'),
                 default => null,
             },

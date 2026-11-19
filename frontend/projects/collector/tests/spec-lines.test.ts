@@ -83,3 +83,16 @@ test('Ansible Galaxy et Terraform : nom sans contrainte', () => {
     'hashicorp/aws\nterraform ~> 1.9',
   );
 });
+
+test('extensions VS Code : identifiant sans version ni casse', () => {
+  assert.equal(lineKey('MS-Python.Python@2024.2.0', 'vscode'), 'ms-python.python');
+  assert.equal(lineKey('redhat.vscode-yaml >=1.14', 'vscode'), 'redhat.vscode-yaml');
+  assert.equal(
+    addLines(
+      'redhat.vscode-yaml\n',
+      ['Redhat.vscode-yaml@1.15.0', 'dbaeumer.vscode-eslint'],
+      'vscode',
+    ),
+    'redhat.vscode-yaml\ndbaeumer.vscode-eslint',
+  );
+});

@@ -26,7 +26,7 @@
 	}
 
 	# API d'administration et registres (npm, PyPI, Composer, Docker) : Symfony
-	@php path /api/* /npm /npm/* /pypi/* /composer/* /v2 /v2/* /deb/* /rpm/* /galaxy/* /terraform/* /.well-known/terraform.json
+	@php path /api/* /npm /npm/* /pypi/* /composer/* /v2 /v2/* /deb/* /rpm/* /galaxy/* /terraform/* /vscode/* /.well-known/terraform.json
 	handle @php {
 		# API JSON et registres : aucune ressource active
 		header Content-Security-Policy "default-src 'none'; frame-ancestors 'none'; base-uri 'none'"

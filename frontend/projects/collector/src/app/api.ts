@@ -53,6 +53,10 @@ export interface ListOptions {
   architectures?: string[];
   sections?: string[];
   recommends?: boolean;
+  /** VS Code : galeries interrogées, version de VS Code visée, préversions */
+  source?: string;
+  vscodeVersion?: string;
+  preRelease?: boolean;
 }
 
 export interface PackageList {
@@ -245,6 +249,7 @@ export interface EcosystemChoices {
   pypi: { pythonVersions: string[]; platforms: Choice[] };
   docker: { platforms: Choice[] };
   terraform: { platforms: Choice[] };
+  vscode: { platforms: Choice[]; sources: Choice[] };
   distributions: Distribution[];
 }
 

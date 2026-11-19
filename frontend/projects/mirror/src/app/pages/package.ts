@@ -145,7 +145,9 @@ import { installCommand } from '../clients';
                           Plus servie par le registre{{ q.reason ? ' : ' + q.reason : '' }}
                         </div>
                       }
-                      @if (v.filename) {
+                      @if (vsixUrl(v.version, v.filename); as url) {
+                        <a class="mono" [href]="url" download>{{ v.filename }}</a>
+                      } @else if (v.filename) {
                         <span class="mono">{{ v.filename }}</span>
                       }
                       {{ v.detail }}
@@ -281,6 +283,16 @@ export default class PackagePage implements OnInit {
   /** Version la plus récente servie (hors quarantaine) */
   protected installable(): PackageVersion | undefined {
     return this.data()?.items.find((v) => !v.quarantine);
+  }
+
+  /** Extension VS Code : téléchargement du .vsix (installation sans galerie configurée) */
+  protected vsixUrl(version: string, filename: string | null): string | null {
+    const d = this.data();
+    if (d?.ecosystem !== 'vscode' || !filename) return null;
+    const [publisher, ...rest] = d.name.split('.');
+    const platform = /@([\w-]+)\.vsix$/.exec(filename)?.[1];
+    const path = [publisher, rest.join('.'), version].map(encodeURIComponent).join('/');
+    return `/vscode/asset/${path}/Microsoft.VisualStudio.Services.VSIXPackage${platform ? '?targetPlatform=' + platform : ''}`;
   }
 
   protected command(version: string): string {

@@ -98,6 +98,42 @@ final readonly class Downloader
     }
 
     /**
+     * Requête JSON envoyée en POST (API de galerie des extensions VS Code).
+     *
+     * @param array<string, mixed> $body
+     * @param array<string, mixed> $options
+     *
+     * @return array<mixed>
+     */
+    public function post(string $url, array $body, array $options = []): array
+    {
+        try {
+            $response = $this->http->request('POST', $url, $this->withAuth($url, $options) + ['json' => $body, 'timeout' => 120]);
+            if (200 !== $status = $response->getStatusCode()) {
+                throw new DownloadException(sprintf('HTTP %d pour %s', $status, self::redact($url)), $status);
+            }
+
+            return $response->toArray();
+        } catch (DownloadException $e) {
+            throw $e;
+        } catch (ExceptionInterface $e) {
+            throw new DownloadException(sprintf('Requête impossible vers %s : %s', self::redact($url), $e->getMessage()), previous: $e);
+        }
+    }
+
+    /** Petit fichier texte (somme de contrôle publiée à côté d'un paquet) ; null s'il n'existe pas. */
+    public function text(string $url): ?string
+    {
+        try {
+            $response = $this->http->request('GET', $url, $this->withAuth($url, []) + ['timeout' => 30]);
+
+            return 200 === $response->getStatusCode() ? $response->getContent() : null;
+        } catch (ExceptionInterface) {
+            return null;
+        }
+    }
+
+    /**
      * Identifiants du dépôt privé qui sert cette adresse, sauf si l'appelant fournit déjà les siens.
      *
      * @param array<string, mixed> $options

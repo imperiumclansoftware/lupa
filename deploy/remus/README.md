@@ -2,7 +2,7 @@
 
 **Rémus** est le collecteur de **Lupa**. Il permet d'installer des paquets **npm**, **Python (PyPI)**,
 **Composer**, des **images Docker**, des paquets système **Debian** et **RPM** (AlmaLinux, CentOS), des
-collections **Ansible Galaxy** et des providers et modules **Terraform** sur un réseau isolé d'Internet. Installé sur une machine connectée,
+collections **Ansible Galaxy**, des providers et modules **Terraform** et des **extensions VS Code** sur un réseau isolé d'Internet. Installé sur une machine connectée,
 il télécharge les paquets et toutes leurs dépendances, puis prépare des **bundles signés** à copier sur
 une clé USB. De l'autre côté, son jumeau [**Romulus**](https://hub.docker.com/r/iemperor/romulus) importe
 ces bundles et sert les dépôts aux postes du réseau isolé.
@@ -26,15 +26,9 @@ les fichiers sont dans le volume `/data`.
 - **Listes de paquets :** par écosystème, saisies à la main (`express@^4`, `django>=5`, `monolog/monolog:^3`,
   `nginx:1.27`) ou importées depuis un fichier de verrouillage (`package-lock.json`, `requirements.txt`,
   `composer.lock`, `composer.json`). Les dépendances sont résolues par les outils officiels.
-- **Modèles de framework :** Rémus exécute le vrai générateur et collecte tout ce qu'il installe. Les commandes
-  suivantes fonctionnent ensuite telles quelles hors ligne :
-  - `ng new` (Angular, avec et sans SSR) ;
-  - `npm create vite` (React, Vue, Svelte, TypeScript) ;
-  - `nest new` ;
-  - `composer create-project symfony/skeleton`, avec les **recettes Symfony Flex** ;
-  - `composer create-project laravel/laravel`.
-  
-  Des listes prêtes à l'emploi existent aussi pour Python (Django, FastAPI, Flask, data science) et Docker.
+- **Modèles de framework :** Rémus exécute le vrai générateur et collecte tout ce qu'il installe : `ng new`,
+  `npm create vite` (React, Vue, Svelte), `nest new`, `composer create-project` Symfony (avec les **recettes
+  Flex**) et Laravel fonctionnent ensuite tels quels hors ligne. Listes prêtes aussi pour Python, Docker, VS Code.
 - **Recherche dans les registres :** depuis le formulaire de liste, on cherche un paquet ou une image
   (npm, PyPI, Packagist, Docker Hub et autres registres OCI), on choisit une version et sa contrainte
   (exacte, compatible, correctifs, toujours la dernière).
@@ -71,8 +65,11 @@ les fichiers sont dans le volume `/data`.
     SHA256SUMS signé par l'éditeur est vérifié avec GPG.
   - modules (`terraform-aws-modules/vpc/aws 5.8.1`) et le binaire `terraform`.
   - Un `.terraform.lock.hcl` peut être importé.
-- **Python multi-plateformes :** des wheels pour chaque cible voulue. Versions de Python de 3.9 à 3.14 ;
-  plateformes Linux glibc ou musl (x86_64, ARM64), Windows et macOS. Les sources (sdist) sont disponibles en option.
+- **Extensions VS Code :** Open VSX et/ou Visual Studio Marketplace (`ms-python.python@2024.2.0`, ou un
+  `.vscode/extensions.json`), dépendances et packs compris, construction de chaque plateforme choisie (Linux
+  x64 par défaut), version compatible avec un VS Code donné. Romulus les sert en marketplace.
+- **Python multi-plateformes :** wheels pour Python 3.9 à 3.14, Linux glibc ou musl (x86_64, ARM64), Windows,
+  macOS ; sources (sdist) en option.
 - **Docker :** les plateformes à collecter sont au choix (amd64, arm64…). L'index multi-plateformes d'origine
   est conservé, donc `image@sha256:…` reste valide. Les couches communes ne sont téléchargées et transportées qu'une fois.
 - **Exports incrémentaux :** seuls les paquets jamais transportés partent. Un export « complet » existe pour un
@@ -84,7 +81,7 @@ les fichiers sont dans le volume `/data`.
 
 | Tag | Contenu |
 |---|---|
-| `1.4.0`, `latest` | Rôles, double authentification, identifiants UUID, Symfony 8.1.11 (17 avis de sécurité) |
+| `1.4.0`, `latest` | Extensions VS Code, rôles, double authentification, identifiants UUID, Symfony 8.1.11 |
 | `1.3.1` | Sécurité : PHP 8.4.27 (CVE-2026-109618 et CVE-2026-109619, critiques), FrankenPHP 1.13.2 |
 | `1.3.0` | Paquets Debian et RPM (AlmaLinux, CentOS), Ansible Galaxy, Terraform |
 
@@ -414,11 +411,8 @@ Après chaque mise à jour d'une liste, Rémus interroge **OSV.dev** pour chaque
 Composer collecté. Le bouton **Analyser maintenant** de la page **Sécurité** relance l'analyse, car de
 nouvelles failles sont publiées chaque jour.
 
-| Niveau | Gravité (avis GitHub, ou score CVSS v3) | Affichage |
-|---|---|---|
-| Critique | critique (CVSS ≥ 9) | rouge |
-| Avertissement | élevée, moyenne, ou non évaluée | orange |
-| Faible | faible | gris, pour information |
+Niveaux : **critique** (CVSS ≥ 9, rouge), **avertissement** (gravité élevée, moyenne ou non évaluée, orange),
+**faible** (gris, pour information).
 
 Pour chaque faille : identifiant (GHSA, CVE), résumé, lien vers la fiche, et **versions corrigées**, utiles pour
 choisir la version à collecter. Une même faille publiée par plusieurs bases n'est comptée qu'une fois.

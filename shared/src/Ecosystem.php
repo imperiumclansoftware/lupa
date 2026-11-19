@@ -12,6 +12,7 @@ enum Ecosystem: string
     case Rpm = 'rpm';
     case Galaxy = 'galaxy';
     case Terraform = 'terraform';
+    case Vscode = 'vscode';
 
     public function label(): string
     {
@@ -24,6 +25,7 @@ enum Ecosystem: string
             self::Rpm => 'RPM (AlmaLinux, CentOS)',
             self::Galaxy => 'Ansible Galaxy',
             self::Terraform => 'Terraform',
+            self::Vscode => 'Extensions VS Code',
         };
     }
 }

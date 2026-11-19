@@ -16,6 +16,8 @@ parameters:
     env(SYSTEM_CACHE_DIR): '%kernel.project_dir%/var/system'
     env(GPGV_BIN): 'gpgv'
     env(GALAXY_URL): 'https://galaxy.ansible.com'
+    env(OPENVSX_URL): 'https://open-vsx.org'
+    env(VSCODE_MARKETPLACE_URL): 'https://marketplace.visualstudio.com'
 
 services:
     _defaults:

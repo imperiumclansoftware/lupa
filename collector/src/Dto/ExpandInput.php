@@ -8,7 +8,7 @@ use Symfony\Component\Validator\Constraints as Assert;
 final readonly class ExpandInput
 {
     public function __construct(
-        #[Assert\Choice(choices: ['npm', 'pypi', 'composer', 'docker', 'deb', 'rpm', 'galaxy', 'terraform'], message: 'Écosystème inconnu.')]
+        #[Assert\Choice(choices: ['npm', 'pypi', 'composer', 'docker', 'deb', 'rpm', 'galaxy', 'terraform', 'vscode'], message: 'Écosystème inconnu.')]
         public string $ecosystem = 'npm',
         #[Assert\NotBlank, Assert\Length(max: 300)]
         public string $line = '',

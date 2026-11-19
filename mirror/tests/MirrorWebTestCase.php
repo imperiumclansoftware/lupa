@@ -106,7 +106,11 @@ abstract class MirrorWebTestCase extends WebTestCase
         return json_decode((string) $this->client->getInternalResponse()->getContent(), true, 512, \JSON_THROW_ON_ERROR);
     }
 
-    /** Corps de la dernière réponse, y compris pour les fichiers servis en BinaryFileResponse. */
+    /**
+     * Corps de la dernière réponse, y compris pour les fichiers servis en BinaryFileResponse.
+     *
+     * @phpstan-impure change à chaque requête
+     */
     protected function body(): string
     {
         return (string) $this->client->getInternalResponse()->getContent();

@@ -61,6 +61,11 @@ final class Presenter
                     default => 'Module',
                 },
                 'deb', 'rpm' => trim(sprintf('%s · %s · %s', \Sas\Bundle\Distributions::find((string) ($metadata['distribution'] ?? ''))['label'] ?? '', $metadata['architecture'] ?? '', $metadata['description'] ?? ''), ' ·'),
+                'vscode' => implode(' · ', array_filter([
+                    \is_string($metadata['displayName'] ?? null) ? $metadata['displayName'] : null,
+                    \is_string($metadata['targetPlatform'] ?? null) && 'universal' !== $metadata['targetPlatform'] ? $metadata['targetPlatform'] : null,
+                    'marketplace' === ($metadata['source'] ?? null) ? 'Marketplace' : 'Open VSX',
+                ])),
                 'npm', 'composer' => isset($metadata['description']) ? mb_substr((string) $metadata['description'], 0, 140) : null,
                 default => null,
             },

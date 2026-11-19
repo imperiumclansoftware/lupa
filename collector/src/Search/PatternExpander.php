@@ -65,7 +65,7 @@ final class PatternExpander
             Ecosystem::Docker => $this->docker($line),
             // Debian, RPM : développé par le résolveur, dans l'index de la distribution choisie
             Ecosystem::Deb, Ecosystem::Rpm => [$line],
-            Ecosystem::Galaxy, Ecosystem::Terraform => throw new \InvalidArgumentException('Les motifs (« * », « ? ») ne sont pas pris en charge pour cet écosystème : saisissez les noms exacts.'),
+            Ecosystem::Galaxy, Ecosystem::Terraform, Ecosystem::Vscode => throw new \InvalidArgumentException('Les motifs (« * », « ? ») ne sont pas pris en charge pour cet écosystème : saisissez les noms exacts.'),
         };
         if ([] === $lines) {
             throw new \InvalidArgumentException([] === $this->skipped ? sprintf('Motif « %s » : aucun paquet ne correspond.', $line) : sprintf('Motif « %s » : %d paquet(s) trouvé(s), mais aucun n\'a de version respectant la contrainte.', $line, \count($this->skipped)));

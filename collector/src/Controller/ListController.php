@@ -15,6 +15,7 @@ use App\Repository\PackageListRepository;
 use App\Resolver\DockerResolver;
 use App\Resolver\PypiPlatforms;
 use App\Resolver\Resolver;
+use App\Resolver\VscodeResolver;
 use App\Template\TemplateCatalog;
 use Doctrine\ORM\EntityManagerInterface;
 use Sas\Bundle\Distributions;
@@ -57,6 +58,15 @@ final class ListController
             ],
             'docker' => ['platforms' => self::choices(DockerResolver::PLATFORMS)],
             'terraform' => ['platforms' => self::choices(\App\Resolver\TerraformResolver::PLATFORMS)],
+            'vscode' => [
+                'platforms' => self::choices(VscodeResolver::PLATFORMS),
+                'sources' => self::choices([
+                    'openvsx' => 'Open VSX',
+                    'openvsx+marketplace' => 'Open VSX, puis le Visual Studio Marketplace',
+                    'marketplace+openvsx' => 'Visual Studio Marketplace, puis Open VSX',
+                    'marketplace' => 'Visual Studio Marketplace',
+                ]),
+            ],
             // Debian et RPM : distributions, architectures et sections (dépôts) proposées
             'distributions' => array_map(static fn (string $id, array $d) => [
                 'id' => $id,
@@ -229,6 +239,12 @@ final class ListController
             Ecosystem::Galaxy => [],
             Ecosystem::Terraform => [
                 'platforms' => array_values(array_filter((array) ($options['platforms'] ?? []), 'is_string')),
+            ],
+            Ecosystem::Vscode => [
+                'platforms' => array_values(array_filter((array) ($options['platforms'] ?? []), 'is_string')),
+                'source' => \is_string($options['source'] ?? null) ? $options['source'] : VscodeResolver::DEFAULT_SOURCE,
+                'vscodeVersion' => \is_string($options['vscodeVersion'] ?? null) ? trim($options['vscodeVersion']) : '',
+                'preRelease' => (bool) ($options['preRelease'] ?? false),
             ],
             Ecosystem::Deb, Ecosystem::Rpm => [
                 'distribution' => (string) ($options['distribution'] ?? ''),

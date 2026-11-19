@@ -127,6 +127,31 @@ final class TemplateCatalog
                 'specs' => "gcc\ngcc-c++\nmake\nautoconf\nautomake\nlibtool\ncmake\npkgconf",
             ],
             [
+                'id' => 'vscode-web', 'ecosystem' => 'vscode', 'kind' => 'preset', 'label' => 'Web (JavaScript, TypeScript)',
+                'description' => 'ESLint, Prettier, Angular, Vue, Tailwind CSS, EditorConfig.',
+                'specs' => "dbaeumer.vscode-eslint\nesbenp.prettier-vscode\nangular.ng-template\nvue.volar\nbradlc.vscode-tailwindcss\neditorconfig.editorconfig",
+            ],
+            [
+                'id' => 'vscode-python', 'ecosystem' => 'vscode', 'kind' => 'preset', 'label' => 'Python',
+                'description' => 'Python, débogueur, Ruff, Black, Jupyter.',
+                'specs' => "ms-python.python\nms-python.debugpy\ncharliermarsh.ruff\nms-python.black-formatter\nms-toolsai.jupyter",
+            ],
+            [
+                'id' => 'vscode-java', 'ecosystem' => 'vscode', 'kind' => 'preset', 'label' => 'Java',
+                'description' => 'Pack Java (langage, débogage, tests, Maven, Gradle).',
+                'specs' => 'vscjava.vscode-java-pack',
+            ],
+            [
+                'id' => 'vscode-php', 'ecosystem' => 'vscode', 'kind' => 'preset', 'label' => 'PHP',
+                'description' => 'Intelephense et Xdebug.',
+                'specs' => "bmewburn.vscode-intelephense-client\nxdebug.php-debug",
+            ],
+            [
+                'id' => 'vscode-ops', 'ecosystem' => 'vscode', 'kind' => 'preset', 'label' => 'Infrastructure',
+                'description' => 'YAML, Docker, Kubernetes, Terraform, Ansible, GitLens.',
+                'specs' => "redhat.vscode-yaml\nms-azuretools.vscode-docker\nms-kubernetes-tools.vscode-kubernetes-tools\nhashicorp.terraform\nredhat.ansible\neamodio.gitlens",
+            ],
+            [
                 'id' => 'galaxy-common', 'ecosystem' => 'galaxy', 'kind' => 'preset', 'label' => 'Collections courantes',
                 'description' => 'Modules système, Docker, cryptographie et utilitaires.',
                 'specs' => "community.general\nansible.posix\nansible.utils\ncommunity.docker\ncommunity.crypto",

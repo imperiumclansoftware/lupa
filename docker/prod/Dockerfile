@@ -80,7 +80,7 @@ CMD ["frankenphp", "run", "--config", "/etc/frankenphp/Caddyfile"]
 FROM runtime AS collector
 ARG APP_VERSION=dev
 LABEL org.opencontainers.image.title="Rémus" \
-      org.opencontainers.image.description="Rémus, collecteur Lupa : télécharge paquets npm, Python, Composer, Debian, RPM, Ansible, Terraform et images Docker et prépare des bundles signés pour Romulus, le miroir hors ligne." \
+      org.opencontainers.image.description="Rémus, collecteur Lupa : télécharge paquets npm, Python, Composer, Debian, RPM, Ansible, Terraform, extensions VS Code et images Docker et prépare des bundles signés pour Romulus, le miroir hors ligne." \
       org.opencontainers.image.url="https://hub.docker.com/r/iemperor/remus" \
       org.opencontainers.image.version="${APP_VERSION}"
 COPY --from=composer:2 /usr/bin/composer /usr/local/bin/composer
@@ -108,7 +108,7 @@ VOLUME ["/data", "/exports"]
 FROM runtime AS mirror
 ARG APP_VERSION=dev
 LABEL org.opencontainers.image.title="Romulus" \
-      org.opencontainers.image.description="Romulus, miroir hors ligne Lupa : importe les bundles signés de Rémus et sert les dépôts npm, PyPI, Composer, Docker, apt, dnf, Ansible Galaxy et Terraform sur un réseau isolé." \
+      org.opencontainers.image.description="Romulus, miroir hors ligne Lupa : importe les bundles signés de Rémus et sert les dépôts npm, PyPI, Composer, Docker, apt, dnf, Ansible Galaxy, Terraform et une marketplace VS Code sur un réseau isolé." \
       org.opencontainers.image.url="https://hub.docker.com/r/iemperor/romulus" \
       org.opencontainers.image.version="${APP_VERSION}"
 COPY --from=front /front/dist/mirror/browser /srv/front
