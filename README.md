@@ -2,15 +2,10 @@
 
 <p align="center">
   <a href="https://github.com/imperiumclansoftware/lupa/releases/download/v1.4.0/lupa.mp4">
-   <!-- <img src="docs/lupa-teaser.webp" width="860" alt="Lupa en animation : Rémus collecte sur Internet, un bundle signé traverse la clé USB, Romulus sert huit écosystèmes sur le réseau isolé">-->
-    
-
-https://github.com/user-attachments/assets/90a10748-f94f-4b35-b05c-b60e01dec34b
-
-
+    <img src="https://github.com/imperiumclansoftware/lupa/releases/download/v1.4.0/lupa-poster.png" width="860" alt="Lupa : Rémus collecte sur Internet, un bundle signé traverse la clé USB, Romulus sert neuf écosystèmes sur le réseau isolé">
   </a>
   <br>
-  <sub>▶ <a href="https://github.com/imperiumclansoftware/lupa/releases/download/v1.3.0/lupa-presentation.mp4">Vidéo de présentation complète</a> (1 min, 1080p)</sub>
+  <sub>▶ <a href="https://github.com/imperiumclansoftware/lupa/releases/download/v1.4.0/lupa.mp4">Vidéo de présentation</a> (1 min 55, 1080p)</sub>
 </p>
 
 Dépôts de paquets **hors ligne** pour un réseau isolé d'Internet : npm, Python (PyPI), Composer,
