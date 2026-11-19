@@ -5,7 +5,7 @@ const { chromium } = require('playwright');
 const { spawn } = require('child_process');
 const fs = require('fs');
 
-const FPS = 30, DURATION = 60;
+const FPS = 30;
 (async () => {
   const [mode, ...times] = process.argv.slice(2);
   fs.mkdirSync('out', { recursive: true });
@@ -23,7 +23,8 @@ const FPS = 30, DURATION = 60;
   } else {
     const ffmpeg = spawn('ffmpeg', ['-y', '-loglevel', 'error', '-f', 'image2pipe', '-framerate', String(FPS), '-c:v', 'mjpeg', '-i', '-',
       '-c:v', 'libx264', '-preset', 'slow', '-crf', '18', '-pix_fmt', 'yuv420p', '-movflags', '+faststart', 'out/lupa.mp4'], { stdio: ['pipe', 'inherit', 'inherit'] });
-    const total = FPS * DURATION;
+    // Durée définie par la composition elle-même
+    const total = Math.round(FPS * await page.evaluate(() => window.DURATION));
     for (let f = 0; f < total; f++) {
       await page.evaluate((s) => window.seek(s), f / FPS);
       const jpeg = await page.screenshot({ type: 'jpeg', quality: 95 });
@@ -33,7 +34,7 @@ const FPS = 30, DURATION = 60;
     ffmpeg.stdin.end();
     await new Promise((r, j) => ffmpeg.on('close', (c) => (c === 0 ? r() : j(new Error('ffmpeg ' + c)))));
     // Image d'aperçu (affiche) pour GitHub ou une page web
-    await page.evaluate(() => window.seek(10.5));
+    await page.evaluate(() => window.seek(14));
     await page.screenshot({ path: 'out/lupa-poster.png' });
     console.log('vidéo prête : out/lupa.mp4');
   }

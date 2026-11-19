@@ -1,6 +1,6 @@
 # Vidéo de présentation
 
-Vidéo de 60 s (1920×1080, muette) : `video.html` est une composition HTML dont chaque image est
+Vidéo de 115 s (1920×1080, muette) : `video.html` est une composition HTML dont chaque image est
 calculée à partir du temps (`window.seek(t)`), rendue par Chromium puis assemblée par ffmpeg.
 
 ```bash

@@ -13,7 +13,7 @@
   :root {
     --bg: #0f0e0d; --surface: #1a1918; --surface-2: #222120; --border: #2e2c2a;
     --text: #efece8; --text-2: #b3ada6; --text-3: #7d7770;
-    --remus: #e58a5c; --remus-deep: #b4532a; --romulus: #6cbf96; --romulus-deep: #2f6b4f;
+    --remus: #e58a5c; --remus-deep: #b4532a; --romulus: #6cbf96; --romulus-deep: #2f6b4f; --vscode: #3fa9f5;
     --danger: #f07171; --ok: #6cbf96;
   }
   * { box-sizing: border-box; margin: 0; }
@@ -23,14 +23,13 @@
   .scene { position: absolute; inset: 0; opacity: 0; will-change: opacity, transform; }
   .center { display: grid; place-items: center; text-align: center; }
   .display { font-family: 'Cinzel', serif; letter-spacing: 0.06em; }
-  .mono { font-family: 'JetBrains Mono', monospace; }
   svg.stroke path { fill: none; stroke-linecap: round; stroke-linejoin: round; }
 
   /* 1 — accroche */
-  #s1 .lines { position: absolute; left: 160px; top: 230px; }
+  #s1 .lines { position: absolute; left: 160px; top: 200px; }
   #s1 h1 { font-size: 70px; font-weight: 750; letter-spacing: -0.02em; line-height: 1.1; }
   #s1 h1.dim { color: var(--text-2); }
-  #s1 .cmds { position: absolute; left: 160px; top: 500px; display: grid; gap: 18px; }
+  #s1 .cmds { position: absolute; left: 160px; top: 470px; display: grid; gap: 18px; }
   #s1 .cmd { font-family: 'JetBrains Mono', monospace; font-size: 34px; display: flex; gap: 28px; align-items: center; }
   #s1 .cmd .prompt { color: var(--text-3); }
   #s1 .cmd .err { color: var(--danger); font-size: 26px; }
@@ -45,66 +44,68 @@
   #s2 .twin span { color: var(--text-2); }
 
   /* 3 — architecture */
-  #s3 .zone { position: absolute; top: 200px; height: 600px; border-radius: 36px; padding: 34px 40px; }
+  #s3 .zone { position: absolute; top: 160px; height: 620px; border-radius: 36px; padding: 34px 40px; }
   #s3 .internet { left: 90px; width: 560px; background: linear-gradient(160deg, #2a1810, #1b1411); box-shadow: inset 0 0 0 2px #4a2a1a; }
   #s3 .isolated { right: 90px; width: 760px; background: linear-gradient(160deg, #10251c, #111a16); box-shadow: inset 0 0 0 2px #1f4434; }
   #s3 .zone h3 { font-size: 26px; text-transform: uppercase; letter-spacing: 0.16em; color: var(--text-2); font-weight: 700; }
   #s3 .card { position: absolute; display: flex; align-items: center; gap: 22px; padding: 24px 30px; border-radius: 26px; background: var(--surface); box-shadow: 0 30px 60px -30px #000, inset 0 0 0 1px var(--border); }
   #s3 .card b { display: block; font-family: 'Cinzel', serif; font-size: 40px; letter-spacing: 0.05em; }
   #s3 .card span { color: var(--text-2); font-size: 24px; }
-  #s3 .remus-card { left: 140px; top: 620px; }
-  #s3 .romulus-card { right: 430px; top: 470px; }
-  #s3 .regs { position: absolute; left: 140px; top: 300px; display: flex; gap: 14px; flex-wrap: wrap; width: 480px; }
-  #s3 .reg { font-family: 'JetBrains Mono', monospace; font-size: 20px; padding: 8px 14px; border-radius: 10px; background: #3a2117; color: #f2b393; }
+  #s3 .remus-card { left: 140px; top: 600px; }
+  #s3 .romulus-card { right: 430px; top: 450px; }
+  #s3 .regs { position: absolute; left: 140px; top: 250px; display: flex; gap: 12px; flex-wrap: wrap; width: 480px; }
+  #s3 .reg { font-family: 'JetBrains Mono', monospace; font-size: 19px; padding: 7px 13px; border-radius: 10px; background: #3a2117; color: #f2b393; }
   #s3 .desk { position: absolute; right: 150px; width: 230px; display: flex; align-items: center; gap: 16px; padding: 16px 20px; border-radius: 18px; background: var(--surface); box-shadow: inset 0 0 0 1px var(--border); font-size: 22px; color: var(--text-2); }
-  #s3 .usb { position: absolute; left: 870px; top: 470px; width: 180px; height: 150px; display: grid; place-items: center; }
+  #s3 .usb { position: absolute; left: 870px; top: 450px; width: 180px; height: 150px; display: grid; place-items: center; }
   #s3 .bundle { position: absolute; top: 0; left: 0; display: flex; align-items: center; gap: 12px; padding: 12px 18px; border-radius: 14px; background: #f2e9df; color: #1b1a18; font-family: 'JetBrains Mono', monospace; font-size: 20px; font-weight: 600; box-shadow: 0 20px 40px -14px #000; white-space: nowrap; }
-  #s3 .check { position: absolute; left: 1150px; top: 380px; display: flex; gap: 12px; align-items: center; padding: 10px 20px; border-radius: 999px; background: #15302a; color: var(--romulus); font-size: 24px; font-weight: 700; }
-  #s3 .caption, .caption { position: absolute; left: 0; right: 0; bottom: 120px; text-align: center; font-size: 38px; font-weight: 600; }
-  #s3 .caption em, .caption em { font-style: normal; color: var(--remus); }
-  #s3 .caption strong, .caption strong { color: var(--romulus); }
+  #s3 .check { position: absolute; left: 1150px; top: 360px; display: flex; gap: 12px; align-items: center; padding: 10px 20px; border-radius: 999px; background: #15302a; color: var(--romulus); font-size: 24px; font-weight: 700; }
+  .caption { position: absolute; left: 0; right: 0; bottom: 110px; text-align: center; font-size: 40px; font-weight: 600; }
+  .caption em { font-style: normal; color: var(--remus); }
+  .caption strong { color: var(--romulus); }
   .dot { position: absolute; width: 18px; height: 18px; margin: -9px; border-radius: 50%; }
 
-  /* 4 — écosystèmes */
-  #s4 h2 { position: absolute; top: 130px; left: 0; right: 0; text-align: center; font-size: 64px; font-weight: 750; letter-spacing: -0.02em; }
-  #s4 h2 span { color: var(--text-2); font-weight: 500; }
-  #s4 .grid { position: absolute; top: 300px; left: 210px; right: 210px; display: grid; grid-template-columns: repeat(4, 1fr); gap: 34px; }
-  #s4 .tile { height: 290px; border-radius: 30px; background: var(--surface); box-shadow: inset 0 0 0 1px var(--border); padding: 34px; display: grid; align-content: space-between; }
-  #s4 .tile .ico { width: 84px; height: 84px; border-radius: 24px; display: grid; place-items: center; }
-  #s4 .tile b { font-size: 40px; font-weight: 750; }
-  #s4 .tile span { display: block; color: var(--text-2); font-size: 22px; margin-top: 6px; }
+  /* 4 — écosystèmes, 8 — sécurité : tuiles */
+  .tiles-scene h2 { position: absolute; top: 110px; left: 0; right: 0; text-align: center; font-size: 64px; font-weight: 750; letter-spacing: -0.02em; }
+  .tiles-scene h2 span { color: var(--text-2); font-weight: 500; }
+  .tiles-scene .grid { position: absolute; top: 260px; left: 230px; right: 230px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 30px; }
+  .tiles-scene .tile { height: 210px; border-radius: 28px; background: var(--surface); box-shadow: inset 0 0 0 1px var(--border); padding: 28px 32px; display: grid; grid-template-columns: 84px 1fr; gap: 26px; align-items: center; }
+  .tiles-scene .tile .ico { width: 84px; height: 84px; border-radius: 24px; display: grid; place-items: center; }
+  .tiles-scene .tile b { font-size: 38px; font-weight: 750; display: block; line-height: 1.1; }
+  .tiles-scene .tile span { display: block; color: var(--text-2); font-size: 23px; margin-top: 6px; line-height: 1.3; }
+  #s8 .tile b { font-size: 32px; }
 
-  /* 5, 6 — captures */
-  .shot-scene .window { position: absolute; left: 700px; top: 190px; width: 1120px; height: 700px; border-radius: 26px; overflow: hidden; background: #000; box-shadow: 0 60px 120px -40px #000, 0 0 0 1px #34312e; }
+  /* 5, 6, 7 — captures */
+  .shot-scene .window { position: absolute; left: 700px; top: 170px; width: 1120px; height: 720px; border-radius: 26px; overflow: hidden; background: #000; box-shadow: 0 60px 120px -40px #000, 0 0 0 1px #34312e; }
   .shot-scene .bar { height: 46px; background: #1d1c1b; display: flex; align-items: center; gap: 10px; padding: 0 20px; }
   .shot-scene .bar i { width: 13px; height: 13px; border-radius: 50%; background: #3a3734; }
   .shot-scene .bar .url { margin-left: 18px; font-family: 'JetBrains Mono', monospace; font-size: 17px; color: var(--text-3); }
   .shot-scene .view { position: absolute; top: 46px; left: 0; right: 0; bottom: 0; overflow: hidden; }
   .shot-scene .view img { position: absolute; top: 0; left: 0; width: 1120px; height: auto; transform-origin: 0 0; }
-  .shot-scene .side { position: absolute; left: 110px; top: 300px; width: 520px; }
+  .shot-scene .side { position: absolute; left: 110px; top: 260px; width: 530px; }
   .shot-scene .side .eyebrow { display: flex; align-items: center; gap: 16px; font-family: 'Cinzel', serif; font-size: 34px; letter-spacing: 0.08em; margin-bottom: 40px; }
-  .shot-scene .point { position: absolute; left: 0; top: 110px; width: 520px; }
+  .shot-scene .point { position: absolute; left: 0; top: 110px; width: 530px; }
   .shot-scene .point b { display: block; font-size: 50px; line-height: 1.12; font-weight: 750; letter-spacing: -0.02em; }
-  .shot-scene .point span { display: block; margin-top: 18px; font-size: 27px; line-height: 1.45; color: var(--text-2); }
+  .shot-scene .point span { display: block; margin-top: 20px; font-size: 28px; line-height: 1.45; color: var(--text-2); }
+  .shot-scene .url .who { color: var(--text-2); }
 
-  /* 7 — terminal */
-  #s7 .term { position: absolute; left: 260px; right: 260px; top: 170px; height: 640px; border-radius: 26px; background: #0b0b0a; box-shadow: 0 60px 120px -40px #000, 0 0 0 1px #34312e; overflow: hidden; }
-  #s7 .term .bar { height: 50px; background: #1d1c1b; display: flex; align-items: center; gap: 10px; padding: 0 22px; color: var(--text-3); font-size: 19px; }
-  #s7 .term .bar i { width: 13px; height: 13px; border-radius: 50%; background: #3a3734; }
-  #s7 .term .bar .title { margin-left: 16px; }
-  #s7 pre { padding: 34px 42px; font-family: 'JetBrains Mono', monospace; font-size: 27px; line-height: 1.62; white-space: pre-wrap; color: var(--text); }
-  #s7 .p { color: var(--romulus); }
-  #s7 .o { color: var(--text-3); }
-  #s7 .ok { color: var(--romulus); font-weight: 700; }
-  #s7 .badge { position: absolute; right: 290px; top: 128px; padding: 10px 22px; border-radius: 999px; background: #2a2210; color: #f0c674; font-size: 22px; font-weight: 700; display: flex; gap: 12px; align-items: center; }
+  /* 9 — terminal */
+  #s9 .term { position: absolute; left: 230px; right: 230px; top: 160px; height: 700px; border-radius: 26px; background: #0b0b0a; box-shadow: 0 60px 120px -40px #000, 0 0 0 1px #34312e; overflow: hidden; }
+  #s9 .term .bar { height: 50px; background: #1d1c1b; display: flex; align-items: center; gap: 10px; padding: 0 22px; color: var(--text-3); font-size: 19px; }
+  #s9 .term .bar i { width: 13px; height: 13px; border-radius: 50%; background: #3a3734; }
+  #s9 .term .bar .title { margin-left: 16px; }
+  #s9 pre { padding: 30px 42px; font-family: 'JetBrains Mono', monospace; font-size: 26px; line-height: 1.55; white-space: pre-wrap; color: var(--text); }
+  #s9 .p { color: var(--romulus); }
+  #s9 .o { color: var(--text-3); }
+  #s9 .ok { color: var(--romulus); font-weight: 700; }
+  #s9 .badge { position: absolute; right: 260px; top: 116px; padding: 10px 22px; border-radius: 999px; background: #2a2210; color: #f0c674; font-size: 22px; font-weight: 700; display: flex; gap: 12px; align-items: center; }
 
-  /* 8 — fin */
-  #s8 .wrap { display: grid; justify-items: center; gap: 20px; }
-  #s8 .name { font-size: 150px; font-weight: 700; letter-spacing: 0.14em; line-height: 1; }
-  #s8 .tagline { font-size: 38px; color: var(--text-2); margin-bottom: 30px; }
-  #s8 .links { display: grid; gap: 18px; justify-items: center; }
-  #s8 .link { font-family: 'JetBrains Mono', monospace; font-size: 32px; padding: 14px 30px; border-radius: 16px; background: var(--surface); box-shadow: inset 0 0 0 1px var(--border); }
-  #s8 .meta { margin-top: 26px; font-size: 28px; color: var(--text-3); letter-spacing: 0.04em; }
+  /* 10 — fin */
+  #s10 .wrap { display: grid; justify-items: center; gap: 20px; }
+  #s10 .name { font-size: 150px; font-weight: 700; letter-spacing: 0.14em; line-height: 1; }
+  #s10 .tagline { font-size: 38px; color: var(--text-2); margin-bottom: 30px; }
+  #s10 .links { display: grid; gap: 18px; justify-items: center; }
+  #s10 .link { font-family: 'JetBrains Mono', monospace; font-size: 32px; padding: 14px 30px; border-radius: 16px; background: var(--surface); box-shadow: inset 0 0 0 1px var(--border); }
+  #s10 .meta { margin-top: 26px; font-size: 28px; color: var(--text-3); letter-spacing: 0.04em; }
 </style>
 </head>
 <body>
@@ -120,6 +121,7 @@
       <div class="cmd"><span class="prompt">$</span><span>npm install</span><span class="err">✕ registre injoignable</span></div>
       <div class="cmd"><span class="prompt">$</span><span>sudo apt install nginx</span><span class="err">✕ registre injoignable</span></div>
       <div class="cmd"><span class="prompt">$</span><span>terraform init</span><span class="err">✕ registre injoignable</span></div>
+      <div class="cmd"><span class="prompt">$</span><span>code --install-extension ms-python.python</span><span class="err">✕ marketplace injoignable</span></div>
     </div>
   </section>
 
@@ -143,23 +145,23 @@
     <div class="regs" id="regs">
       <span class="reg">registry.npmjs.org</span><span class="reg">pypi.org</span><span class="reg">packagist.org</span>
       <span class="reg">docker.io</span><span class="reg">deb.debian.org</span><span class="reg">galaxy.ansible.com</span>
-      <span class="reg">registry.terraform.io</span>
+      <span class="reg">registry.terraform.io</span><span class="reg">open-vsx.org</span>
     </div>
     <div class="card remus-card" id="remus-card"><svg class="stroke" width="76" height="76" viewBox="0 0 48 48" data-logo="remus" data-color="#e58a5c" data-tile="1"></svg><div><b>Rémus</b><span>résout et vérifie</span></div></div>
     <div class="usb" id="usb"><svg class="stroke" width="120" height="120" viewBox="0 0 24 24"><path d="M12 2v14M8 6l4-4 4 4M7 11h2v3M17 9h-2v4M7 14c0 2 2 3 5 3s5-1 5-4M12 17v3M10 22h4" stroke="#efece8" stroke-width="1.6"/></svg></div>
     <div class="bundle" id="bundle"><svg class="stroke" width="28" height="28" viewBox="0 0 24 24"><path d="M19 11H5a2 2 0 0 0-2 2v7a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7a2 2 0 0 0-2-2zM7 11V7a5 5 0 0 1 10 0v4" stroke="#933f1c" stroke-width="2"/></svg>bundle · signé Ed25519</div>
     <div class="check" id="check"><svg class="stroke" width="26" height="26" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5" stroke="#6cbf96" stroke-width="3"/></svg>signature et sha256 vérifiés</div>
     <div class="card romulus-card" id="romulus-card"><svg class="stroke" width="76" height="76" viewBox="0 0 48 48" data-logo="romulus" data-color="#6cbf96" data-tile="1"></svg><div><b>Romulus</b><span>sert les dépôts</span></div></div>
-    <div class="desk" id="desk1" style="top:330px"><svg class="stroke" width="34" height="34" viewBox="0 0 24 24"><path d="M4 17l6-6-6-6M12 19h8" stroke="#6cbf96" stroke-width="2"/></svg>poste dev</div>
-    <div class="desk" id="desk2" style="top:500px"><svg class="stroke" width="34" height="34" viewBox="0 0 24 24"><path d="M4 17l6-6-6-6M12 19h8" stroke="#6cbf96" stroke-width="2"/></svg>serveur</div>
-    <div class="desk" id="desk3" style="top:670px"><svg class="stroke" width="34" height="34" viewBox="0 0 24 24"><path d="M4 17l6-6-6-6M12 19h8" stroke="#6cbf96" stroke-width="2"/></svg>CI interne</div>
+    <div class="desk" id="desk1" style="top:300px"><svg class="stroke" width="34" height="34" viewBox="0 0 24 24"><path d="M4 17l6-6-6-6M12 19h8" stroke="#6cbf96" stroke-width="2"/></svg>poste dev</div>
+    <div class="desk" id="desk2" style="top:470px"><svg class="stroke" width="34" height="34" viewBox="0 0 24 24"><path d="M4 17l6-6-6-6M12 19h8" stroke="#6cbf96" stroke-width="2"/></svg>serveur</div>
+    <div class="desk" id="desk3" style="top:640px"><svg class="stroke" width="34" height="34" viewBox="0 0 24 24"><path d="M4 17l6-6-6-6M12 19h8" stroke="#6cbf96" stroke-width="2"/></svg>CI interne</div>
     <div id="dots"></div>
     <div class="caption" id="s3cap"></div>
   </section>
 
   <!-- 4 — écosystèmes -->
-  <section class="scene" id="s4">
-    <h2>8 écosystèmes. <span>Dépendances comprises.</span></h2>
+  <section class="scene tiles-scene" id="s4">
+    <h2>9 écosystèmes. <span>Dépendances comprises.</span></h2>
     <div class="grid" id="ecos"></div>
   </section>
 
@@ -167,35 +169,53 @@
   <section class="scene shot-scene" id="s5">
     <div class="side">
       <div class="eyebrow"><svg class="stroke" width="58" height="58" viewBox="0 0 48 48" data-logo="remus" data-color="#e58a5c" data-tile="1"></svg><span style="color:var(--remus)">Rémus</span></div>
-      <div class="point" data-shot="0"><b>Des listes de paquets, des modèles prêts à l’emploi.</b><span>ng new, composer create-project, serveurs web, PostgreSQL… Rémus exécute les outils officiels.</span></div>
-      <div class="point" data-shot="1"><b>Toutes les dépendances, rien de plus.</b><span>Résolues comme npm, pip, apt ou dnf le feraient, téléchargées et vérifiées une à une.</span></div>
-      <div class="point" data-shot="2"><b>Les failles connues, avant l’export.</b><span>Alertes OSV.dev, versions corrigées, liste noire synchronisée jusqu’au miroir.</span></div>
+      <div class="point"><b>Des listes de paquets, des modèles prêts à l’emploi.</b><span>Saisie libre, fichiers de verrouillage, listes toutes faites : Rémus utilise les outils officiels.</span></div>
+      <div class="point"><b>Toutes les dépendances, rien de plus.</b><span>Résolues comme npm, pip, apt ou dnf le feraient, téléchargées et vérifiées une à une.</span></div>
+      <div class="point"><b>Les failles connues, avant l’export.</b><span>Alertes OSV.dev, versions corrigées, liste noire synchronisée jusqu’au miroir.</span></div>
     </div>
     <div class="window"><div class="bar"><i></i><i></i><i></i><span class="url">remus.intranet</span></div>
-      <div class="view"><img data-shot="0" src="assets/captures/remus-new-list.png"><img data-shot="1" src="assets/captures/remus-list.png"><img data-shot="2" src="assets/captures/remus-security.png"></div>
+      <div class="view"><img src="assets/captures/remus-new-list.png"><img src="assets/captures/remus-list.png"><img src="assets/captures/remus-security.png"></div>
     </div>
   </section>
 
-  <!-- 6 — Romulus -->
+  <!-- 6 — VS Code -->
   <section class="scene shot-scene" id="s6">
     <div class="side">
-      <div class="eyebrow"><svg class="stroke" width="58" height="58" viewBox="0 0 48 48" data-logo="romulus" data-color="#6cbf96" data-tile="1"></svg><span style="color:var(--romulus)">Romulus</span></div>
-      <div class="point" data-shot="0"><b>Rien n’entre sans signature.</b><span>Chaque bundle est vérifié avant d’écrire le moindre fichier. Les versions interdites passent en quarantaine.</span></div>
-      <div class="point" data-shot="1"><b>Les outils habituels, sans rien installer.</b><span>Registres npm, PyPI, Composer, Docker, dépôts apt et dnf, Galaxy, Terraform.</span></div>
+      <div class="eyebrow"><svg class="stroke" width="58" height="58" viewBox="0 0 24 24"><rect width="24" height="24" rx="6" fill="#3fa9f5"/><path d="M17 4.5 21 6.5v11l-4 2L8 12zM17 8.5l-4 3.5 4 3.5zM8 12 4.5 14.8 6 16l4-3.2M8 12 4.5 9.2 6 8l4 3.2" stroke="#081a28" stroke-width="1.4"/></svg><span style="color:var(--vscode)">Extensions VS Code</span></div>
+      <div class="point"><b>Les extensions de vos éditeurs aussi.</b><span>Open VSX ou Visual Studio Marketplace, dépendances et packs compris, version adaptée à chaque plateforme.</span></div>
+      <div class="point"><b>Une marketplace sur le réseau isolé.</b><span>VS Code, VSCodium et code-server cherchent, installent et mettent à jour leurs extensions sur Romulus.</span></div>
     </div>
-    <div class="window"><div class="bar"><i></i><i></i><i></i><span class="url">romulus.intranet</span></div>
-      <div class="view"><img data-shot="0" src="assets/captures/romulus-dashboard.png"><img data-shot="1" src="assets/captures/romulus-usage.png"></div>
+    <div class="window"><div class="bar"><i></i><i></i><i></i><span class="url" id="s6url">remus.intranet</span></div>
+      <div class="view"><img src="assets/captures/remus-vscode.png"><img src="assets/captures/romulus-vscode.png"></div>
     </div>
   </section>
 
-  <!-- 7 — terminal -->
-  <section class="scene" id="s7">
+  <!-- 7 — Romulus -->
+  <section class="scene shot-scene" id="s7">
+    <div class="side">
+      <div class="eyebrow"><svg class="stroke" width="58" height="58" viewBox="0 0 48 48" data-logo="romulus" data-color="#6cbf96" data-tile="1"></svg><span style="color:var(--romulus)">Romulus</span></div>
+      <div class="point"><b>Rien n’entre sans signature.</b><span>Chaque bundle est vérifié avant d’écrire le moindre fichier. Les versions interdites passent en quarantaine.</span></div>
+      <div class="point"><b>Les outils habituels, sans rien installer.</b><span>Registres npm, PyPI, Composer, Docker, dépôts apt et dnf, Galaxy, Terraform, VS Code.</span></div>
+    </div>
+    <div class="window"><div class="bar"><i></i><i></i><i></i><span class="url">romulus.intranet</span></div>
+      <div class="view"><img src="assets/captures/romulus-import.png"><img src="assets/captures/romulus-packages.png"></div>
+    </div>
+  </section>
+
+  <!-- 8 — sécurité -->
+  <section class="scene tiles-scene" id="s8">
+    <h2>Sécurisé de bout en bout. <span>Par conception.</span></h2>
+    <div class="grid" id="secu"></div>
+  </section>
+
+  <!-- 9 — terminal -->
+  <section class="scene" id="s9">
     <div class="badge"><span style="width:12px;height:12px;border-radius:50%;background:#f0c674;display:inline-block"></span>Réseau isolé · aucun accès sortant</div>
     <div class="term"><div class="bar"><i></i><i></i><i></i><span class="title">poste@reseau-isole</span></div><pre id="term"></pre></div>
   </section>
 
-  <!-- 8 — fin -->
-  <section class="scene center" id="s8">
+  <!-- 10 — fin -->
+  <section class="scene center" id="s10">
     <div class="wrap">
       <svg id="lupa-end" class="stroke" width="170" height="170" viewBox="0 0 48 48"></svg>
       <div class="name display">LUPA</div>
@@ -218,12 +238,21 @@ const LOGOS = {
 const ECOS = [
   ['npm', 'npm', '#f07171', 'M21 16V8a2 2 0 0 0-1-1.7l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.7l7 4a2 2 0 0 0 2 0l7-4a2 2 0 0 0 1-1.7zM3.3 7 12 12l8.7-5M12 22V12', 'toutes plateformes'],
   ['Python', 'pip · uv', '#74a9e0', 'M8 6 2 12l6 6M16 6l6 6-6 6M14 4l-4 16', 'wheels multi-cibles'],
-  ['Composer', 'Symfony Flex', '#d2a173', 'M9 18V5l12-2v13M9 18a3 3 0 1 1-6 0 3 3 0 0 1 6 0zM21 16a3 3 0 1 1-6 0 3 3 0 0 1 6 0z', 'archives et recettes Flex'],
-  ['Docker', 'registre OCI', '#5bb8ee', 'M2 12h17c1.5 0 2.5-1 3-2.5-1-.5-2-.3-2.6.2M2 12c.3 5 4 8.5 9.5 8.5 5.2 0 8.3-3.3 9-8.5M5 8h3v4H5zM9 8h3v4H9zM13 8h3v4h-3zM9 4h3v4H9z', 'images multi-plateformes'],
+  ['Composer', 'Symfony Flex', '#d2a173', 'M9 18V5l12-2v13M9 18a3 3 0 1 1-6 0 3 3 0 0 1 6 0zM21 16a3 3 0 1 1-6 0 3 3 0 0 1 6 0z', 'archives et recettes'],
+  ['Docker', 'registre OCI', '#5bb8ee', 'M2 12h17c1.5 0 2.5-1 3-2.5-1-.5-2-.3-2.6.2M2 12c.3 5 4 8.5 9.5 8.5 5.2 0 8.3-3.3 9-8.5M5 8h3v4H5zM9 8h3v4H9zM13 8h3v4h-3zM9 4h3v4H9z', 'multi-plateformes'],
   ['Debian', 'apt', '#ef6f8f', 'M14.6 9.2a3 3 0 1 0-.9 4.5M12 21a9 9 0 1 1 9-9c0 3.3-2.2 5.5-5 5.5-2.5 0-4.5-2-4.5-4.5', 'Debian 12 et 13'],
   ['RPM', 'dnf · yum', '#cf8fe0', 'M12 2 3 7v10l9 5 9-5V7zM3 7l9 5 9-5M12 12v10M7.5 4.5l9 5', 'AlmaLinux, CentOS'],
   ['Ansible', 'Galaxy', '#ff7070', 'M12 3 4 21h3l5-11 5 11h3zM8.5 14.5l8 4', 'collections et rôles'],
   ['Terraform', 'providers · modules', '#b48cf0', 'M3 3.5v6l5 3v-6zM9 7v6l5 3v-6zM15 10.5v6l5-3v-6zM9 14.5v6l5 3v-6z', 'signatures vérifiées'],
+  ['VS Code', 'extensions', '#3fa9f5', 'M17 2.5 22 5v14l-5 2.5L6.5 12zM17 7.5l-5 4.5 5 4.5zM6.5 12 2 15.5 4 17l5-4M6.5 12 2 8.5 4 7l5 4', 'Open VSX · Marketplace'],
+];
+const SECURITY = [
+  ['Bundles signés', 'Ed25519 et SHA-256 vérifiés avant toute écriture', '#6cbf96', 'M19 11H5a2 2 0 0 0-2 2v7a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7a2 2 0 0 0-2-2zM7 11V7a5 5 0 0 1 10 0v4'],
+  ['Liste noire', 'versions interdites mises en quarantaine', '#f07171', 'M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10zM9 9l6 6M15 9l-6 6'],
+  ['Rôles', 'lecteur, opérateur, administrateur', '#e58a5c', 'M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM23 21v-2a4 4 0 0 0-3-3.9M16 3.1a4 4 0 0 1 0 7.8'],
+  ['Double authentification', 'application TOTP, hors ligne', '#3fa9f5', 'M7 2h10a2 2 0 0 1 2 2v16a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2zM12 18h.01M9 7h6M9 11h6'],
+  ['Journal d’audit', 'connexions, refus, approbations', '#f0c674', 'M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8zM14 2v6h6M8 13h8M8 17h5'],
+  ['Politiques documentées', 'sécurité, confidentialité, risques', '#b48cf0', 'M4 19.5A2.5 2.5 0 0 1 6.5 17H20V3H6.5A2.5 2.5 0 0 0 4 5.5zM20 17v4H6.5A2.5 2.5 0 0 1 4 18.5'],
 ];
 
 // ---- construction --------------------------------------------------------------------
@@ -234,14 +263,16 @@ function drawLogo(svg, name, color, tile) {
 document.querySelectorAll('svg[data-logo]').forEach((s) => drawLogo(s, s.dataset.logo, s.dataset.color, s.dataset.tile));
 drawLogo(document.getElementById('lupa-mark'), 'lupa', '#efece8');
 drawLogo(document.getElementById('lupa-end'), 'lupa', '#efece8');
-document.getElementById('ecos').innerHTML = ECOS.map(([name, sub, color, d, info]) => `
+const tile = (title, sub, color, d, info) => `
   <div class="tile"><div class="ico" style="background:${color}22"><svg class="stroke" width="50" height="50" viewBox="0 0 24 24"><path d="${d}" stroke="${color}" stroke-width="1.8"/></svg></div>
-  <div><b>${name}</b><span style="color:${color}">${sub}</span><span>${info}</span></div></div>`).join('');
+  <div><b>${title}</b>${sub ? `<span style="color:${color}">${sub}</span>` : ''}<span>${info}</span></div></div>`;
+document.getElementById('ecos').innerHTML = ECOS.map(([n, sub, c, d, info]) => tile(n, sub, c, d, info)).join('');
+document.getElementById('secu').innerHTML = SECURITY.map(([n, info, c, d]) => tile(n, '', c, d, info)).join('');
 const DOTS = [];
-for (let i = 0; i < 14; i++) {
+for (let i = 0; i < 16; i++) {
   const el = document.createElement('div');
   el.className = 'dot';
-  el.style.background = ECOS[i % 8][2];
+  el.style.background = ECOS[i % 9][2];
   document.getElementById('dots').appendChild(el);
   DOTS.push(el);
 }
@@ -257,141 +288,159 @@ const lerp = (a, b, x) => a + (b - a) * x;
 const $ = (id) => document.getElementById(id);
 function show(el, x, dy = 30) { el.style.opacity = x; el.style.transform = `translateY(${(1 - x) * dy}px)`; }
 /** Fenêtre de visibilité d'une scène : fondu entrant puis sortant */
-function windowed(el, t, start, end, fade = 0.6) {
+function windowed(el, t, start, end, fade = 0.7) {
   const x = Math.min(prog(t, start, fade), 1 - prog(t, end - fade, fade));
   el.style.opacity = x;
   return x;
 }
 
-// Scènes (secondes) : 1 accroche 0–6 · 2 logo 6–12 · 3 architecture 12–22 · 4 écosystèmes 22–29
-// 5 Rémus 29–40 · 6 Romulus 40–48 · 7 terminal 48–54.5 · 8 fin 54.5–60
+// Minutage (secondes). Règle de lecture : chaque texte reste lisible au moins le temps de le lire deux fois.
+const T = {
+  s1: [0, 10], s2: [10, 17.5], s3: [17.5, 33.5], s4: [33.5, 43], s5: [43, 61.5],
+  s6: [61.5, 74], s7: [74, 86.5], s8: [86.5, 96.5], s9: [96.5, 107.5], s10: [107.5, 115],
+};
+window.DURATION = 115;
 const TERMINAL = [
   ['$ ', 'sudo apt install nginx', 'Setting up nginx (1.22.1-9+deb12u10) ...'],
   ['$ ', 'npm install express', 'added 65 packages in 2s'],
   ['$ ', 'ansible-galaxy collection install community.general', 'community.general was installed successfully'],
   ['$ ', 'terraform init', 'Terraform has been successfully initialized!'],
+  ['$ ', 'code --install-extension ms-python.python', 'Extension \'ms-python.python\' was successfully installed.'],
 ];
 
 window.seek = function (t) {
   // 1 — accroche
-  const s1 = $('s1');
-  windowed(s1, t, 0, 6.2, 0.5);
-  show($('s1a'), out(prog(t, 0.3, 0.8)));
-  show($('s1b'), out(prog(t, 1.4, 0.8)));
+  let [a, b] = T.s1;
+  windowed($('s1'), t, a, b, 0.5);
+  show($('s1a'), out(prog(t, a + 0.3, 0.9)));
+  show($('s1b'), out(prog(t, a + 1.8, 0.9)));
   document.querySelectorAll('#s1 .cmd').forEach((c, i) => {
-    show(c, out(prog(t, 2.6 + i * 0.55, 0.5)), 20);
-    c.querySelector('.err').style.opacity = prog(t, 3.0 + i * 0.55, 0.3);
+    show(c, out(prog(t, a + 3.6 + i * 0.9, 0.5)), 20);
+    c.querySelector('.err').style.opacity = prog(t, a + 4.1 + i * 0.9, 0.3);
   });
 
   // 2 — logo
-  const s2 = $('s2');
-  windowed(s2, t, 6, 12.2, 0.6);
-  lupaPaths.forEach((p, i) => { p.style.strokeDashoffset = p.dataset.len * (1 - inOut(prog(t, 6.3 + i * 0.25, 1.3))); });
-  show(document.querySelector('#s2 .name'), out(prog(t, 7.2, 0.9)), 40);
-  show(document.querySelector('#s2 .tagline'), out(prog(t, 8.0, 0.8)));
-  const twin = out(prog(t, 9.0, 0.9));
+  [a, b] = T.s2;
+  windowed($('s2'), t, a, b);
+  lupaPaths.forEach((p, i) => { p.style.strokeDashoffset = p.dataset.len * (1 - inOut(prog(t, a + 0.3 + i * 0.25, 1.4))); });
+  show(document.querySelector('#s2 .name'), out(prog(t, a + 1.3, 0.9)), 40);
+  show(document.querySelector('#s2 .tagline'), out(prog(t, a + 2.2, 0.8)));
+  const twin = out(prog(t, a + 3.4, 0.9));
   $('twin-remus').style.opacity = twin; $('twin-remus').style.transform = `translateX(${(1 - twin) * -80}px)`;
   $('twin-romulus').style.opacity = twin; $('twin-romulus').style.transform = `translateX(${(1 - twin) * 80}px)`;
 
-  // 3 — architecture
-  const s3 = $('s3');
-  windowed(s3, t, 12, 22.2, 0.6);
-  const t3 = t - 12;
+  // 3 — architecture (16 s : chaque légende reste environ 6 s)
+  [a, b] = T.s3;
+  windowed($('s3'), t, a, b);
+  const t3 = t - a;
   show(document.querySelector('#s3 .internet'), out(prog(t3, 0.1, 0.7)), 20);
   show(document.querySelector('#s3 .isolated'), out(prog(t3, 0.3, 0.7)), 20);
   show($('regs'), out(prog(t3, 0.6, 0.6)), 10);
-  show($('remus-card'), out(prog(t3, 0.8, 0.6)), 20);
-  show($('romulus-card'), out(prog(t3, 1.0, 0.6)), 20);
-  show($('usb'), out(prog(t3, 1.2, 0.6)), 20);
-  ['desk1', 'desk2', 'desk3'].forEach((id, i) => show($(id), out(prog(t3, 1.3 + i * 0.12, 0.5)), 16));
-  // Paquets : registres → Rémus (1,6–3,6 s), puis postes depuis Romulus (7–9,5 s)
+  show($('remus-card'), out(prog(t3, 0.9, 0.6)), 20);
+  show($('romulus-card'), out(prog(t3, 1.1, 0.6)), 20);
+  show($('usb'), out(prog(t3, 1.3, 0.6)), 20);
+  ['desk1', 'desk2', 'desk3'].forEach((id, i) => show($(id), out(prog(t3, 1.4 + i * 0.15, 0.5)), 16));
+  // Paquets : registres → Rémus (1,8–5,5 s), puis Romulus → postes (11–14 s)
   DOTS.forEach((d, i) => {
-    const a = prog(t3, 1.6 + i * 0.12, 1.0);
-    const b = prog(t3, 7.0 + (i % 9) * 0.14, 1.1);
-    const sx = 180 + (i % 7) * 62, sy = 330 + Math.floor(i / 7) * 46;
+    const pa = prog(t3, 1.8 + i * 0.2, 1.4);
+    const pb = prog(t3, 11.0 + (i % 9) * 0.2, 1.4);
+    const sx = 180 + (i % 7) * 62, sy = 280 + Math.floor(i / 7) * 46;
     let x, y, o;
-    if (b > 0) {
-      const target = [400, 570, 740][i % 3];
-      x = lerp(1340, 1640, out(b)); y = lerp(540, target, out(b)); o = b < 1 ? 1 : 0;
+    if (pb > 0) {
+      const target = [370, 540, 710][i % 3];
+      x = lerp(1340, 1640, out(pb)); y = lerp(520, target, out(pb)); o = pb < 1 ? 1 : 0;
     } else {
-      x = lerp(sx, 300, inOut(a)); y = lerp(sy, 690, inOut(a)); o = a > 0 && a < 1 ? 1 : 0;
+      x = lerp(sx, 300, inOut(pa)); y = lerp(sy, 670, inOut(pa)); o = pa > 0 && pa < 1 ? 1 : 0;
     }
     d.style.left = x + 'px'; d.style.top = y + 'px'; d.style.opacity = o;
   });
   // Bundle : Rémus → clé USB → Romulus
   const bundle = $('bundle');
-  const b1 = inOut(prog(t3, 3.8, 1.3)), b2 = inOut(prog(t3, 5.4, 1.3));
-  const bx = b2 > 0 ? lerp(850, 1170, b2) : lerp(300, 850, b1);
-  const by = b2 > 0 ? lerp(420, 395, b2) : lerp(570, 420, b1);
-  bundle.style.left = bx + 'px'; bundle.style.top = by + 'px';
-  bundle.style.opacity = Math.min(prog(t3, 3.6, 0.3), 1 - prog(t3, 6.6, 0.25));
-  const chk = out(prog(t3, 6.95, 0.5));
+  const b1 = inOut(prog(t3, 6.0, 1.8)), b2 = inOut(prog(t3, 8.2, 1.8));
+  bundle.style.left = (b2 > 0 ? lerp(850, 1170, b2) : lerp(300, 850, b1)) + 'px';
+  bundle.style.top = (b2 > 0 ? lerp(400, 375, b2) : lerp(550, 400, b1)) + 'px';
+  bundle.style.opacity = Math.min(prog(t3, 5.8, 0.3), 1 - prog(t3, 10.0, 0.3));
+  const chk = out(prog(t3, 10.2, 0.6));
   $('check').style.opacity = chk; $('check').style.transform = `scale(${0.85 + 0.15 * chk})`;
   const cap = $('s3cap');
-  const c1 = Math.min(prog(t3, 1.8, 0.4), 1 - prog(t3, 5.0, 0.4)), c2 = prog(t3, 5.4, 0.4);
+  const c1 = Math.min(prog(t3, 2.0, 0.5), 1 - prog(t3, 8.6, 0.5)), c2 = prog(t3, 9.2, 0.5);
   if (c2 > 0) { cap.innerHTML = 'Romulus vérifie tout, puis sert les postes <strong>sans aucun accès sortant</strong>.'; cap.style.opacity = c2; }
   else { cap.innerHTML = 'Rémus collecte côté Internet et prépare un <em>bundle signé</em> pour la clé USB.'; cap.style.opacity = c1; }
 
   // 4 — écosystèmes
-  const s4 = $('s4');
-  windowed(s4, t, 22, 29.2, 0.6);
-  show(document.querySelector('#s4 h2'), out(prog(t, 22.3, 0.7)));
-  document.querySelectorAll('#s4 .tile').forEach((tile, i) => {
-    const x = out(prog(t, 22.9 + i * 0.22, 0.6));
-    tile.style.opacity = x; tile.style.transform = `translateY(${(1 - x) * 40}px) scale(${0.94 + 0.06 * x})`;
+  [a, b] = T.s4;
+  windowed($('s4'), t, a, b);
+  show(document.querySelector('#s4 h2'), out(prog(t, a + 0.3, 0.8)));
+  document.querySelectorAll('#s4 .tile').forEach((el, i) => {
+    const x = out(prog(t, a + 1.0 + i * 0.35, 0.7));
+    el.style.opacity = x; el.style.transform = `translateY(${(1 - x) * 40}px) scale(${0.94 + 0.06 * x})`;
   });
 
-  // 5, 6 — captures (chaque capture : fondu enchaîné, lent travelling)
-  shots($('s5'), t, 29, 40.2, [[29, 33.2, 0.0, 0.35], [33.2, 36.7, 0.0, 0.45], [36.7, 40.2, 0.0, 0.5]]);
-  shots($('s6'), t, 40, 48.2, [[40, 44.2, 0.0, 0.3], [44.2, 48.2, 0.0, 0.55]]);
+  // 5, 6, 7 — captures : environ 6 s par capture
+  shots($('s5'), t, T.s5, 3);
+  shots($('s6'), t, T.s6, 2);
+  $('s6url').textContent = t < T.s6[0] + (T.s6[1] - T.s6[0]) / 2 ? 'remus.intranet' : 'romulus.intranet';
+  shots($('s7'), t, T.s7, 2);
 
-  // 7 — terminal : saisie des commandes, puis leur résultat
-  const s7 = $('s7');
-  windowed(s7, t, 48, 54.7, 0.5);
-  show(document.querySelector('#s7 .badge'), out(prog(t, 48.3, 0.5)), 10);
+  // 8 — sécurité
+  [a, b] = T.s8;
+  windowed($('s8'), t, a, b);
+  show(document.querySelector('#s8 h2'), out(prog(t, a + 0.3, 0.8)));
+  document.querySelectorAll('#s8 .tile').forEach((el, i) => {
+    const x = out(prog(t, a + 1.0 + i * 0.45, 0.7));
+    el.style.opacity = x; el.style.transform = `translateY(${(1 - x) * 40}px) scale(${0.94 + 0.06 * x})`;
+  });
+
+  // 9 — terminal : saisie des commandes, puis leur résultat
+  [a, b] = T.s9;
+  windowed($('s9'), t, a, b, 0.5);
+  show(document.querySelector('#s9 .badge'), out(prog(t, a + 0.3, 0.5)), 10);
   let html = '';
   TERMINAL.forEach(([prompt, cmd, result], i) => {
-    const start = 48.6 + i * 1.45;
-    const typed = Math.floor(clamp((t - start) / 0.75) * cmd.length);
+    const start = a + 0.8 + i * 1.8;
+    const typed = Math.floor(clamp((t - start) / 0.9) * cmd.length);
     if (t < start) return;
     html += `<span class="p">${prompt}</span>${cmd.slice(0, typed)}${typed < cmd.length ? '▌' : ''}\n`;
-    if (t > start + 0.95) html += `<span class="o">${result}</span> <span class="ok">✓</span>\n\n`;
+    if (t > start + 1.1) html += `<span class="o">${result}</span> <span class="ok">✓</span>\n\n`;
   });
   $('term').innerHTML = html;
 
-  // 8 — fin
-  const s8 = $('s8');
-  windowed(s8, t, 54.5, 61, 0.6);
-  show($('lupa-end'), out(prog(t, 54.7, 0.8)), 20);
-  show(document.querySelector('#s8 .name'), out(prog(t, 55.0, 0.8)), 30);
-  show(document.querySelector('#s8 .tagline'), out(prog(t, 55.5, 0.7)));
-  document.querySelectorAll('#s8 .link').forEach((l, i) => show(l, out(prog(t, 56.2 + i * 0.35, 0.6)), 16));
-  show(document.querySelector('#s8 .meta'), out(prog(t, 57.2, 0.6)), 10);
+  // 10 — fin
+  [a, b] = T.s10;
+  windowed($('s10'), t, a, b + 2, 0.7);
+  show($('lupa-end'), out(prog(t, a + 0.2, 0.8)), 20);
+  show(document.querySelector('#s10 .name'), out(prog(t, a + 0.5, 0.8)), 30);
+  show(document.querySelector('#s10 .tagline'), out(prog(t, a + 1.0, 0.7)));
+  document.querySelectorAll('#s10 .link').forEach((l, i) => show(l, out(prog(t, a + 1.8 + i * 0.4, 0.6)), 16));
+  show(document.querySelector('#s10 .meta'), out(prog(t, a + 2.8, 0.6)), 10);
   // Fondu au noir final
-  $('stage').style.opacity = 1 - prog(t, 59.3, 0.7);
+  $('stage').style.opacity = 1 - prog(t, b - 0.8, 0.8);
 };
 
-/** Captures : [début, fin, défilement de départ, défilement final (fraction de la hauteur)] */
-function shots(scene, t, start, end, list) {
-  windowed(scene, t, start, end, 0.6);
+/** Captures : la scène est partagée en parts égales, une capture et un texte par part */
+function shots(scene, t, [start, end], count) {
+  windowed(scene, t, start, end);
   const win = scene.querySelector('.window');
   const enter = out(prog(t, start + 0.1, 0.8));
   win.style.transform = `translateX(${(1 - enter) * 80}px) scale(${0.97 + 0.03 * enter})`;
   scene.querySelector('.eyebrow').style.opacity = out(prog(t, start + 0.2, 0.6));
   const imgs = scene.querySelectorAll('img'), points = scene.querySelectorAll('.point');
-  list.forEach(([a, b, from, to], i) => {
-    const x = i === 0 ? 1 - prog(t, b - 0.4, 0.4) : Math.min(prog(t, a - 0.1, 0.5), i === list.length - 1 ? 1 : 1 - prog(t, b - 0.4, 0.4));
+  const part = (end - start) / count;
+  for (let i = 0; i < count; i++) {
+    const a = start + i * part, b = a + part;
+    const first = i === 0, last = i === count - 1;
+    const x = Math.min(first ? 1 : prog(t, a - 0.1, 0.6), last ? 1 : 1 - prog(t, b - 0.5, 0.5));
     const img = imgs[i];
-    const travel = inOut(prog(t, a, b - a));
-    // Image 2880×1800 affichée sur 1120 px de large : hauteur 700 px ; défilement vers le bas puis zoom léger
-    const scale = 1 + 0.12 * travel;
-    const overflow = img.naturalHeight ? (1120 * img.naturalHeight / img.naturalWidth) * scale - 654 : 0;
+    // Défilement lent vers le bas et zoom léger : l'image 2880×1800 est affichée sur 1120 px de large
+    const travel = inOut(prog(t, a, part));
+    const scale = 1 + 0.1 * travel;
+    const overflow = img.naturalHeight ? (1120 * img.naturalHeight / img.naturalWidth) * scale - 674 : 0;
     img.style.opacity = x;
-    img.style.transform = `translateY(${-Math.max(0, overflow) * lerp(from, to, travel)}px) scale(${scale})`;
+    img.style.transform = `translateY(${-Math.max(0, overflow) * 0.45 * travel}px) scale(${scale})`;
     const p = points[i];
-    const px = i === 0 ? Math.min(out(prog(t, start + 0.4, 0.6)), 1 - prog(t, b - 0.45, 0.35)) : Math.min(out(prog(t, a, 0.6)), i === list.length - 1 ? 1 : 1 - prog(t, b - 0.45, 0.35));
+    const px = Math.min(out(prog(t, first ? start + 0.5 : a + 0.1, 0.7)), last ? 1 : 1 - prog(t, b - 0.55, 0.45));
     p.style.opacity = px; p.style.transform = `translateY(${(1 - px) * 24}px)`;
-  });
+  }
 }
 window.seek(0);
 </script>
