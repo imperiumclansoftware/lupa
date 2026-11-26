@@ -61,6 +61,12 @@ les fichiers sont dans le volume `/data`.
   signature valide de cette clé, sinon il est refusé et supprimé. Les index publiés sans base SQLite
   (`primary.xml` seul, comme Docker CE) sont pris en charge. Romulus fournit ensuite la clé aux postes
   (`gpgkey` de `romulus.repo`).
+- **Stockage S3 :** les paquets peuvent être rangés dans un bucket S3 (AWS, MinIO, Ceph, Garage) au lieu du
+  disque (Réglages › Stockage, administrateurs) : point d'accès, région, bucket, préfixe, clé d'accès (secret
+  chiffré en base), bouton **Tester**. **Migrer vers S3** copie chaque fichier en faisant vérifier son
+  empreinte SHA-256 par le serveur S3, puis bascule seulement si aucun fichier n'a échoué (relancer reprend
+  où la copie s'est arrêtée) ; les fichiers du disque sont conservés. **Revenir au disque** fait l'inverse.
+  Les fichiers de plus de 5 Gio ne peuvent pas aller dans S3 (envoi en une requête).
 - **Distributions personnalisées :** dérivée interne ou distribution absente du catalogue (Réglages ›
   Distributions personnalisées) : identifiant, nom, version, nom de code (apt), architectures, suites ou
   dépôts, et clé publique. Elle se choisit ensuite dans les listes comme une distribution intégrée ; ses

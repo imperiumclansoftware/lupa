@@ -2,6 +2,8 @@ import { ChangeDetectionStrategy, Component, OnInit, inject, signal } from '@ang
 import { FormsModule } from '@angular/forms';
 import {
   AboutCard,
+  StorageSettings,
+  routedTab,
   DateTimePipe,
   Dialog,
   Eco,
@@ -15,167 +17,210 @@ import { MirrorApi, Quarantine, TrustedKey } from '../api';
 import { viewChild } from '@angular/core';
 
 @Component({
-  imports: [AboutCard, FormsModule, Icon, Dialog, DateTimePipe, Eco, EcosystemPipe],
+  imports: [
+    AboutCard,
+    FormsModule,
+    Icon,
+    Dialog,
+    DateTimePipe,
+    Eco,
+    EcosystemPipe,
+    StorageSettings,
+  ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="page">
       <header class="page-header">
         <div>
           <h1>Réglages</h1>
-          <p>Collecteurs dont les bundles sont acceptés, et liste noire qu’ils transmettent.</p>
+          <p>Collecteurs approuvés, liste noire, stockage des paquets.</p>
         </div>
       </header>
+
+      <div class="tabs" role="tablist" aria-label="Rubriques des réglages">
+        @for (t of tabs; track t.id) {
+          <button
+            type="button"
+            role="tab"
+            [id]="'onglet-' + t.id"
+            [attr.aria-selected]="tab() === t.id"
+            [attr.aria-controls]="'panneau-' + t.id"
+            (click)="select(t.id)"
+          >
+            <sas-icon [name]="t.icon" [size]="16" />{{ t.label }}
+          </button>
+        }
+      </div>
 
       @if (error()) {
         <div class="alert alert-danger">{{ error() }}</div>
       }
 
-      <section class="card">
-        <header class="card-header">
-          <div class="row">
-            <sas-icon name="shield" />
-            <h2>Collecteurs approuvés</h2>
-          </div>
-        </header>
-        @if (keys().length === 0) {
-          <div class="empty">
-            <sas-icon name="key" [size]="28" />
-            <h3>Aucun collecteur approuvé</h3>
-            <p>
-              Le premier import propose d’approuver le collecteur après vérification de son
-              empreinte, ou ajoutez sa clé ci-dessous.
-            </p>
-          </div>
-        } @else {
-          <ul class="keys">
-            @for (k of keys(); track k.id) {
-              <li>
-                <div>
-                  <strong>{{ k.label }}</strong>
-                  <div class="fingerprint small">{{ k.fingerprint }}</div>
-                  <div class="subtle">Approuvé le {{ k.createdAt | datetime }}</div>
+      <div
+        class="panel"
+        role="tabpanel"
+        [id]="'panneau-' + tab()"
+        [attr.aria-labelledby]="'onglet-' + tab()"
+      >
+        @switch (tab()) {
+          @case ('collectors') {
+            <section class="card">
+              <header class="card-header">
+                <div class="row">
+                  <sas-icon name="shield" />
+                  <h2>Collecteurs approuvés</h2>
                 </div>
-                @if (auth.can('admin')) {
-                  <button
-                    type="button"
-                    class="btn btn-sm btn-danger btn-ghost"
-                    (click)="askRemove(k)"
-                  >
-                    <sas-icon name="trash" [size]="15" />Retirer
-                  </button>
-                }
-              </li>
-            }
-          </ul>
-        }
-      </section>
-
-      @if (auth.can('admin')) {
-        <form class="card card-body stack" (ngSubmit)="add()">
-          <h2>Ajouter une clé</h2>
-          <p class="muted">
-            Copiez la clé publique depuis Rémus (Réglages › Signature des bundles).
-          </p>
-          <div class="field">
-            <label for="label">Nom</label>
-            <input
-              class="input"
-              id="label"
-              name="label"
-              [(ngModel)]="label"
-              placeholder="ex. Collecteur du bureau"
-              maxlength="120"
-            />
-          </div>
-          <div class="field">
-            <label for="key">Clé publique</label>
-            <input
-              class="input mono"
-              id="key"
-              name="key"
-              [(ngModel)]="publicKey"
-              required
-              spellcheck="false"
-              autocomplete="off"
-              placeholder="Base64, 44 caractères"
-            />
-          </div>
-          <div>
-            <button class="btn btn-primary" type="submit" [disabled]="!publicKey.trim()">
-              <sas-icon name="plus" />Ajouter
-            </button>
-          </div>
-        </form>
-      }
-
-      <section class="card" id="quarantaine">
-        <header class="card-header">
-          <div>
-            <div class="row">
-              <sas-icon name="lock" />
-              <h2>Liste noire et quarantaine</h2>
-            </div>
-            <p class="subtle">
-              Reçue avec les bundles ; elle se modifie dans Rémus (Réglages › Liste noire). Les
-              versions présentes ne sont plus servies.
-            </p>
-          </div>
-        </header>
-        @if (quarantine(); as q) {
-          @if (q.collectors.length) {
-            <p class="card-body subtle sync">
-              @for (c of q.collectors; track c.id; let last = $last) {
-                {{ c.collectorName }} : révision {{ c.revision }}, du {{ c.updatedAt | datetime
-                }}{{ last ? '' : ' · ' }}
-              }
-            </p>
-          }
-          @if (q.items.length === 0) {
-            <div class="empty">
-              <sas-icon name="lock" [size]="28" />
-              <h3>Aucune version interdite</h3>
-              <p>Aucune liste noire reçue, ou elle est vide.</p>
-            </div>
-          } @else {
-            <div class="table-wrap">
-              <table class="table">
-                <thead>
-                  <tr>
-                    <th>Paquet</th>
-                    <th>Version</th>
-                    <th>Motif</th>
-                    <th>Dans le miroir</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  @for (e of q.items; track e.id) {
-                    <tr>
-                      <td>
-                        <span class="row"
-                          ><sas-eco [ecosystem]="e.ecosystem" [size]="22" /><span
-                            ><strong>{{ e.name }}</strong
-                            ><br /><span class="subtle">{{ e.ecosystem | ecosystem }}</span></span
-                          ></span
+              </header>
+              @if (keys().length === 0) {
+                <div class="empty">
+                  <sas-icon name="key" [size]="28" />
+                  <h3>Aucun collecteur approuvé</h3>
+                  <p>
+                    Le premier import propose d’approuver le collecteur après vérification de son
+                    empreinte, ou ajoutez sa clé ci-dessous.
+                  </p>
+                </div>
+              } @else {
+                <ul class="keys">
+                  @for (k of keys(); track k.id) {
+                    <li>
+                      <div>
+                        <strong>{{ k.label }}</strong>
+                        <div class="fingerprint small">{{ k.fingerprint }}</div>
+                        <div class="subtle">Approuvé le {{ k.createdAt | datetime }}</div>
+                      </div>
+                      @if (auth.can('admin')) {
+                        <button
+                          type="button"
+                          class="btn btn-sm btn-danger btn-ghost"
+                          (click)="askRemove(k)"
                         >
-                      </td>
-                      <td class="mono">{{ e.version }}</td>
-                      <td>{{ e.reason || '—' }}</td>
-                      <td>
-                        @if (e.present.length) {
-                          <span class="badge badge-danger">en quarantaine</span>
-                        } @else {
-                          <span class="subtle">absente</span>
-                        }
-                      </td>
-                    </tr>
+                          <sas-icon name="trash" [size]="15" />Retirer
+                        </button>
+                      }
+                    </li>
                   }
-                </tbody>
-              </table>
-            </div>
+                </ul>
+              }
+            </section>
+
+            @if (auth.can('admin')) {
+              <form class="card card-body stack" (ngSubmit)="add()">
+                <h2>Ajouter une clé</h2>
+                <p class="muted">
+                  Copiez la clé publique depuis Rémus (Réglages › Signature des bundles).
+                </p>
+                <div class="field">
+                  <label for="label">Nom</label>
+                  <input
+                    class="input"
+                    id="label"
+                    name="label"
+                    [(ngModel)]="label"
+                    placeholder="ex. Collecteur du bureau"
+                    maxlength="120"
+                  />
+                </div>
+                <div class="field">
+                  <label for="key">Clé publique</label>
+                  <input
+                    class="input mono"
+                    id="key"
+                    name="key"
+                    [(ngModel)]="publicKey"
+                    required
+                    spellcheck="false"
+                    autocomplete="off"
+                    placeholder="Base64, 44 caractères"
+                  />
+                </div>
+                <div>
+                  <button class="btn btn-primary" type="submit" [disabled]="!publicKey.trim()">
+                    <sas-icon name="plus" />Ajouter
+                  </button>
+                </div>
+              </form>
+            }
+          }
+          @case ('quarantine') {
+            <section class="card" id="quarantaine">
+              <header class="card-header">
+                <div>
+                  <div class="row">
+                    <sas-icon name="lock" />
+                    <h2>Liste noire et quarantaine</h2>
+                  </div>
+                  <p class="subtle">
+                    Reçue avec les bundles ; elle se modifie dans Rémus (Réglages › Liste noire).
+                    Les versions présentes ne sont plus servies.
+                  </p>
+                </div>
+              </header>
+              @if (quarantine(); as q) {
+                @if (q.collectors.length) {
+                  <p class="card-body subtle sync">
+                    @for (c of q.collectors; track c.id; let last = $last) {
+                      {{ c.collectorName }} : révision {{ c.revision }}, du
+                      {{ c.updatedAt | datetime }}{{ last ? '' : ' · ' }}
+                    }
+                  </p>
+                }
+                @if (q.items.length === 0) {
+                  <div class="empty">
+                    <sas-icon name="lock" [size]="28" />
+                    <h3>Aucune version interdite</h3>
+                    <p>Aucune liste noire reçue, ou elle est vide.</p>
+                  </div>
+                } @else {
+                  <div class="table-wrap">
+                    <table class="table">
+                      <thead>
+                        <tr>
+                          <th>Paquet</th>
+                          <th>Version</th>
+                          <th>Motif</th>
+                          <th>Dans le miroir</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        @for (e of q.items; track e.id) {
+                          <tr>
+                            <td>
+                              <span class="row"
+                                ><sas-eco [ecosystem]="e.ecosystem" [size]="22" /><span
+                                  ><strong>{{ e.name }}</strong
+                                  ><br /><span class="subtle">{{
+                                    e.ecosystem | ecosystem
+                                  }}</span></span
+                                ></span
+                              >
+                            </td>
+                            <td class="mono">{{ e.version }}</td>
+                            <td>{{ e.reason || '—' }}</td>
+                            <td>
+                              @if (e.present.length) {
+                                <span class="badge badge-danger">en quarantaine</span>
+                              } @else {
+                                <span class="subtle">absente</span>
+                              }
+                            </td>
+                          </tr>
+                        }
+                      </tbody>
+                    </table>
+                  </div>
+                }
+              }
+            </section>
+          }
+          @case ('storage') {
+            <sas-storage />
+          }
+          @case ('about') {
+            <sas-about />
           }
         }
-      </section>
-      <sas-about />
+      </div>
     </div>
 
     <sas-dialog heading="Retirer ce collecteur ?">
@@ -190,6 +235,13 @@ import { viewChild } from '@angular/core';
     </sas-dialog>
   `,
   styles: `
+    .tabs {
+      margin-bottom: 20px;
+    }
+    .panel {
+      display: grid;
+      gap: 20px;
+    }
     .card-header p {
       margin: 4px 0 0;
     }
@@ -221,6 +273,24 @@ import { viewChild } from '@angular/core';
 export default class Settings implements OnInit {
   protected readonly auth = inject(Auth);
   private readonly api = inject(MirrorApi);
+  private readonly routed = routedTab(['collectors', 'quarantine', 'storage', 'about'] as const);
+  protected readonly tab = this.routed.tab;
+  protected readonly select = this.routed.select;
+  /** Stockage : administrateurs seulement (l'API le leur réserve) */
+  protected get tabs(): {
+    id: 'collectors' | 'quarantine' | 'storage' | 'about';
+    label: string;
+    icon: string;
+  }[] {
+    return [
+      { id: 'collectors', label: 'Collecteurs', icon: 'key' },
+      { id: 'quarantine', label: 'Liste noire', icon: 'lock' },
+      ...(this.auth.can('admin')
+        ? [{ id: 'storage' as const, label: 'Stockage', icon: 'hdd' }]
+        : []),
+      { id: 'about', label: 'À propos', icon: 'file' },
+    ];
+  }
   private readonly toasts = inject(Toasts);
   protected readonly dialog = viewChild.required(Dialog);
   protected readonly keys = signal<TrustedKey[]>([]);

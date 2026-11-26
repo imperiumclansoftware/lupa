@@ -44,6 +44,9 @@ d'aucun service externe : la base SQLite et les paquets sont dans le volume `/da
     distributions personnalisées définies dans Rémus, apprises par les paquets importés. Les paquets gardent la
     signature de leur distribution ;
   - **Ansible Galaxy** (`/galaxy/`, API v3) pour ansible-galaxy ;
+  - stockage des paquets sur disque ou dans un **bucket S3** interne (MinIO, Ceph, Garage ; Réglages ›
+    Stockage) : Romulus relaie les fichiers aux postes, qui n'ont pas besoin d'accéder au bucket. La clé
+    secrète S3 est chiffrée avec une clé dérivée d'`APP_SECRET` : si `APP_SECRET` change, ressaisissez-la ;
   - **extensions VS Code** (`/vscode/`, galerie au protocole d'Open VSX) pour VS Code, VSCodium et code-server ;
   - **Terraform** : miroir réseau de providers (`/terraform/providers/`), archive pour miroir local,
     modules (`/terraform/modules/`) et binaire (`/terraform/releases/`).
