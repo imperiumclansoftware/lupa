@@ -1,3 +1,5 @@
+import { TOURS } from '@sas/shared';
+import { MIRROR_TOURS } from './tours';
 import { provideHttpClient, withInterceptors, withXsrfConfiguration } from '@angular/common/http';
 import { ApplicationConfig, provideBrowserGlobalErrorListeners } from '@angular/core';
 import { provideRouter, withComponentInputBinding, withInMemoryScrolling } from '@angular/router';
@@ -7,6 +9,8 @@ import { routes } from './app.routes';
 export const appConfig: ApplicationConfig = {
   providers: [
     provideBrowserGlobalErrorListeners(),
+    // Visites guidées : une par page, à la première visite (bouton Aide pour la revoir)
+    { provide: TOURS, useValue: MIRROR_TOURS },
     // Jeton CSRF : cookie XSRF-TOKEN posé par Symfony, renvoyé en en-tête sur les requêtes qui modifient (ADR 0007)
     provideHttpClient(
       withInterceptors([sessionInterceptor]),

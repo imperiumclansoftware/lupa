@@ -211,6 +211,18 @@ interface Enrollment {
           }
         </div>
       </section>
+      <section class="card card-body stack">
+        <h2>Visites guidées</h2>
+        <p class="muted">
+          Chaque page propose une courte visite à votre première visite ; le bouton Aide de la
+          navigation la relance. Pour les voir de nouveau d’elles-mêmes sur toutes les pages :
+        </p>
+        <div>
+          <button type="button" class="btn" (click)="resetTours()" [disabled]="busy()">
+            <sas-icon name="help" />Revoir toutes les visites guidées
+          </button>
+        </div>
+      </section>
     </div>
   `,
   styles: `
@@ -280,6 +292,17 @@ export class AccountPage {
   protected readonly twoFactorError = signal('');
   protected readonly enrollment = signal<Enrollment | null>(null);
   protected readonly codes = signal<string[] | null>(null);
+
+  protected async resetTours(): Promise<void> {
+    try {
+      await firstValueFrom(this.http.delete('/api/account/tours'));
+      const user = this.auth.user();
+      if (user) this.auth.user.set({ ...user, seenTours: [] });
+      this.toasts.ok('Les visites guidées réapparaîtront sur chaque page.');
+    } catch (e) {
+      this.toasts.error(errorMessage(e));
+    }
+  }
 
   protected async changePassword(): Promise<void> {
     this.passwordError.set('');

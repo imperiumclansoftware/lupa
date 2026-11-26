@@ -63,7 +63,7 @@ import { CollectorApi, Overview } from '../api';
           </section>
         }
 
-        <section class="hero">
+        <section data-tour="accueil" class="hero">
           <sas-logo class="watermark" name="remus" [size]="280" [bare]="true" />
           <div>
             <span class="eyebrow">Rémus · collecteur</span>
@@ -103,7 +103,7 @@ import { CollectorApi, Overview } from '../api';
           </div>
         </section>
 
-        <section class="grid">
+        <section data-tour="ecosystemes" class="grid">
           @for (eco of ecosystems; track eco.id) {
             @let stats = d.ecosystems[eco.id];
             <a class="card stat" [routerLink]="'/paquets'" [queryParams]="{ ecosystem: eco.id }">
@@ -120,7 +120,12 @@ import { CollectorApi, Overview } from '../api';
         </section>
 
         @if (d.security.critical || d.security.warning) {
-          <a class="card security" routerLink="/securite" [class.critical]="d.security.critical">
+          <a
+            data-tour="alertes"
+            class="card security"
+            routerLink="/securite"
+            [class.critical]="d.security.critical"
+          >
             <sas-icon name="alert" [size]="22" />
             <span class="grow"
               ><strong>Alertes de sécurité</strong>

@@ -39,6 +39,10 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface, TwoFact
     #[ORM\Column(type: Types::JSON, options: ['default' => '[]'])]
     private array $backupCodes = [];
 
+    /** @var list<string> visites guidées déjà vues (identifiants des pages) */
+    #[ORM\Column(type: Types::JSON, options: ['default' => '[]'])]
+    private array $seenTours = [];
+
     public function __construct(string $username, Role $role = Role::Admin)
     {
         $this->id = Uuid::v7();
@@ -115,6 +119,26 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface, TwoFact
     {
         $this->totpSecret = $secret;
         $this->backupCodes = array_map(self::hashCode(...), $backupCodes);
+    }
+
+    /** @return list<string> */
+    public function getSeenTours(): array
+    {
+        return $this->seenTours;
+    }
+
+    /** Visite guidée vue (identifiant validé par l'appelant) ; liste bornée. */
+    public function markTourSeen(string $tour): void
+    {
+        if (!\in_array($tour, $this->seenTours, true)) {
+            $this->seenTours = \array_slice([...$this->seenTours, $tour], -200);
+        }
+    }
+
+    /** Toutes les visites guidées réapparaîtront (Mon compte). */
+    public function resetTours(): void
+    {
+        $this->seenTours = [];
     }
 
     public function disableTotp(): void

@@ -38,7 +38,7 @@ import { SettingsSources } from './settings-sources';
         </div>
       </header>
 
-      <div class="tabs" role="tablist" aria-label="Rubriques des réglages">
+      <div data-tour="onglets" class="tabs" role="tablist" aria-label="Rubriques des réglages">
         @for (t of tabs; track t.id) {
           <button
             type="button"

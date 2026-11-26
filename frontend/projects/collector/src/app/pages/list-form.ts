@@ -111,7 +111,7 @@ const HELP: Record<
       }
 
       @if (!id()) {
-        <fieldset class="card card-body ecosystems">
+        <fieldset data-tour="ecosystemes" class="card card-body ecosystems">
           <legend class="label">Écosystème</legend>
           @for (eco of ecosystems; track eco.id) {
             <label class="eco-choice" [class.selected]="ecosystem() === eco.id">
@@ -130,7 +130,7 @@ const HELP: Record<
       }
 
       @if (ecosystemTemplates().length) {
-        <section class="card card-body stack">
+        <section data-tour="modeles" class="card card-body stack">
           <div>
             <h2>{{ hasPresets() ? 'Listes prêtes à l’emploi' : 'Partir d’un modèle' }}</h2>
             <p class="subtle">
@@ -178,7 +178,7 @@ const HELP: Record<
         </section>
       }
 
-      <section class="card card-body stack">
+      <section data-tour="saisie" class="card card-body stack">
         @if (selectedTemplate(); as t) {
           <div class="chosen">
             <div class="row head">
@@ -315,7 +315,7 @@ const HELP: Record<
         }
       </section>
 
-      <section class="card card-body stack">
+      <section data-tour="options" class="card card-body stack">
         <h2>Options</h2>
         @switch (ecosystem()) {
           @case ('npm') {

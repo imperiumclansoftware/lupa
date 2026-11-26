@@ -35,7 +35,7 @@ import { MirrorApi, Overview } from '../api';
       }
 
       @if (data(); as d) {
-        <section class="hero">
+        <section data-tour="accueil" class="hero">
           <sas-logo class="watermark" name="romulus" [size]="280" [bare]="true" />
           <div>
             <span class="eyebrow">Romulus · miroir hors ligne</span>
@@ -100,7 +100,7 @@ import { MirrorApi, Overview } from '../api';
           </section>
         }
 
-        <section class="grid">
+        <section data-tour="ecosystemes" class="grid">
           @for (eco of ecosystems; track eco.id) {
             @let stats = d.ecosystems[eco.id];
             <a class="card stat" routerLink="/paquets" [queryParams]="{ ecosystem: eco.id }">
@@ -173,7 +173,7 @@ import { MirrorApi, Overview } from '../api';
             </div>
           </section>
 
-          <section class="card">
+          <section data-tour="serveur" class="card">
             <header class="card-header">
               <h2>Serveur</h2>
               <a routerLink="/reglages" class="subtle">Réglages</a>

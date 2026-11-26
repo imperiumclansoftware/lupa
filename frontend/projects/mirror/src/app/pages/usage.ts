@@ -33,7 +33,7 @@ interface Snippet {
         </div>
       }
 
-      <div class="tabs" role="tablist" aria-label="Outil">
+      <div data-tour="outils" class="tabs" role="tablist" aria-label="Outil">
         @for (t of tabs; track t.id) {
           <button
             type="button"
@@ -75,7 +75,7 @@ interface Snippet {
         }
       }
 
-      <section class="stack">
+      <section data-tour="configuration" class="stack">
         @for (s of snippets(); track s.title) {
           <article class="card card-body snippet">
             <div class="row head">

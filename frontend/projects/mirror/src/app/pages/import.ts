@@ -78,7 +78,7 @@ interface Upload {
         </div>
       }
 
-      <section class="card">
+      <section data-tour="bundles" class="card">
         <header class="card-header">
           <h2>Bundles disponibles</h2>
           @if (inbox(); as box) {
@@ -248,7 +248,7 @@ interface Upload {
         </ul>
       </section>
 
-      <section class="card card-body stack">
+      <section data-tour="envoi" class="card card-body stack">
         <h2>Envoyer depuis cet ordinateur</h2>
         <label
           class="drop"
@@ -304,7 +304,7 @@ interface Upload {
         }
       </section>
 
-      <section class="card">
+      <section data-tour="historique" class="card">
         <header class="card-header"><h2>Historique des imports</h2></header>
         @if (history().length === 0) {
           <div class="empty"><p>Aucun bundle importé pour l’instant.</p></div>

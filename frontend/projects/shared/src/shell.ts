@@ -4,6 +4,7 @@ import { Auth, Role } from './auth';
 import { Icon } from './icon';
 import { Logo, LogoName } from './logo';
 import { ToastHost } from './toast';
+import { TourOverlay, Tours } from './tour';
 
 export interface NavItem {
   path: string;
@@ -17,7 +18,7 @@ export interface NavItem {
 /** Mise en page des pages connectées : navigation latérale (barre en haut sur mobile). */
 @Component({
   selector: 'sas-shell',
-  imports: [RouterOutlet, RouterLink, RouterLinkActive, Icon, Logo, ToastHost],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive, Icon, Logo, ToastHost, TourOverlay],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="layout">
@@ -29,7 +30,7 @@ export interface NavItem {
             ><small>{{ product() }}</small></span
           >
         </a>
-        <ul>
+        <ul data-tour="navigation">
           @for (item of visibleNav(); track item.path) {
             <li>
               <a
@@ -41,6 +42,20 @@ export interface NavItem {
                 <sas-icon [name]="item.icon" />
                 <span>{{ item.label }}</span>
               </a>
+            </li>
+          }
+          @if (tours.current()) {
+            <li>
+              <button
+                type="button"
+                class="help"
+                data-tour="aide"
+                (click)="tours.help()"
+                title="Revoir la visite guidée de cette page"
+              >
+                <sas-icon name="help" />
+                <span>Aide</span>
+              </button>
             </li>
           }
         </ul>
@@ -80,6 +95,7 @@ export interface NavItem {
       <main class="main"><router-outlet /></main>
     </div>
     <sas-toasts />
+    <sas-tour />
   `,
   styles: `
     .layout {
@@ -131,7 +147,8 @@ export interface NavItem {
       display: grid;
       gap: 3px;
     }
-    li a {
+    li a,
+    li .help {
       position: relative;
       display: flex;
       align-items: center;
@@ -145,7 +162,18 @@ export interface NavItem {
       transition-property: background-color, color;
       transition-duration: 140ms;
     }
-    li a:hover {
+    li .help {
+      width: 100%;
+      border: none;
+      background: none;
+      font: inherit;
+      font-weight: 600;
+      font-size: 0.92rem;
+      cursor: pointer;
+      text-align: left;
+    }
+    li a:hover,
+    li .help:hover {
       background: rgb(255 255 255 / 0.07);
       color: #fff;
     }
@@ -292,7 +320,8 @@ export interface NavItem {
         width: 100%;
         scrollbar-width: none;
       }
-      li a {
+      li a,
+      li .help {
         white-space: nowrap;
         padding: 8px 12px;
       }
@@ -320,6 +349,7 @@ export class Shell {
   readonly nav = input.required<NavItem[]>();
   readonly online = input(true);
   protected readonly auth = inject(Auth);
+  protected readonly tours = inject(Tours);
   protected readonly visibleNav = computed(() =>
     this.nav().filter((item) => !item.role || this.auth.can(item.role)),
   );

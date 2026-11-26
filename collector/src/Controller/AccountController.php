@@ -14,6 +14,7 @@ use Psr\Log\LoggerInterface;
 use Symfony\Component\DependencyInjection\Attribute\Target;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Attribute\MapRequestPayload;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\Routing\Attribute\Route;
@@ -36,6 +37,30 @@ final class AccountController
     public function show(#[CurrentUser] User $user): JsonResponse
     {
         return new JsonResponse(UserView::of($user));
+    }
+
+    /** Visite guidée d'une page vue (fermée ou terminée) : elle ne s'ouvrira plus d'elle-même. */
+    #[Route('/tours', methods: ['POST'])]
+    public function tourSeen(#[CurrentUser] User $user, Request $request): JsonResponse
+    {
+        $tour = $request->toArray()['tour'] ?? null;
+        if (!\is_string($tour) || !preg_match('/^[a-z0-9-]{1,40}$/', $tour)) {
+            return new JsonResponse(['error' => 'Visite inconnue.'], Response::HTTP_UNPROCESSABLE_ENTITY);
+        }
+        $user->markTourSeen($tour);
+        $this->em->flush();
+
+        return new JsonResponse(null, Response::HTTP_NO_CONTENT);
+    }
+
+    /** Toutes les visites guidées s'afficheront de nouveau. */
+    #[Route('/tours', methods: ['DELETE'])]
+    public function resetTours(#[CurrentUser] User $user): JsonResponse
+    {
+        $user->resetTours();
+        $this->em->flush();
+
+        return new JsonResponse(null, Response::HTTP_NO_CONTENT);
     }
 
     #[Route('/password', methods: ['POST'])]

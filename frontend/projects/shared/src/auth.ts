@@ -15,6 +15,8 @@ export interface SessionUser {
   roleLabel: string;
   twoFactor: boolean;
   backupCodes: number;
+  /** Visites guidées déjà vues (identifiants) */
+  seenTours: string[];
 }
 
 interface Session {

@@ -47,7 +47,7 @@ import { CollectorApi, PackageList } from '../api';
             }
           }
           @if (auth.can('operator')) {
-            <a class="btn btn-primary" routerLink="/listes/nouvelle"
+            <a data-tour="nouvelle-liste" class="btn btn-primary" routerLink="/listes/nouvelle"
               ><sas-icon name="plus" />Nouvelle liste</a
             >
           }
@@ -58,7 +58,7 @@ import { CollectorApi, PackageList } from '../api';
         <div class="alert alert-danger">{{ error() }}</div>
       }
 
-      <section class="card">
+      <section data-tour="listes" class="card">
         @if (loaded() && lists().length === 0) {
           <div class="empty">
             <sas-icon name="list" [size]="28" />

@@ -17,4 +17,5 @@ export * from './shell';
 export * from './storage';
 export * from './tabs';
 export * from './toast';
+export * from './tour';
 export * from './users';

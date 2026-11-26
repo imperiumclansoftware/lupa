@@ -17,6 +17,7 @@ final class UserView
             'roleLabel' => $user->getRole()->label(),
             'twoFactor' => $user->isTotpAuthenticationEnabled(),
             'backupCodes' => $user->getBackupCodeCount(),
+            'seenTours' => $user->getSeenTours(),
         ];
     }
 }

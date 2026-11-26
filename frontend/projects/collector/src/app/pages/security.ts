@@ -51,6 +51,7 @@ import { BlacklistDialog } from '../blacklist-dialog';
         </div>
         @if (auth.can('operator')) {
           <button
+            data-tour="analyse"
             type="button"
             class="btn btn-primary"
             (click)="audit()"
@@ -70,7 +71,7 @@ import { BlacklistDialog } from '../blacklist-dialog';
           <section class="card card-body"><sas-job-progress [job]="d.job" /></section>
         }
 
-        <section class="grid stats">
+        <section data-tour="alertes" class="grid stats">
           <button
             type="button"
             class="card stat critical"
@@ -113,7 +114,7 @@ import { BlacklistDialog } from '../blacklist-dialog';
           </div>
         </section>
 
-        <section class="card">
+        <section data-tour="vulnerables" class="card">
           <header class="card-header">
             <h2>{{ filter() === 'all' ? 'Paquets vulnérables' : filterLabel() }}</h2>
             @if (filter() !== 'all') {

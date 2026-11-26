@@ -81,6 +81,7 @@ import { BlacklistDialog } from '../blacklist-dialog';
             }
             @if (auth.can('operator')) {
               <button
+                data-tour="mettre-a-jour"
                 type="button"
                 class="btn btn-primary"
                 (click)="resolve()"
@@ -154,7 +155,7 @@ import { BlacklistDialog } from '../blacklist-dialog';
           </section>
         }
 
-        <section class="card">
+        <section data-tour="contenu" class="card">
           <header class="card-header">
             <h2>Contenu</h2>
             <div class="row filters">

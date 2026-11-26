@@ -37,7 +37,7 @@ import { MirrorApi, Page, PackageSummary } from '../api';
       </header>
 
       <div class="toolbar">
-        <div class="tabs" role="tablist" aria-label="Écosystème">
+        <div data-tour="filtres" class="tabs" role="tablist" aria-label="Écosystème">
           <button
             type="button"
             role="tab"
@@ -72,7 +72,7 @@ import { MirrorApi, Page, PackageSummary } from '../api';
         <div class="alert alert-danger">{{ error() }}</div>
       }
 
-      <section class="card">
+      <section data-tour="paquets" class="card">
         @if (data(); as d) {
           @if (d.items.length === 0) {
             <div class="empty">

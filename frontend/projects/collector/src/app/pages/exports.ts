@@ -52,7 +52,7 @@ import { KeyValuePipe } from '@angular/common';
           <section class="card card-body"><sas-job-progress [job]="job" /></section>
         }
 
-        <section class="card">
+        <section data-tour="nouveau-bundle" class="card">
           <header class="card-header"><h2>Nouveau bundle</h2></header>
           <div class="card-body stack">
             <div class="modes" role="radiogroup" aria-label="Contenu du bundle">
@@ -151,7 +151,7 @@ import { KeyValuePipe } from '@angular/common';
           </div>
         </section>
 
-        <section class="card">
+        <section data-tour="historique" class="card">
           <header class="card-header"><h2>Historique</h2></header>
           @if (d.items.length === 0) {
             <div class="empty">
@@ -242,7 +242,7 @@ import { KeyValuePipe } from '@angular/common';
           }
         </section>
 
-        <section class="card card-body steps">
+        <section data-tour="transport" class="card card-body steps">
           <h2>Transporter un bundle</h2>
           <ol>
             <li>
