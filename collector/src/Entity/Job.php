@@ -43,6 +43,14 @@ class Job
     #[ORM\Column(type: Types::TEXT, nullable: true)]
     private ?string $error = null;
 
+    /**
+     * Rapport structuré (vérification d'intégrité), écrit par la tâche via JobContext::saveReport().
+     *
+     * @var array<string, mixed>|null
+     */
+    #[ORM\Column(type: Types::JSON, nullable: true)]
+    private ?array $report = null;
+
     #[ORM\ManyToOne(targetEntity: PackageList::class)]
     #[ORM\JoinColumn(onDelete: 'SET NULL')]
     private ?PackageList $list = null;
@@ -63,6 +71,12 @@ class Job
         $this->title = $title;
         $this->list = $list;
         $this->createdAt = new \DateTimeImmutable();
+    }
+
+    /** @return array<string, mixed>|null */
+    public function getReport(): ?array
+    {
+        return $this->report;
     }
 
     public function getId(): Uuid

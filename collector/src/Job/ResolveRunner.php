@@ -4,7 +4,9 @@ namespace App\Job;
 
 use App\Audit\Auditor;
 use App\Blacklist\Blacklist;
+use App\Entity\Artifact;
 use App\Entity\Job;
+use App\Entity\PackageList;
 use App\Resolver\Resolver;
 use App\Search\Glob;
 use App\Search\PatternExpander;
@@ -33,6 +35,40 @@ final readonly class ResolveRunner implements JobRunner
     public function run(Job $job, JobContext $context): string
     {
         $list = $job->getList() ?? throw new \RuntimeException('La liste a été supprimée.');
+        $artifacts = $this->resolveList($list, $context);
+
+        // Analyse de sécurité : une panne d'OSV.dev ne fait pas échouer la mise à jour
+        $security = '';
+        try {
+            $audit = $this->auditor->audit(array_values($artifacts), $context);
+            if ($audit['audited'] > 0) {
+                $security = ' ; '.AuditRunner::summary($audit);
+                $context->log('Sécurité : '.AuditRunner::summary($audit).'.');
+            }
+        } catch (\Throwable $e) {
+            $context->log('ATTENTION analyse de sécurité impossible : '.$e->getMessage());
+        }
+
+        $pending = \count(array_filter($artifacts, static fn ($a) => null === $a->getExport()));
+        $size = array_sum(array_map(static fn ($a) => $a->getSize(), $artifacts));
+
+        $blocked = $this->blacklist->takeBlocked();
+        if ($blocked) {
+            $context->log(sprintf('Liste noire : %d version(s) non téléchargée(s) : %s.', \count($blocked), implode(', ', $blocked)));
+        }
+
+        return sprintf('%d paquet(s), %s ; %d à exporter', \count($artifacts), Bytes::format($size), $pending)
+            .($blocked ? sprintf(' ; %d bloqué(s) par la liste noire', \count($blocked)) : '').$security;
+    }
+
+    /**
+     * Calcule les dépendances, télécharge ce qui manque ou a disparu du stockage et met à jour le contenu de la liste.
+     * Utilisé aussi par la vérification d'intégrité pour retélécharger les fichiers écartés.
+     *
+     * @return array<int, Artifact>
+     */
+    public function resolveList(PackageList $list, JobContext $context): array
+    {
         $resolver = null;
         foreach ($this->resolvers as $candidate) {
             if ($candidate->ecosystem() === $list->getEcosystem()) {
@@ -70,27 +106,6 @@ final readonly class ResolveRunner implements JobRunner
         $list->replaceArtifacts(array_values($artifacts));
         $this->em->flush();
 
-        // Analyse de sécurité : une panne d'OSV.dev ne fait pas échouer la mise à jour
-        $security = '';
-        try {
-            $audit = $this->auditor->audit(array_values($artifacts), $context);
-            if ($audit['audited'] > 0) {
-                $security = ' ; '.AuditRunner::summary($audit);
-                $context->log('Sécurité : '.AuditRunner::summary($audit).'.');
-            }
-        } catch (\Throwable $e) {
-            $context->log('ATTENTION analyse de sécurité impossible : '.$e->getMessage());
-        }
-
-        $pending = \count(array_filter($artifacts, static fn ($a) => null === $a->getExport()));
-        $size = array_sum(array_map(static fn ($a) => $a->getSize(), $artifacts));
-
-        $blocked = $this->blacklist->takeBlocked();
-        if ($blocked) {
-            $context->log(sprintf('Liste noire : %d version(s) non téléchargée(s) : %s.', \count($blocked), implode(', ', $blocked)));
-        }
-
-        return sprintf('%d paquet(s), %s ; %d à exporter', \count($artifacts), Bytes::format($size), $pending)
-            .($blocked ? sprintf(' ; %d bloqué(s) par la liste noire', \count($blocked)) : '').$security;
+        return $artifacts;
     }
 }

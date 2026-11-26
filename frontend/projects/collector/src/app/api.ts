@@ -12,6 +12,35 @@ import {
 export type { Page } from '@sas/shared';
 import { firstValueFrom } from 'rxjs';
 
+/** Paquet dont un fichier était absent ou abîmé, et résultat du retéléchargement */
+export interface IntegrityItem {
+  id: string;
+  ecosystem: EcosystemId;
+  name: string;
+  version: string;
+  filename: string | null;
+  files: { sha256: string; problem: 'missing' | 'size' | 'hash' }[];
+  lists: { id: string; name: string }[];
+  status: 'repaired' | 'failed';
+  message: string | null;
+}
+
+export interface IntegrityReport {
+  artifacts: number;
+  files: number;
+  bytes: number;
+  damaged: number;
+  repaired: number;
+  failed: number;
+  truncated: boolean;
+  items: IntegrityItem[];
+}
+
+export interface IntegrityState {
+  job: Job | null;
+  last: (Job & { report: IntegrityReport | null }) | null;
+}
+
 export interface Identity {
   id: string;
   name: string;
@@ -379,6 +408,14 @@ export class CollectorApi {
 
   audit(listId?: string): Promise<Job> {
     return firstValueFrom(this.http.post<Job>('/api/security/audit', listId ? { listId } : {}));
+  }
+
+  integrity(): Promise<IntegrityState> {
+    return firstValueFrom(this.http.get<IntegrityState>('/api/integrity'));
+  }
+
+  checkIntegrity(): Promise<Job> {
+    return firstValueFrom(this.http.post<Job>('/api/integrity', {}));
   }
 
   settings(): Promise<{ identity: Identity; exportDir: string; storageDir: string }> {

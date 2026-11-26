@@ -44,6 +44,20 @@ final class JobContext
         $this->flushLog(true);
     }
 
+    /**
+     * Rapport structuré de la tâche, écrit en base comme le journal (la tâche est rechargée à la fin).
+     *
+     * @param array<string, mixed> $report
+     */
+    public function saveReport(array $report): void
+    {
+        $this->db->executeStatement(
+            'UPDATE job SET report = ? WHERE id = ?',
+            [json_encode($report, \JSON_THROW_ON_ERROR | \JSON_UNESCAPED_UNICODE | \JSON_UNESCAPED_SLASHES), $this->jobId->toBinary()],
+            [ParameterType::STRING, ParameterType::BINARY],
+        );
+    }
+
     public function flushLog(bool $force = true): void
     {
         if ('' === $this->pendingLog || (!$force && \strlen($this->pendingLog) < 2000)) {

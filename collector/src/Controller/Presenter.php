@@ -127,6 +127,7 @@ final class Presenter
         ];
         if ($withLog) {
             $data['log'] = $job->getLog();
+            $data['report'] = $job->getReport();
         }
 
         return $data;
