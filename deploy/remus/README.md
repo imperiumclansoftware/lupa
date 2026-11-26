@@ -29,59 +29,36 @@ les fichiers sont dans le volume `/data`.
 - **Modèles de framework :** Rémus exécute le vrai générateur et collecte tout ce qu'il installe : `ng new`,
   `npm create vite` (React, Vue, Svelte), `nest new`, `composer create-project` Symfony (avec les **recettes
   Flex**) et Laravel fonctionnent ensuite tels quels hors ligne. Listes prêtes aussi pour Python, Docker, VS Code.
-- **Recherche dans les registres :** depuis le formulaire de liste, on cherche un paquet ou une image
-  (npm, PyPI, Packagist, Docker Hub et autres registres OCI), on choisit une version et sa contrainte
-  (exacte, compatible, correctifs, toujours la dernière).
+- **Recherche dans les registres** (npm, PyPI, Packagist, registres OCI) : version et contrainte au choix.
 - **Motifs de noms :** `*` et `?` pour collecter une famille de paquets, avec aperçu avant d'enregistrer :
   `@syncfusion/ej2-*angular*@^29`, `symfony/*-bundle:^7.3`, `django-rest-*>=3`, `node:24-alpine*`,
-  `bitnami/*-exporter`. Les paquets sans version respectant la contrainte sont écartés et signalés. Un motif
-  enregistré est redéveloppé à chaque mise à jour : les nouveaux paquets de la famille sont ajoutés.
+  `bitnami/*-exporter`, redéveloppés à chaque mise à jour.
 - **Alertes de sécurité :** chaque paquet npm, Python et Composer est vérifié dans la base **OSV.dev** (avis
   GitHub, PyPA, npm, Packagist) après chaque mise à jour, ou à la demande. Gravité « critique » ou
   « avertissement », versions corrigées, page **Sécurité** dédiée. Les alertes voyagent dans les bundles :
   Romulus les affiche sur le réseau isolé.
-- **Liste noire :** des versions précises (`lodash 4.17.20`, `nginx 1.25.3`, `openssl 1:3.0.7-27.el9`) sont
-  interdites de téléchargement et d'export (Réglages › Liste noire, ou « Interdire » sur Sécurité et les listes).
-  La liste voyage, signée, dans chaque bundle. Romulus met ces versions en **quarantaine** : elles ne sont
-  plus servies, même si elles avaient été importées avant. Un bundle sans nouveau paquet suffit à
-  transmettre une liste modifiée, et retirer une entrée lève la quarantaine au bundle suivant.
+- **Liste noire :** des versions précises (`lodash 4.17.20`, `openssl 1:3.0.7-27.el9`) ne sont plus
+  téléchargées ni exportées. La liste voyage, signée, dans chaque bundle ; Romulus met ces versions en
+  **quarantaine**, même déjà importées, et la lève quand l'entrée est retirée.
 - **Dépôts privés :** Verdaccio, Nexus, Artifactory, GitLab, Harbor, devpi, Satis… s'ajoutent aux dépôts
   officiels (Réglages › Dépôts sources) ou les remplacent (miroir d'entreprise) : portée npm (`@entreprise`),
   index Python supplémentaire, dépôt Composer prioritaire, identifiants par registre Docker ou miroir de
   Docker Hub. Identifiant et mot de passe ou jeton, vérifiés par le bouton **Tester** ; les secrets sont
   chiffrés dans la base et jamais réaffichés.
-- **Dépôts apt tiers :** Docker CE, PostgreSQL, nginx, dépôt interne… s'ajoutent à une distribution Debian
-  ou Ubuntu (Réglages › Dépôts sources › Debian) : adresse, suite et composants de la ligne `deb`, et clé
-  publique OpenPGP du dépôt. L'index n'est accepté que signé par cette clé (InRelease, ou Release et
-  Release.gpg) ; son empreinte est affichée pour la comparer à celle publiée par l'éditeur. Les paquets
-  rejoignent la distribution chez Romulus, avec le nom du dépôt d'origine.
-- **Dépôts dnf tiers :** EPEL, Docker CE, PostgreSQL, dépôt interne… s'ajoutent à une distribution RPM
-  (Réglages › Dépôts sources › RPM) : `baseurl` avec `$basearch`, et clé publique du dépôt. Un index signé
-  (`repomd.xml.asc`) est vérifié avec cette clé ; s'il ne l'est pas (EPEL), **chaque paquet** doit porter une
-  signature valide de cette clé, sinon il est refusé et supprimé. Les index publiés sans base SQLite
-  (`primary.xml` seul, comme Docker CE) sont pris en charge. Romulus fournit ensuite la clé aux postes
-  (`gpgkey` de `romulus.repo`).
-- **Stockage S3 :** les paquets peuvent être rangés dans un bucket S3 (AWS, MinIO, Ceph, Garage) au lieu du
-  disque (Réglages › Stockage, administrateurs) : point d'accès, région, bucket, préfixe, clé d'accès (secret
-  chiffré en base), bouton **Tester**. **Migrer vers S3** copie chaque fichier en faisant vérifier son
-  empreinte SHA-256 par le serveur S3, puis bascule seulement si aucun fichier n'a échoué (relancer reprend
-  où la copie s'est arrêtée) ; les fichiers du disque sont conservés. **Revenir au disque** fait l'inverse.
-  Les fichiers de plus de 5 Gio ne peuvent pas aller dans S3 (envoi en une requête).
+- **Dépôts apt et dnf tiers :** Docker CE, PostgreSQL, EPEL, dépôt interne… rattachés à une distribution
+  (Réglages › Dépôts sources) avec la clé publique du dépôt, dont l'empreinte est affichée. Index accepté
+  seulement signé par cette clé ; dnf sans index signé (EPEL) : chaque paquet doit l'être. Romulus fournit la
+  clé aux postes (`gpgkey`).
 - **Distributions personnalisées :** dérivée interne ou distribution absente du catalogue (Réglages ›
-  Distributions personnalisées) : identifiant, nom, version, nom de code (apt), architectures, suites ou
-  dépôts, et clé publique. Elle se choisit ensuite dans les listes comme une distribution intégrée ; ses
-  index sont vérifiés avec sa clé (dnf : chaque paquet, si l'index n'est pas signé). Romulus l'apprend par
-  les paquets importés, sans changement du format des bundles : un Romulus plus ancien importe ces paquets
-  sans les servir.
-- **Paquets système Debian, Ubuntu et RPM :** Debian 11 (fin de vie), 12 et 13, Ubuntu 22.04 et 24.04 LTS,
-  AlmaLinux 8, 9 et 10, Rocky Linux 8, 9 et 10, CentOS Stream 9 et 10, CentOS 7 et 8 (dépôts figés de
-  vault.centos.org). On choisit des paquets (`nginx`, `postgresql`, motifs
-  `python3-*`, versions exactes `curl=7.88.1-10+deb12u8`, streams de modules `@nodejs:20` sur EL8). Rémus
-  ajoute leurs dépendances comme le feraient apt ou dnf sur un système vide.
-  - Architectures : amd64 / x86_64 par défaut, arm64 / aarch64 en option.
-  - Sections Debian (main, contrib…) ou Ubuntu (main, universe…), dépôts BaseOS, AppStream, CRB… au choix.
-  - Les index officiels ne sont acceptés qu'avec une signature valide des clés Debian, Ubuntu, AlmaLinux, Rocky Linux ou CentOS
-    livrées avec l'image, et chaque paquet est vérifié par son sha256.
+  Distributions) : dépôts, architectures, clé. Romulus l'apprend par les paquets importés (1.5.0 requis).
+- **Stockage S3 :** AWS, MinIO, Ceph, Garage (Réglages › Stockage) : clé chiffrée en base, **Tester**,
+  **Migrer vers S3** (empreinte de chaque fichier vérifiée par le serveur, bascule seulement sans erreur,
+  reprise possible) et retour au disque. Fichiers de 5 Gio au plus.
+- **Paquets système :** Debian 11 (fin de vie), 12 et 13, Ubuntu 22.04 et 24.04 LTS, AlmaLinux et Rocky Linux
+  8, 9 et 10, CentOS Stream 9 et 10, CentOS 7 et 8 (vault). Paquets (`nginx`, motifs `python3-*`, versions
+  `curl=7.88.1-10+deb12u8`, streams `@nodejs:20` sur EL8) et leurs dépendances, comme apt ou dnf sur un
+  système vide ; amd64/x86_64, arm64/aarch64 en option ; sections ou dépôts au choix. Index acceptés seulement
+  signés (clés livrées avec l'image), sha256 de chaque paquet vérifié.
 - **Ansible Galaxy :** collections (`community.general >=8.0.0`, dépendances comprises, sha256 vérifié) et
   rôles (`role:geerlingguy.docker 7.4.1`). Un `requirements.yml` peut être importé.
 - **Terraform :**
@@ -92,14 +69,14 @@ les fichiers sont dans le volume `/data`.
 - **Extensions VS Code :** Open VSX et/ou Visual Studio Marketplace (`ms-python.python@2024.2.0`, ou un
   `.vscode/extensions.json`), dépendances et packs compris, construction de chaque plateforme choisie (Linux
   x64 par défaut), version compatible avec un VS Code donné. Romulus les sert en marketplace.
-- **Python multi-plateformes :** wheels pour Python 3.9 à 3.14, Linux glibc ou musl (x86_64, ARM64), Windows,
-  macOS ; sources (sdist) en option.
+- **Python :** wheels pour Python 3.9 à 3.14, Linux glibc ou musl, Windows, macOS ; sources en option.
 - **Docker :** les plateformes à collecter sont au choix (amd64, arm64…). L'index multi-plateformes d'origine
   est conservé, donc `image@sha256:…` reste valide. Les couches communes ne sont téléchargées et transportées qu'une fois.
 - **Exports incrémentaux :** seuls les paquets jamais transportés partent. Un export « complet » existe pour un
   nouveau miroir. Un bundle peut être découpé en **parties de 4 Go** pour une clé FAT32.
-- **Bundles signés (Ed25519) :** Romulus refuse tout bundle modifié ou produit par un collecteur qu'il n'a pas approuvé.
-- **Interface :** en français, thème clair et sombre, adaptée au mobile. Assistant d'installation au premier démarrage.
+- **Bundles signés (Ed25519) :** Romulus refuse tout bundle modifié ou d'un collecteur non approuvé.
+- **Interface :** en français, thème clair et sombre, adaptée au mobile, réglages en onglets, visites guidées
+  (bouton **Aide**). Assistant d'installation au premier démarrage. Vérification d'intégrité des paquets.
 
 ## Tags
 
@@ -107,8 +84,6 @@ les fichiers sont dans le volume `/data`.
 |---|---|
 | `1.5.0`, `latest` | Ubuntu, Debian 11, Rocky Linux ; dépôts apt et dnf tiers ; distributions personnalisées ; stockage S3 ; vérification d'intégrité ; réglages en onglets ; visites guidées ; Symfony 8.1.12 |
 | `1.4.0` | Extensions VS Code, rôles, double authentification, identifiants UUID, Symfony 8.1.11 |
-| `1.3.1` | Sécurité : PHP 8.4.27 (CVE-2026-109618 et CVE-2026-109619, critiques), FrankenPHP 1.13.2 |
-| `1.3.0` | Paquets Debian et RPM (AlmaLinux, CentOS), Ansible Galaxy, Terraform |
 
 Versions précédentes : [releases GitHub](https://github.com/imperiumclansoftware/lupa/releases).
 
@@ -210,7 +185,7 @@ Toutes les valeurs ont un défaut : ce fichier ne sert qu'à les changer.
 
 ```bash
 # Version de l'image
-REMUS_IMAGE=iemperor/remus:1.3.1
+REMUS_IMAGE=iemperor/remus:1.5.0
 
 # UID des conteneurs : 0 en Docker rootless, votre UID (id -u) sinon ; ./configure.sh le détecte
 SAS_UID=0
@@ -297,10 +272,8 @@ s'il manque, sans toucher à une valeur existante.
 
 - Le conteneur tourne aussi avec le **groupe 0**, et les dossiers de l'image lui sont accessibles :
   l'application fonctionne quel que soit l'UID choisi.
-- **Mise à jour depuis la 1.0.0 en rootless :** le volume avait été créé sous l'UID 1000. Au premier
-  démarrage en UID 0, Rémus en reprend la propriété (« Droits du volume /data repris »). Les capacités
-  `CHOWN`, `DAC_OVERRIDE` et `FOWNER` du compose servent à cela. Docker ne les accorde qu'à un processus
-  root, donc seulement en rootless, où ce root n'a aucun privilège sur l'hôte.
+- Les capacités `CHOWN`, `DAC_OVERRIDE` et `FOWNER` servent seulement en rootless, à reprendre un volume
+  créé sous un autre UID (mise à jour depuis la 1.0.0) ; ce root n'a aucun privilège sur l'hôte.
 - Si un dossier reste inaccessible, le démarrage et la page **Exports** indiquent son UID propriétaire et
   la valeur de `SAS_UID` à mettre.
 

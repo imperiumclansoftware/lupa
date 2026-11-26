@@ -44,15 +44,13 @@ d'aucun service externe : la base SQLite et les paquets sont dans le volume `/da
     distributions personnalisées définies dans Rémus, apprises par les paquets importés. Les paquets gardent la
     signature de leur distribution ;
   - **Ansible Galaxy** (`/galaxy/`, API v3) pour ansible-galaxy ;
-  - stockage des paquets sur disque ou dans un **bucket S3** interne (MinIO, Ceph, Garage ; Réglages ›
-    Stockage) : Romulus relaie les fichiers aux postes, qui n'ont pas besoin d'accéder au bucket. La clé
-    secrète S3 est chiffrée avec une clé dérivée d'`APP_SECRET` : si `APP_SECRET` change, ressaisissez-la ;
   - **extensions VS Code** (`/vscode/`, galerie au protocole d'Open VSX) pour VS Code, VSCodium et code-server ;
   - **Terraform** : miroir réseau de providers (`/terraform/providers/`), archive pour miroir local,
     modules (`/terraform/modules/`) et binaire (`/terraform/releases/`).
-- **Alertes de sécurité :** les vulnérabilités connues relevées par Rémus (OSV.dev) au moment de l'export
-  voyagent avec les paquets. Le tableau de bord, la liste des paquets et la page de chaque paquet les
-  affichent (« critique », « avertissement », versions corrigées), sans accès à Internet.
+- **Stockage :** disque ou **bucket S3** interne (MinIO, Ceph, Garage ; Réglages › Stockage) ; Romulus relaie
+  les fichiers aux postes. Clé S3 chiffrée avec une clé dérivée d'`APP_SECRET` (à ressaisir si elle change).
+- **Alertes de sécurité :** les failles relevées par Rémus (OSV.dev) voyagent avec les paquets et s'affichent
+  sans accès à Internet (gravité, versions corrigées).
 - **Quarantaine (liste noire) :** la liste noire configurée dans Rémus arrive avec les bundles (signée, la
   révision la plus récente l'emporte). Les versions interdites restent stockées mais ne sont plus servies :
   - npm : version retirée du document du paquet (npm en choisit une autre) et archive refusée (403) ;
@@ -60,12 +58,11 @@ d'aucun service externe : la base SQLite et les paquets sont dans le volume `/da
   - Composer : version masquée et archive refusée ;
   - Docker : étiquette et empreintes refusées (`DENIED`), y compris sous une autre étiquette.
 
-  Les paquets concernés portent un badge « Quarantaine ». La liste reçue est consultable dans Réglages,
-  en lecture seule : elle se modifie dans Rémus.
+  Badge « Quarantaine » sur les paquets concernés ; la liste se consulte dans Réglages et se modifie dans Rémus.
 - **Interface :**
   - tableau de bord, historique des imports, navigation dans les paquets avec la commande d'installation de chacun ;
   - page **Utilisation**, qui donne la configuration exacte de chaque outil avec l'adresse du serveur ;
-  - en français, thème clair et sombre ;
+  - en français, thème clair et sombre, réglages en onglets, visites guidées (bouton **Aide**) ;
   - assistant d'installation au premier démarrage.
 
 ## Tags
@@ -74,8 +71,6 @@ d'aucun service externe : la base SQLite et les paquets sont dans le volume `/da
 |---|---|
 | `1.5.0`, `latest` | Ubuntu, Debian 11, Rocky Linux ; dépôts apt et dnf tiers et distributions personnalisées de Rémus ; stockage S3 ; réglages en onglets ; visites guidées ; Symfony 8.1.12 |
 | `1.4.0` | Marketplace VS Code, rôles, double authentification, identifiants UUID, Symfony 8.1.11 (17 avis de sécurité) ; `TRUSTED_PROXIES` derrière un proxy HTTPS |
-| `1.3.1` | Sécurité : PHP 8.4.27 (CVE-2026-109618 et CVE-2026-109619, critiques), FrankenPHP 1.13.2 |
-| `1.3.0` | Dépôts apt et dnf/yum, serveur Ansible Galaxy, miroir Terraform |
 
 Versions précédentes : [releases GitHub](https://github.com/imperiumclansoftware/lupa/releases).
 
@@ -257,8 +252,7 @@ composer config -g repositories.packagist false
 composer config -g secure-http false
 ```
 
-**Symfony Flex :** pour que les recettes viennent de Romulus et non de GitHub, ce qui est indispensable
-pour `composer create-project symfony/skeleton` hors ligne :
+**Symfony Flex :** recettes servies par Romulus (indispensable pour `composer create-project` hors ligne) :
 
 ```bash
 export SYMFONY_ENDPOINT=http://romulus:8080/composer/flex     # dans ~/.bashrc ou ~/.profile
@@ -287,13 +281,7 @@ url = http://romulus:8080/galaxy/
 ```
 
 Puis `ansible-galaxy collection install community.general`. Les rôles s'installent par l'adresse de leur
-archive, indiquée dans la page du paquet :
-
-```yaml
-roles:
-  - src: http://romulus:8080/galaxy/roles/geerlingguy.docker-7.4.1.tar.gz
-    name: geerlingguy.docker
-```
+archive (`src:` dans `requirements.yml`), indiquée dans la page du paquet.
 
 **Terraform :** Terraform n'accepte un miroir réseau qu'en **HTTPS** (voir [HTTPS](#https)). Dans
 `~/.terraformrc` :
@@ -314,10 +302,8 @@ mkdir -p ~/.terraform.d/plugins
 curl -s "http://romulus:8080/terraform/providers.tar?platform=linux_amd64" | tar -x -C ~/.terraform.d/plugins
 ```
 
-Les modules se référencent par l'adresse de leur archive :
-`source = "http://romulus:8080/terraform/modules/terraform-aws-modules/vpc/aws/5.8.1.tar.gz"`.
-En HTTPS, le registre du miroir permet aussi `source = "romulus.intranet/terraform-aws-modules/vpc/aws"`
-avec `version = "5.8.1"`. Le binaire est sous `/terraform/releases/terraform_<version>_<os>_<arch>.zip`.
+Modules : par l'adresse de leur archive (`/terraform/modules/<espace>/<nom>/<fournisseur>/<version>.tar.gz`),
+ou en HTTPS par le registre du miroir. Binaire : `/terraform/releases/terraform_<version>_<os>_<arch>.zip`.
 
 **Debian (apt) :** Romulus régénère les index de ce qu'il a reçu et les signe avec sa propre clé. Installez-la
 une fois par poste, puis déclarez le dépôt. La page Utilisation donne aussi l'empreinte de la clé.
@@ -340,9 +326,8 @@ sudo dnf config-manager --set-disabled '*' && sudo dnf config-manager --set-enab
 sudo dnf install nginx
 ```
 
-Sur CentOS 7, remplacez `dnf config-manager` par `yum-config-manager --disable \*` puis
-`--enable romulus-centos-7`. Le fichier `.repo` contient `module_hotfixes=1` : sur EL8 et EL9, seuls les
-streams de modules collectés sont présents et dnf ne doit pas les filtrer.
+CentOS 7 : `yum-config-manager --disable \*` puis `--enable romulus-centos-7`. `module_hotfixes=1` évite que
+dnf (EL8, EL9) filtre les streams de modules collectés.
 - Podman et containerd passent par `/etc/containers/registries.conf`, avec un `[[registry.mirror]]` dont
   `location = "romulus:8080"` et `insecure = true`.
 
@@ -459,9 +444,8 @@ docker load -i romulus-1.5.0.tar.gz
 docker compose up -d    # migrations appliquées au démarrage ; secrets, paquets et collecteurs approuvés conservés
 ```
 
-Vers 1.4.0, les identifiants passent en UUID : sauvegardez le volume avant (voir ci-dessous). Mettez Romulus
-en 1.5.0 avant d'importer des paquets de distributions personnalisées de Rémus : une version plus ancienne les
-importe sans les servir.
+Vers 1.4.0 (identifiants UUID), sauvegardez le volume avant. Les distributions personnalisées de Rémus
+demandent Romulus 1.5.0 (une version plus ancienne importe ces paquets sans les servir).
 
 ### Sauvegarde et restauration
 
@@ -471,8 +455,7 @@ docker run --rm -v romulus_data:/data -v "$PWD":/backup alpine tar -czf /backup/
 docker compose start
 ```
 
-L'image `alpine` doit être disponible sur le serveur : chargez-la par clé USB comme Romulus, ou utilisez
-toute autre image présente qui contient `tar`.
+L'image `alpine` (ou toute image avec `tar`) doit être chargée sur le serveur, par clé USB.
 
 Restauration sur un serveur neuf, avant le premier `up` :
 
@@ -499,12 +482,10 @@ docker compose exec romulus php bin/console app:setup:code       # nouveau code 
 
 ### Comptes, rôles et double authentification
 
-Trois rôles : **lecteur** (consulte), **opérateur** (importe les bundles des collecteurs déjà approuvés)
-et **administrateur** (en plus : comptes, clés de confiance, approbation d'un nouveau collecteur). Les
-administrateurs gèrent les comptes dans la page « Comptes » ; chacun change son mot de passe dans
-« Mon compte » et peut y activer la **double authentification** (application TOTP, qui fonctionne sans
-réseau, et codes de secours). Elle reste facultative : les téléphones sont souvent interdits sur les
-réseaux isolés.
+Rôles : **lecteur** (consulte), **opérateur** (importe les bundles des collecteurs approuvés),
+**administrateur** (comptes, clés de confiance, nouveau collecteur, stockage). Dans « Mon compte », chacun
+change son mot de passe et peut activer la **double authentification** (TOTP hors ligne, codes de secours),
+facultative car les téléphones sont souvent interdits sur les réseaux isolés.
 
 ## Sécurité
 
