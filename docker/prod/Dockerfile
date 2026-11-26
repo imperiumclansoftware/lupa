@@ -91,6 +91,7 @@ RUN apk add --no-cache nodejs npm python3 git unzip xz zstd bzip2 gpgv \
  && python3 -m venv /opt/pip && /opt/pip/bin/pip install --no-cache-dir --quiet --upgrade pip
 COPY --from=front /front/dist/collector/browser /srv/front
 ENV SAS_APP=collector \
+    APP_VERSION=${APP_VERSION} \
     EXPORT_DIR=/exports \
     IDENTITY_DIR=/data/identity \
     PIP_BIN=/opt/pip/bin/pip \
@@ -116,6 +117,7 @@ LABEL org.opencontainers.image.title="Romulus" \
       org.opencontainers.image.version="${APP_VERSION}"
 COPY --from=front /front/dist/mirror/browser /srv/front
 ENV SAS_APP=mirror \
+    APP_VERSION=${APP_VERSION} \
     INBOX_DIR=/inbox \
     UPLOAD_DIR=/data/uploads \
     MIRROR_KEY_DIR=/data/identity

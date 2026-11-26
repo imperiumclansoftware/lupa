@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, OnInit, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import {
+  AboutCard,
   DateTimePipe,
   Dialog,
   Eco,
@@ -14,7 +15,7 @@ import { MirrorApi, Quarantine, TrustedKey } from '../api';
 import { viewChild } from '@angular/core';
 
 @Component({
-  imports: [FormsModule, Icon, Dialog, DateTimePipe, Eco, EcosystemPipe],
+  imports: [AboutCard, FormsModule, Icon, Dialog, DateTimePipe, Eco, EcosystemPipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="page">
@@ -174,6 +175,7 @@ import { viewChild } from '@angular/core';
           }
         }
       </section>
+      <sas-about />
     </div>
 
     <sas-dialog heading="Retirer ce collecteur ?">

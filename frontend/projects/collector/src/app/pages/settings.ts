@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, OnInit, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { CopyButton, Icon, Toasts, errorMessage, Auth } from '@sas/shared';
+import { AboutCard, CopyButton, Icon, Toasts, errorMessage, Auth } from '@sas/shared';
 import { CollectorApi, Identity } from '../api';
 import { SettingsBlacklist } from './settings-blacklist';
 import { SettingsDistributions } from './settings-distributions';
@@ -9,6 +9,7 @@ import { SettingsSources } from './settings-sources';
 
 @Component({
   imports: [
+    AboutCard,
     FormsModule,
     CopyButton,
     Icon,
@@ -106,6 +107,7 @@ import { SettingsSources } from './settings-sources';
           </div>
         </section>
       }
+      <sas-about />
     </div>
   `,
   styles: `

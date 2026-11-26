@@ -1,4 +1,6 @@
 parameters:
+    # Version de Lupa, fixée à la construction de l'image (make release) ; « dev » en développement
+    env(APP_VERSION): 'dev'
     # Nom du cookie de session : préfixe __Host- derrière un proxy HTTPS (entrypoint de production, ADR 0002)
     env(SESSION_NAME): 'sas_collector'
     # Documents PDF (conditions, confidentialité, politiques de sécurité) : dépôt en développement, image en production
