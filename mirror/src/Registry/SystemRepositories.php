@@ -6,6 +6,7 @@ use App\Quarantine\Quarantine;
 use Doctrine\DBAL\Connection;
 use Sas\Bundle\Distributions;
 use Sas\Bundle\Ecosystem;
+use Sas\Bundle\OpenPgpKey;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 
 /**
@@ -136,6 +137,29 @@ final readonly class SystemRepositories
 
             return $files;
         });
+    }
+
+    /**
+     * Clés des dépôts dnf tiers dont des paquets sont servis pour cette distribution (empreinte => clé),
+     * publiées pour la vérification des paquets sur les postes (gpgcheck).
+     *
+     * @return array<string, string>
+     */
+    public function rpmKeys(string $distribution): array
+    {
+        $keys = [];
+        $rows = $this->db->fetchFirstColumn(
+            "SELECT DISTINCT json_extract(metadata, '$.signingKey') FROM package WHERE ecosystem = 'rpm' AND filename LIKE ? ESCAPE '\\' AND json_extract(metadata, '$.signingKey') IS NOT NULL",
+            [addcslashes($distribution, '%_').'/%'],
+        );
+        foreach ($rows as $key) {
+            if (\is_string($key) && null !== $fingerprint = OpenPgpKey::fingerprint($key)) {
+                $keys[$fingerprint] = $key;
+            }
+        }
+        ksort($keys);
+
+        return $keys;
     }
 
     /** Paquet servi par un chemin du dépôt (pool/… ou Packages/<fichier>), hors quarantaine. */

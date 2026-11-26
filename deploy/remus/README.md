@@ -55,6 +55,12 @@ les fichiers sont dans le volume `/data`.
   publique OpenPGP du dépôt. L'index n'est accepté que signé par cette clé (InRelease, ou Release et
   Release.gpg) ; son empreinte est affichée pour la comparer à celle publiée par l'éditeur. Les paquets
   rejoignent la distribution chez Romulus, avec le nom du dépôt d'origine.
+- **Dépôts dnf tiers :** EPEL, Docker CE, PostgreSQL, dépôt interne… s'ajoutent à une distribution RPM
+  (Réglages › Dépôts sources › RPM) : `baseurl` avec `$basearch`, et clé publique du dépôt. Un index signé
+  (`repomd.xml.asc`) est vérifié avec cette clé ; s'il ne l'est pas (EPEL), **chaque paquet** doit porter une
+  signature valide de cette clé, sinon il est refusé et supprimé. Les index publiés sans base SQLite
+  (`primary.xml` seul, comme Docker CE) sont pris en charge. Romulus fournit ensuite la clé aux postes
+  (`gpgkey` de `romulus.repo`).
 - **Paquets système Debian, Ubuntu et RPM :** Debian 11 (fin de vie), 12 et 13, Ubuntu 22.04 et 24.04 LTS,
   AlmaLinux 8, 9 et 10, Rocky Linux 8, 9 et 10, CentOS Stream 9 et 10, CentOS 7 et 8 (dépôts figés de
   vault.centos.org). On choisit des paquets (`nginx`, `postgresql`, motifs

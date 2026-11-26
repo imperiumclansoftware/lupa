@@ -325,8 +325,9 @@ sudo rm -f /etc/apt/sources.list.d/debian.sources /etc/apt/sources.list    # dé
 sudo apt update && sudo apt install nginx
 ```
 
-**AlmaLinux, Rocky Linux, CentOS (dnf, yum) :** les paquets gardent la signature de la distribution (`gpgcheck=1`, la clé
-est déjà sur le poste).
+**AlmaLinux, Rocky Linux, CentOS (dnf, yum) :** les paquets gardent leur signature (`gpgcheck=1`) : la clé de la
+distribution est déjà sur le poste, celles des dépôts tiers ajoutés dans Rémus (EPEL, Docker…) sont publiées par
+Romulus (`/rpm/<distribution>/keys/<empreinte>.asc`) et listées dans `romulus.repo`.
 
 ```bash
 sudo curl -o /etc/yum.repos.d/romulus.repo http://romulus:8080/rpm/almalinux-9/romulus.repo

@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<metadata xmlns="http://linux.duke.edu/metadata/common" xmlns:rpm="http://linux.duke.edu/metadata/rpm" packages="2">
+<package type="rpm">
+  <name>nginx</name>
+  <arch>x86_64</arch>
+  <version epoch="1" ver="1.20.2" rel="1.el9.ngx"/>
+  <checksum type="sha256" pkgid="YES">5ab07c8683b0e477b5bc1bccdc9a7552b39af56acb195c8d0fe454516c3565bb</checksum>
+  <summary>High performance web server</summary>
+  <description>nginx [engine x] is an HTTP and reverse proxy server, as well as
+a mail proxy server.</description>
+  <packager></packager>
+  <url>https://nginx.org/</url>
+  <time file="1653289977" build="1653042542"/>
+  <size package="874674" installed="3051022" archive="3055848"/>
+  <location href="RPMS/nginx-1.20.2-1.el9.ngx.x86_64.rpm"/>
+  <format>
+    <rpm:license>2-clause BSD-like license</rpm:license>
+    <rpm:vendor>NGINX Packaging &lt;nginx-packaging@f5.com&gt;</rpm:vendor>
+    <rpm:group>System Environment/Daemons</rpm:group>
+    <rpm:buildhost>ip-10-1-17-195.eu-central-1.compute.internal</rpm:buildhost>
+    <rpm:sourcerpm>nginx-1.20.2-1.el9.ngx.src.rpm</rpm:sourcerpm>
+    <rpm:header-range start="5112" end="16705"/>
+    <rpm:provides>
+      <rpm:entry name="config(nginx)" flags="EQ" epoch="1" ver="1.20.2" rel="1.el9.ngx"/>
+      <rpm:entry name="nginx" flags="EQ" epoch="1" ver="1.20.2" rel="1.el9.ngx"/>
+      <rpm:entry name="nginx(x86-64)" flags="EQ" epoch="1" ver="1.20.2" rel="1.el9.ngx"/>
+      <rpm:entry name="nginx-r1.20.2"/>
+      <rpm:entry name="webserver"/>
+    </rpm:provides>
+    <rpm:requires>
+      <rpm:entry name="/bin/sh" pre="1"/>
+      <rpm:entry name="/bin/sh"/>
+      <rpm:entry name="/usr/bin/sh"/>
+      <rpm:entry name="libcrypt.so.2()(64bit)"/>
+      <rpm:entry name="libcrypt.so.2(XCRYPT_2.0)(64bit)"/>
+      <rpm:entry name="libcrypto.so.3()(64bit)"/>
+      <rpm:entry name="libcrypto.so.3(OPENSSL_3.0.0)(64bit)"/>
+      <rpm:entry name="libpcre.so.1()(64bit)"/>
+      <rpm:entry name="libssl.so.3()(64bit)"/>
+      <rpm:entry name="libssl.so.3(OPENSSL_3.0.0)(64bit)"/>
+      <rpm:entry name="libz.so.1()(64bit)"/>
+      <rpm:entry name="rtld(GNU_HASH)"/>
+      <rpm:entry name="shadow-utils" pre="1"/>
+      <rpm:entry name="systemd" pre="1"/>
+      <rpm:entry name="systemd"/>
+      <rpm:entry name="libc.so.6(GLIBC_2.34)(64bit)"/>
+    </rpm:requires>
+    <file>/etc/logrotate.d/nginx</file>
+    <file type="dir">/etc/nginx</file>
+    <file type="dir">/etc/nginx/conf.d</file>
+    <file>/etc/nginx/conf.d/default.conf</file>
+    <file>/etc/nginx/fastcgi_params</file>
+    <file>/etc/nginx/mime.types</file>
+    <file>/etc/nginx/modules</file>
+    <file>/etc/nginx/nginx.conf</file>
+    <file>/etc/nginx/scgi_params</file>
+    <file>/etc/nginx/uwsgi_params</file>
+    <file>/usr/sbin/nginx</file>
+    <file>/usr/sbin/nginx-debug</file>
+  </format>
+</package>
+<package type="rpm">
+  <name>nginx-module-njs</name>
+  <arch>x86_64</arch>
+  <version epoch="1" ver="1.20.2+0.7.3" rel="1.el9.ngx"/>
+  <checksum type="sha256" pkgid="YES">ded0451164a27adf04dbe9e7f56128eb2ee297748a2c3fba02e5842098c638d7</checksum>
+  <summary>nginx njs dynamic modules</summary>
+  <description>nginx njs dynamic modules.</description>
+  <packager></packager>
+  <url>https://nginx.org/</url>
+  <time file="1653289977" build="1653042772"/>
+  <size package="768230" installed="4470503" archive="4473540"/>
+  <location href="RPMS/nginx-module-njs-1.20.2+0.7.3-1.el9.ngx.x86_64.rpm"/>
+  <format>
+    <rpm:license>2-clause BSD-like license</rpm:license>
+    <rpm:vendor>NGINX Packaging &lt;nginx-packaging@f5.com&gt;</rpm:vendor>
+    <rpm:group>System Environment/Daemons</rpm:group>
+    <rpm:buildhost>ip-10-1-17-195.eu-central-1.compute.internal</rpm:buildhost>
+    <rpm:sourcerpm>nginx-module-njs-1.20.2+0.7.3-1.el9.ngx.src.rpm</rpm:sourcerpm>
+    <rpm:header-range start="5112" end="15113"/>
+    <rpm:provides>
+      <rpm:entry name="nginx-module-njs" flags="EQ" epoch="1" ver="1.20.2+0.7.3" rel="1.el9.ngx"/>
+      <rpm:entry name="nginx-module-njs(x86-64)" flags="EQ" epoch="1" ver="1.20.2+0.7.3" rel="1.el9.ngx"/>
+      <rpm:entry name="nginx-module-njs-r1.20.2"/>
+    </rpm:provides>
+    <rpm:requires>
+      <rpm:entry name="/bin/sh" pre="1"/>
+      <rpm:entry name="libcrypto.so.3()(64bit)"/>
+      <rpm:entry name="libcrypto.so.3(OPENSSL_3.0.0)(64bit)"/>
+      <rpm:entry name="libedit.so.0()(64bit)"/>
+      <rpm:entry name="libm.so.6()(64bit)"/>
+      <rpm:entry name="libm.so.6(GLIBC_2.2.5)(64bit)"/>
+      <rpm:entry name="libm.so.6(GLIBC_2.29)(64bit)"/>
+      <rpm:entry name="libpcre.so.1()(64bit)"/>
+      <rpm:entry name="nginx-r1.20.2"/>
+      <rpm:entry name="rtld(GNU_HASH)"/>
+      <rpm:entry name="libc.so.6(GLIBC_2.34)(64bit)"/>
+    </rpm:requires>
+    <file>/usr/bin/njs</file>
+  </format>
+</package>
+</metadata>

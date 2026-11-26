@@ -40,6 +40,8 @@ final class SystemRepositoriesTest extends MirrorWebTestCase
             $file = sprintf('%s-2.10-8.el9.%s.rpm', $name, $arch);
             $builder->artifact('rpm', $name, '2.10-8.el9', 'almalinux-9/x86_64/'.$file, [$this->sha[$role]], [
                 'distribution' => 'almalinux-9', 'architecture' => $arch, 'repoArch' => 'x86_64', 'repository' => 'AppStream',
+                // hello-data vient d'un dépôt tiers : sa clé voyage avec lui (gpgcheck sur les postes)
+            ] + ('noarch' === $role ? ['signingKey' => (string) file_get_contents(__DIR__.'/../fixtures/third-party-key.asc')] : []) + [
                 'primary' => sprintf('<package type="rpm"><name>%s</name><arch>%s</arch><version epoch="0" ver="2.10" rel="8.el9"/><checksum type="sha256" pkgid="YES">%s</checksum><summary>x</summary><location href="Packages/h/%s"/><format><rpm:provides><rpm:entry name="%1$s"/></rpm:provides><file>/usr/bin/%1$s</file></format></package>', $name, $arch, $this->sha[$role], $file),
             ]);
         }
@@ -126,7 +128,12 @@ final class SystemRepositoriesTest extends MirrorWebTestCase
 
         $this->client->request('GET', '/rpm/almalinux-9/romulus.repo');
         self::assertStringContainsString("baseurl=http://localhost/rpm/almalinux-9/\$basearch/\n", $this->body());
-        self::assertStringContainsString("gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-AlmaLinux-9\n", $this->body());
+        self::assertStringContainsString("gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-AlmaLinux-9\n       http://localhost/rpm/almalinux-9/keys/F9BD3017B38B644C8F9EFF2D29A000A37390BBF1.asc\n", $this->body());
+        $this->client->request('GET', '/rpm/almalinux-9/keys/F9BD3017B38B644C8F9EFF2D29A000A37390BBF1.asc');
+        self::assertResponseIsSuccessful();
+        self::assertStringContainsString('BEGIN PGP PUBLIC KEY BLOCK', $this->body());
+        $this->client->request('GET', '/rpm/almalinux-9/keys/'.str_repeat('A', 40).'.asc');
+        self::assertResponseStatusCodeSame(404);
 
         $this->client->request('GET', '/api/distributions');
         $items = array_column($this->json()['items'], null, 'id');

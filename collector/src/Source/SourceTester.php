@@ -3,7 +3,9 @@
 namespace App\Source;
 
 use App\Entity\Source;
+use App\System\RpmIndex;
 use App\System\Signatures;
+use Sas\Bundle\Distributions;
 use Sas\Bundle\Ecosystem;
 use Sas\Bundle\OpenPgpKey;
 use Symfony\Contracts\HttpClient\Exception\ExceptionInterface;
@@ -26,6 +28,7 @@ final readonly class SourceTester
             return match ($source->getEcosystem()) {
                 Ecosystem::Docker => $this->docker($source),
                 Ecosystem::Deb => $this->deb($source),
+                Ecosystem::Rpm => $this->rpm($source),
                 default => $this->http($source),
             };
         } catch (ExceptionInterface $e) {
@@ -153,6 +156,35 @@ final readonly class SourceTester
             implode(', ', $source->getComponents()),
             implode(', ', $field('Architectures')) ?: 'non précisées',
         )];
+    }
+
+    /**
+     * Dépôt dnf tiers : repomd.xml de la première architecture de la distribution, signé par la clé saisie,
+     * ou non signé (EPEL) : chaque paquet sera alors vérifié au téléchargement.
+     *
+     * @return array{ok: bool, message: string}
+     */
+    private function rpm(Source $source): array
+    {
+        $dist = Distributions::find((string) $source->getDistribution()) ?? throw new \RuntimeException('Distribution inconnue.');
+        /** @var array<string, string> $arches */
+        $arches = $dist['architectures'];
+        $arch = RpmIndex::packageArch((string) array_key_first($arches));
+        $base = str_replace(['$basearch', '$arch'], $arch, $source->getUrl());
+        $repomd = (string) $this->fetch($source, $base.'/repodata/repomd.xml');
+        $data = RpmIndex::repomd($repomd);
+        if (!isset($data['primary']) && !isset($data['primary_db'])) {
+            return ['ok' => false, 'message' => sprintf('%s/repodata/repomd.xml ne décrit aucun paquet (index primary absent).', $base)];
+        }
+        $key = (string) $source->getSigningKey();
+        $fingerprint = substr((string) OpenPgpKey::fingerprint($key), -16);
+        $signature = $this->fetch($source, $base.'/repodata/repomd.xml.asc', true);
+        if (null === $signature) {
+            return ['ok' => true, 'message' => sprintf('Le dépôt répond (%s). Son index n\'est pas signé : chaque paquet téléchargé sera vérifié avec la clé %s, et refusé s\'il n\'est pas signé par elle.', $arch, $fingerprint)];
+        }
+        $this->signatures->detachedWithKey($repomd, $signature, $key, $source->getLabel());
+
+        return ['ok' => true, 'message' => sprintf('Index signé vérifié (clé %s) pour %s.', $fingerprint, $arch)];
     }
 
     /** Fichier d'index du dépôt, avec ses identifiants ; null si absent (404) et facultatif. */

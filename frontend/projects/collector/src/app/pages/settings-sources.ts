@@ -37,6 +37,10 @@ const HINTS: Partial<Record<EcosystemId, { url: string; help: string }>> = {
     url: 'https://download.docker.com/linux/debian',
     help: 'Dépôt apt tiers (Docker, PostgreSQL, nginx, dépôt interne) : adresse de la ligne « deb » du dépôt, avant la suite. Ses paquets s’ajoutent à la distribution choisie.',
   },
+  rpm: {
+    url: 'https://download.docker.com/linux/centos/9/$basearch/stable',
+    help: 'Dépôt dnf tiers (EPEL, Docker, PostgreSQL, dépôt interne) : « baseurl » du fichier .repo, avec $basearch pour l’architecture et la version de la distribution en clair. Ses paquets s’ajoutent à la distribution choisie.',
+  },
   docker: {
     url: 'harbor.example.com',
     help: 'Hôte du registre (Harbor, GitLab, Nexus, registry:2). Les images « harbor.example.com/projet/app:1.0 » l’utilisent ; s’il remplace Docker Hub, les images officielles y sont tirées.',
@@ -55,8 +59,8 @@ const HINTS: Partial<Record<EcosystemId, { url: string; help: string }>> = {
           <h2>Dépôts sources</h2>
           <p class="subtle">
             Les dépôts officiels (npmjs, PyPI, Packagist, Docker Hub, distributions Linux) sont
-            toujours utilisés, sauf si un dépôt privé les remplace. Les dépôts apt tiers s’ajoutent
-            à une distribution.
+            toujours utilisés, sauf si un dépôt privé les remplace. Les dépôts apt et dnf tiers
+            s’ajoutent à une distribution.
           </p>
         </div>
         @if (auth.can('admin')) {
@@ -179,7 +183,7 @@ const HINTS: Partial<Record<EcosystemId, { url: string; help: string }>> = {
           />
           <span class="hint">{{ hint().help }}</span>
         </div>
-        @if (form.ecosystem === 'deb') {
+        @if (isSystem()) {
           <div class="grid two">
             <div class="field">
               <label for="src-dist">Distribution</label>
@@ -196,35 +200,39 @@ const HINTS: Partial<Record<EcosystemId, { url: string; help: string }>> = {
                 }
               </select>
             </div>
+            @if (form.ecosystem === 'deb') {
+              <div class="field">
+                <label for="src-suite">Suite</label>
+                <input
+                  class="input mono"
+                  id="src-suite"
+                  name="suite"
+                  required
+                  [(ngModel)]="form.suite"
+                  placeholder="bookworm"
+                  (ngModelChange)="tested.set(null)"
+                />
+              </div>
+            }
+          </div>
+          @if (form.ecosystem === 'deb') {
             <div class="field">
-              <label for="src-suite">Suite</label>
+              <label for="src-components">Composants</label>
               <input
                 class="input mono"
-                id="src-suite"
-                name="suite"
+                id="src-components"
+                name="components"
                 required
-                [(ngModel)]="form.suite"
-                placeholder="bookworm"
+                [(ngModel)]="form.components"
+                placeholder="stable"
                 (ngModelChange)="tested.set(null)"
               />
+              <span class="hint"
+                >Ligne « deb https://download.docker.com/linux/debian bookworm stable » : suite
+                bookworm, composant stable.</span
+              >
             </div>
-          </div>
-          <div class="field">
-            <label for="src-components">Composants</label>
-            <input
-              class="input mono"
-              id="src-components"
-              name="components"
-              required
-              [(ngModel)]="form.components"
-              placeholder="stable"
-              (ngModelChange)="tested.set(null)"
-            />
-            <span class="hint"
-              >Ligne « deb https://download.docker.com/linux/debian bookworm stable » : suite
-              bookworm, composant stable.</span
-            >
-          </div>
+          }
           <div class="field">
             <label for="src-key">Clé de signature du dépôt</label>
             <textarea
@@ -242,8 +250,9 @@ const HINTS: Partial<Record<EcosystemId, { url: string; help: string }>> = {
             ></textarea>
             <span class="hint"
               >Clé publique OpenPGP publiée par l’éditeur (ASCII armor). L’index du dépôt n’est
-              accepté que signé par cette clé : comparez son empreinte à celle publiée par
-              l’éditeur.</span
+              accepté que signé par cette clé (dnf : à défaut, chaque paquet doit l’être) ; comparez
+              son empreinte à celle publiée par l’éditeur. Romulus la fournit aux postes pour
+              gpgcheck.</span
             >
           </div>
         }
@@ -395,7 +404,7 @@ export class SettingsSources implements OnInit {
   private readonly api = inject(CollectorApi);
   private readonly toasts = inject(Toasts);
   private readonly dialog = viewChild.required<Dialog>('dialog');
-  /** Dépôts privés : npm, Python, Composer, Docker, apt tiers (pas encore RPM, Ansible ni Terraform) */
+  /** Dépôts privés : npm, Python, Composer, Docker, apt et dnf tiers (pas encore Ansible ni Terraform) */
   protected readonly ecosystems = ECOSYSTEMS.filter((e) => e.id in HINTS);
   protected readonly items = signal<Source[]>([]);
   protected readonly error = signal('');
@@ -433,6 +442,10 @@ export class SettingsSources implements OnInit {
       (c) => this.distributions.set(c.distributions),
       () => undefined,
     );
+  }
+
+  protected isSystem(): boolean {
+    return this.form.ecosystem === 'deb' || this.form.ecosystem === 'rpm';
   }
 
   protected ecosystemChanged(): void {
@@ -532,7 +545,7 @@ export class SettingsSources implements OnInit {
 
   private payload(): SourceInput {
     const f = this.form;
-    const system = f.ecosystem === 'deb';
+    const system = this.isSystem();
     return {
       ...f,
       replacesDefault: system ? false : f.replacesDefault,

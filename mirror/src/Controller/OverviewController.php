@@ -37,6 +37,7 @@ final class OverviewController
         private readonly CacheInterface $cache,
         private readonly Quarantine $quarantine,
         private readonly \App\Registry\OpenPgp $pgp,
+        private readonly \App\Registry\SystemRepositories $repositories,
         private readonly string $storageDir,
         private readonly string $publicUrl,
     ) {
@@ -99,7 +100,7 @@ final class OverviewController
                 'packages' => (int) $row['packages'],
                 'architectures' => $arches,
                 'components' => $deb ? array_values(array_filter(explode(',', (string) $row['components']))) : [],
-                'repoFile' => $deb ? null : SystemRegistryController::repoFile($base, (string) $row['distribution'], $dist),
+                'repoFile' => $deb ? null : SystemRegistryController::repoFile($base, $id = (string) $row['distribution'], $dist, array_keys($this->repositories->rpmKeys($id))),
             ];
         }
 

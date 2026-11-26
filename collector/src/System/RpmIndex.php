@@ -3,17 +3,22 @@
 namespace App\System;
 
 use App\Job\JobContext;
+use App\Source\Sources;
 use Sas\Bundle\Distributions;
+use Sas\Bundle\Ecosystem;
 
 /**
  * Télécharge, vérifie (repomd.xml signé) et analyse les métadonnées primary.xml des dépôts
  * BaseOS/AppStream… d'une distribution RPM. EL8 : lit aussi modules.yaml (streams par défaut).
+ * Dépôts tiers (Réglages) : index vérifié avec leur clé s'il est signé, sinon chaque paquet l'est
+ * au téléchargement (EPEL ne signe que ses paquets).
  */
 final readonly class RpmIndex
 {
     public function __construct(
         private IndexFiles $files,
         private Signatures $signatures,
+        private ?Sources $sources = null,
     ) {
     }
 
@@ -35,14 +40,28 @@ final readonly class RpmIndex
             $repomd = (string) $this->files->text($base.'/repodata/repomd.xml');
             $this->signatures->detached($repomd, (string) $this->files->text($base.'/repodata/repomd.xml.asc'), $repo['keys'], $dist['label'].' '.$section);
             $data = self::repomd($repomd);
-            if (!isset($data['primary_db'])) {
-                throw new \RuntimeException(sprintf('Pas de base primary_db dans %s.', $base));
-            }
-            $sqlite = $this->files->plain($base.'/'.$data['primary_db']['href'], $data['primary_db']['algo'], $data['primary_db']['digest'], $context, $dist['label'].' '.$section.' '.$arch);
+            $sqlite = $this->primary($base, $data, $context, $dist['label'].' '.$section.' '.$arch);
             $sources[] = ['name' => $section, 'base' => $base, 'sqlite' => $sqlite];
             if (($dist['modules'] ?? false) && isset($data['modules'])) {
                 $modules[] = $this->files->plain($base.'/'.$data['modules']['href'], $data['modules']['algo'], $data['modules']['digest'], $context, $section.' modules');
             }
+        }
+        foreach ($this->sources?->system(Ecosystem::Rpm, $distribution) ?? [] as $source) {
+            $base = str_replace(['$basearch', '$arch'], self::packageArch($arch), $source->getUrl());
+            $repomd = $this->files->text($base.'/repodata/repomd.xml', true);
+            if (null === $repomd) {
+                $context->log(sprintf('Dépôt « %s » : rien pour %s.', $source->getLabel(), $arch));
+                continue;
+            }
+            $key = (string) $source->getSigningKey();
+            $signature = $this->files->text($base.'/repodata/repomd.xml.asc', true);
+            if (null !== $signature) {
+                $this->signatures->detachedWithKey($repomd, $signature, $key, $source->getLabel());
+            } else {
+                $context->log(sprintf('Dépôt « %s » : index non signé, chaque paquet sera vérifié avec la clé du dépôt.', $source->getLabel()));
+            }
+            $sqlite = $this->primary($base, self::repomd($repomd), $context, $source->getLabel().' '.$arch);
+            $sources[] = ['name' => $source->getLabel(), 'base' => $base, 'sqlite' => $sqlite, 'key' => $key, 'verify' => null === $signature];
         }
         $repository = new RpmRepository($sources, [self::packageArch($arch), 'noarch']);
         foreach ($modules as $file) {
@@ -50,6 +69,23 @@ final readonly class RpmIndex
         }
 
         return $repository;
+    }
+
+    /**
+     * Base SQLite des paquets : primary_db si le dépôt la publie, sinon primary.xml converti.
+     *
+     * @param array<string, array{href: string, algo: string, digest: string}> $data
+     */
+    private function primary(string $base, array $data, JobContext $context, string $label): string
+    {
+        if (isset($data['primary_db'])) {
+            return $this->files->plain($base.'/'.$data['primary_db']['href'], $data['primary_db']['algo'], $data['primary_db']['digest'], $context, $label);
+        }
+        if (!isset($data['primary'])) {
+            throw new \RuntimeException(sprintf('Pas d\'index primary dans %s.', $base));
+        }
+
+        return PrimaryXml::database($this->files->plain($base.'/'.$data['primary']['href'], $data['primary']['algo'], $data['primary']['digest'], $context, $label));
     }
 
     /** @return array<string, array{href: string, algo: string, digest: string}> */

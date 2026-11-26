@@ -96,14 +96,33 @@ final class SystemRegistryController
             return self::notFound();
         }
 
-        return new Response(self::repoFile($this->files->baseUrl($request), $distribution, $dist), 200, ['Content-Type' => 'text/plain; charset=utf-8']);
+        $base = $this->files->baseUrl($request);
+
+        return new Response(self::repoFile($base, $distribution, $dist, array_keys($this->repositories->rpmKeys($distribution))), 200, ['Content-Type' => 'text/plain; charset=utf-8']);
     }
 
-    /** @param array<string, mixed> $dist */
-    public static function repoFile(string $base, string $distribution, array $dist): string
+    /** Clé publique d'un dépôt dnf tiers (gpgkey de romulus.repo) */
+    #[Route('/rpm/{distribution}/keys/{fingerprint}.asc', methods: ['GET', 'HEAD'], requirements: ['distribution' => '[a-z0-9-]+', 'fingerprint' => '[A-F0-9]{40}'])]
+    public function rpmKey(string $distribution, string $fingerprint): Response
     {
+        $key = $this->repositories->rpmKeys($distribution)[$fingerprint] ?? null;
+
+        return null === $key ? self::notFound() : new Response($key, 200, ['Content-Type' => 'application/pgp-keys']);
+    }
+
+    /**
+     * @param array<string, mixed> $dist
+     * @param list<string>         $keys empreintes des clés des dépôts tiers servis
+     */
+    public static function repoFile(string $base, string $distribution, array $dist, array $keys = []): string
+    {
+        // Clé de la distribution (déjà sur le poste), puis celles des dépôts tiers, publiées par Romulus
+        $clientKey = \is_string($dist['clientKey'] ?? null) ? $dist['clientKey'] : '';
+        $label = \is_string($dist['label'] ?? null) ? $dist['label'] : $distribution;
+        $gpgkey = implode("\n       ", ['file://'.$clientKey, ...array_map(static fn (string $f) => sprintf('%s/rpm/%s/keys/%s.asc', $base, $distribution, $f), $keys)]);
+
         // module_hotfixes : sans métadonnées de modules, dnf (EL8) ne doit pas filtrer les paquets modulaires
-        return sprintf("[romulus-%1\$s]\nname=Romulus - %2\$s\nbaseurl=%3\$s/rpm/%1\$s/\$basearch/\nenabled=1\ngpgcheck=1\ngpgkey=file://%4\$s\nrepo_gpgcheck=0\nmodule_hotfixes=1\n", $distribution, $dist['label'], $base, $dist['clientKey']);
+        return sprintf("[romulus-%1\$s]\nname=Romulus - %2\$s\nbaseurl=%3\$s/rpm/%1\$s/\$basearch/\nenabled=1\ngpgcheck=1\ngpgkey=%4\$s\nrepo_gpgcheck=0\nmodule_hotfixes=1\n", $distribution, $label, $base, $gpgkey);
     }
 
     private function serve(Ecosystem $ecosystem, string $filename): Response

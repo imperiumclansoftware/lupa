@@ -278,7 +278,7 @@ export default class Usage {
           {
             title: 'Dépôt : /etc/yum.repos.d/romulus.repo',
             code: d.repoFile ?? '',
-            hint: `Ou : sudo curl -o /etc/yum.repos.d/romulus.repo ${base}/rpm/${d.id}/romulus.repo. Les paquets gardent la signature de la distribution (gpgcheck=1, clé déjà présente sur le poste).`,
+            hint: `Ou : sudo curl -o /etc/yum.repos.d/romulus.repo ${base}/rpm/${d.id}/romulus.repo. Les paquets gardent leur signature (gpgcheck=1) : clé de la distribution déjà présente sur le poste, clés des dépôts tiers fournies par Romulus.`,
           },
           {
             title: 'Désactiver les dépôts Internet',

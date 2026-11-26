@@ -85,6 +85,19 @@ final class Signatures
         }
     }
 
+    /** Signature détachée d'un fichier (trop gros pour la mémoire), vérifiée avec la clé fournie. */
+    public function detachedFileWithKey(string $file, string $signature, string $armoredKey, string $what): void
+    {
+        $dir = $this->tempDir();
+        try {
+            file_put_contents($dir.'/keyring.gpg', self::dearmor($armoredKey));
+            file_put_contents($dir.'/data.sig', $signature);
+            $this->run([$this->gpgv, '--status-fd', '1', '--keyring', $dir.'/keyring.gpg', $dir.'/data.sig', $file], $what);
+        } finally {
+            $this->cleanup($dir);
+        }
+    }
+
     /** Clé(s) au format binaire (trousseau), à partir des fichiers ASCII armor (plusieurs blocs possibles). */
     public static function dearmor(string $armored): string
     {

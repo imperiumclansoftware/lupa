@@ -7,7 +7,7 @@ use Symfony\Component\Validator\Constraints as Assert;
 final readonly class SourceInput
 {
     public function __construct(
-        #[Assert\Choice(choices: ['npm', 'pypi', 'composer', 'docker', 'deb'], message: 'Écosystème inconnu.')]
+        #[Assert\Choice(choices: ['npm', 'pypi', 'composer', 'docker', 'deb', 'rpm'], message: 'Écosystème inconnu.')]
         public string $ecosystem = '',
         #[Assert\NotBlank(message: 'Donnez un nom au dépôt.'), Assert\Length(max: 120)]
         public string $label = '',

@@ -27,8 +27,8 @@ final class RpmRepository
     private array $db = [];
 
     /**
-     * @param list<array{name: string, base: string, sqlite: string}> $sources
-     * @param list<string>                                            $arches  architectures retenues (x86_64, noarch)
+     * @param list<array{name: string, base: string, sqlite: string, key?: string, verify?: bool}> $sources dépôt tiers : sa clé, et « verify » si son index n'est pas signé
+     * @param list<string>                                                                         $arches  architectures retenues (x86_64, noarch)
      */
     public function __construct(public array $sources, private readonly array $arches)
     {

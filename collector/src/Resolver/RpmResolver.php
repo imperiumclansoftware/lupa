@@ -10,6 +10,8 @@ use App\Job\JobContext;
 use App\Search\Glob;
 use App\System\RpmIndex;
 use App\System\RpmRepository;
+use App\System\RpmSignature;
+use Sas\Bundle\BlobStore;
 use Sas\Bundle\Distributions;
 use Sas\Bundle\Ecosystem;
 use Sas\Bundle\RpmVersion;
@@ -29,6 +31,8 @@ final readonly class RpmResolver implements Resolver
         private Downloader $downloader,
         private ArtifactCatalog $catalog,
         private Blacklist $blacklist,
+        private ?RpmSignature $signatures = null,
+        private ?BlobStore $store = null,
     ) {
     }
 
@@ -337,6 +341,15 @@ final readonly class RpmResolver implements Resolver
                 $source = $repository->sources[$p['src']];
                 $url = $source['base'].'/'.$p['loc'];
                 $blob = 'sha256' === $p['ht'] ? $this->downloader->fetch($url, sha256: $p['h']) : $this->downloader->fetch($url, checks: [$p['ht'] => $p['h']]);
+                if (($source['verify'] ?? false) && null !== $this->signatures && null !== $this->store) {
+                    // Index non signé (EPEL) : la signature du paquet avec la clé du dépôt est exigée
+                    try {
+                        $this->signatures->verify($this->store->path($blob['sha256']), (string) ($source['key'] ?? ''), sprintf('%s-%s (%s)', $p['n'], $version, $source['name']));
+                    } catch (\RuntimeException $e) {
+                        $this->store->delete($blob['sha256']);
+                        throw $e;
+                    }
+                }
                 $artifact = $this->catalog->record(Ecosystem::Rpm, $p['n'], $version, $filename, [$blob], [
                     'distribution' => $distribution,
                     'architecture' => $p['a'],
@@ -344,7 +357,8 @@ final readonly class RpmResolver implements Resolver
                     'repository' => $source['name'],
                     'description' => $p['d'],
                     'primary' => RpmIndex::xml($repository->pdo($p['src']), $p['key']),
-                ]);
+                    // Dépôt tiers : clé publiée par Romulus pour la vérification sur les postes (gpgcheck)
+                ] + (isset($source['key']) ? ['signingKey' => $source['key']] : []));
             }
             $artifacts[] = $artifact;
             if (0 === $done % 50) {
