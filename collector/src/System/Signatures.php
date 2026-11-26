@@ -40,6 +40,21 @@ final class Signatures
         }
     }
 
+    /** Index apt d'un dépôt tiers, signé par la clé fournie par l'administrateur. */
+    public function clearsignedWithKey(string $message, string $armoredKey, string $what): string
+    {
+        $dir = $this->tempDir();
+        try {
+            file_put_contents($dir.'/keyring.gpg', self::dearmor($armoredKey));
+            file_put_contents($dir.'/in', $message);
+            $this->run([$this->gpgv, '--status-fd', '1', '--keyring', $dir.'/keyring.gpg', '--output', $dir.'/out', $dir.'/in'], $what);
+
+            return (string) file_get_contents($dir.'/out');
+        } finally {
+            $this->cleanup($dir);
+        }
+    }
+
     /** @param list<string> $keys */
     public function detached(string $data, string $signature, array $keys, string $what): void
     {
@@ -101,7 +116,8 @@ final class Signatures
             }
             $data .= self::dearmor((string) file_get_contents($file));
         }
-        $path = sys_get_temp_dir().'/sas-keyring-'.sha1($id).'.gpg';
+        // Nom tiré aussi du dossier des clés : deux jeux de clés de même nom ne partagent jamais un trousseau
+        $path = sys_get_temp_dir().'/sas-keyring-'.sha1($this->keyDir.'|'.$id).'.gpg';
         file_put_contents($path, $data);
 
         return $this->keyrings[$id] = $path;

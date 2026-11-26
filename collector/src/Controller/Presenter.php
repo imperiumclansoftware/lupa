@@ -8,6 +8,7 @@ use App\Entity\Export;
 use App\Entity\Job;
 use App\Entity\PackageList;
 use App\Entity\Source;
+use Sas\Bundle\OpenPgpKey;
 
 /** Représentation JSON des entités pour le front. */
 final class Presenter
@@ -106,6 +107,12 @@ final class Presenter
             'replacesDefault' => $source->replacesDefault(),
             'enabled' => $source->isEnabled(),
             'createdAt' => $source->getCreatedAt()->format(\DATE_ATOM),
+            // Debian, RPM : dépôt tiers rattaché à une distribution
+            'distribution' => $source->getDistribution(),
+            'suite' => $source->getSuite(),
+            'components' => $source->getComponents(),
+            'signingKey' => $source->getSigningKey(),
+            'keyFingerprint' => null === $source->getSigningKey() ? null : OpenPgpKey::fingerprint($source->getSigningKey()),
         ];
     }
 

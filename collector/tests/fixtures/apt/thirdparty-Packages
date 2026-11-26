@@ -1,0 +1,9 @@
+Package: acme-tool
+Version: 1.2.0
+Architecture: amd64
+Depends: base-files (>= 12)
+Filename: pool/stable/a/acme-tool_1.2.0_amd64.deb
+Size: 16
+SHA256: b56016cf71bf995a416222819e86417e9059c4b251413e1580f52f67d693dc1c
+Description: acme-tool de test
+

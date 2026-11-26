@@ -3,9 +3,11 @@
 namespace App\System;
 
 use App\Job\JobContext;
+use App\Source\Sources;
 use Sas\Bundle\Distributions;
+use Sas\Bundle\Ecosystem;
 
-/** Télécharge, vérifie (InRelease signé) et analyse les index Packages d'une distribution Debian. */
+/** Télécharge, vérifie (InRelease signé) et analyse les index Packages d'une distribution Debian ou Ubuntu et de ses dépôts tiers. */
 final readonly class DebIndex
 {
     private const int FORMAT = 1;
@@ -13,6 +15,7 @@ final readonly class DebIndex
     public function __construct(
         private IndexFiles $files,
         private Signatures $signatures,
+        private ?Sources $sources = null,
     ) {
     }
 
@@ -21,7 +24,9 @@ final readonly class DebIndex
     {
         $dist = Distributions::find($distribution) ?? throw new \InvalidArgumentException(sprintf('Distribution inconnue : %s.', $distribution));
         $repository = new DebRepository();
-        foreach ($dist['suites'] as $suite) {
+        /** @var list<array{url: string, ports?: string, suite: string, keys: list<string>}> $suites */
+        $suites = $dist['suites'];
+        foreach ($suites as $suite) {
             // Ubuntu : arm64 et autres architectures hors x86 sur le miroir « ports »
             $base = \in_array($arch, ['amd64', 'i386'], true) ? $suite['url'] : ($suite['ports'] ?? $suite['url']);
             $release = $this->signatures->clearsigned(
@@ -29,29 +34,55 @@ final readonly class DebIndex
                 $suite['keys'],
                 $suite['suite'],
             );
-            $hashes = self::sha256($release);
-            foreach ($sections as $section) {
-                $found = null;
-                foreach (["$section/binary-$arch/Packages.xz", "updates/$section/binary-$arch/Packages.xz", "$section/binary-$arch/Packages.gz"] as $path) {
-                    if (isset($hashes[$path])) {
-                        $found = $path;
-                        break;
-                    }
-                }
-                if (null === $found) {
-                    continue;
-                }
-                $file = $this->files->plain(sprintf('%s/dists/%s/%s', $base, $suite['suite'], $found), 'sha256', $hashes[$found], $context, $suite['suite'].' '.$section.' '.$arch);
-                $source = \count($repository->sources);
-                $repository->sources[] = ['base' => $base, 'file' => $file, 'suite' => $suite['suite']];
-                $repository->add($source, $this->parse($file, $section));
-            }
+            $this->read($repository, $base, $suite['suite'], $release, $sections, $arch, $context);
+        }
+        // Dépôts tiers ajoutés à la distribution (Réglages) : leurs propres composants, leur propre clé
+        foreach ($this->sources?->system(Ecosystem::Deb, $distribution) ?? [] as $source) {
+            $suite = (string) $source->getSuite();
+            $release = $this->release($source->getUrl(), $suite, (string) $source->getSigningKey(), $source->getLabel());
+            $this->read($repository, $source->getUrl(), $suite, $release, $source->getComponents(), $arch, $context, $source->getLabel());
         }
         if ([] === $repository->packages) {
             throw new \RuntimeException(sprintf('Aucun paquet trouvé pour %s (%s).', $dist['label'], $arch));
         }
 
         return $repository;
+    }
+
+    /** Fichier Release vérifié d'un dépôt tiers : InRelease, sinon Release et sa signature Release.gpg. */
+    public function release(string $base, string $suite, string $armoredKey, string $label): string
+    {
+        $url = sprintf('%s/dists/%s', $base, $suite);
+        $inRelease = $this->files->text($url.'/InRelease', true);
+        if (null !== $inRelease) {
+            return $this->signatures->clearsignedWithKey($inRelease, $armoredKey, $label);
+        }
+        $release = (string) $this->files->text($url.'/Release');
+        $this->signatures->detachedWithKey($release, (string) $this->files->text($url.'/Release.gpg'), $armoredKey, $label);
+
+        return $release;
+    }
+
+    /** @param list<string> $sections composants à lire */
+    private function read(DebRepository $repository, string $base, string $suite, string $release, array $sections, string $arch, JobContext $context, ?string $label = null): void
+    {
+        $hashes = self::sha256($release);
+        foreach ($sections as $section) {
+            $found = null;
+            foreach (["$section/binary-$arch/Packages.xz", "updates/$section/binary-$arch/Packages.xz", "$section/binary-$arch/Packages.gz", "$section/binary-$arch/Packages"] as $path) {
+                if (isset($hashes[$path])) {
+                    $found = $path;
+                    break;
+                }
+            }
+            if (null === $found) {
+                continue;
+            }
+            $file = $this->files->plain(sprintf('%s/dists/%s/%s', $base, $suite, $found), 'sha256', $hashes[$found], $context, $suite.' '.$section.' '.$arch);
+            $source = \count($repository->sources);
+            $repository->sources[] = ['base' => $base, 'file' => $file, 'suite' => $suite, 'repository' => $label];
+            $repository->add($source, $this->parse($file, $section));
+        }
     }
 
     /** @return array<string, string> chemin => sha256 (section SHA256 du fichier Release) */

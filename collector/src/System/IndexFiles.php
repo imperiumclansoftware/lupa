@@ -4,6 +4,7 @@ namespace App\System;
 
 use App\Http\DownloadException;
 use App\Job\JobContext;
+use App\Source\Sources;
 use Sas\Bundle\IntegrityException;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\Process\Process;
@@ -19,6 +20,8 @@ final readonly class IndexFiles
         private HttpClientInterface $http,
         #[Autowire('%env(SYSTEM_CACHE_DIR)%')]
         private string $cacheDir,
+        /** Identifiants des dépôts privés (apt, dnf), choisis d'après l'hôte */
+        private ?Sources $sources = null,
     ) {
     }
 
@@ -36,7 +39,7 @@ final readonly class IndexFiles
     public function text(string $url, bool $optional = false): ?string
     {
         try {
-            $response = $this->http->request('GET', $url, ['timeout' => 60]);
+            $response = $this->http->request('GET', $url, ['timeout' => 60] + ($this->sources?->httpOptions($url) ?? []));
             $status = $response->getStatusCode();
             if (404 === $status && $optional) {
                 return null;
@@ -75,7 +78,7 @@ final readonly class IndexFiles
         $out = fopen($tmp, 'w');
         $hash = hash_init($algo);
         try {
-            $response = $this->http->request('GET', $url, ['timeout' => 120, 'max_duration' => 0]);
+            $response = $this->http->request('GET', $url, ['timeout' => 120, 'max_duration' => 0] + ($this->sources?->httpOptions($url) ?? []));
             if (200 !== $status = $response->getStatusCode()) {
                 throw new DownloadException(sprintf('HTTP %d pour %s', $status, $url), $status);
             }

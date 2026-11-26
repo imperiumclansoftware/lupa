@@ -18,7 +18,7 @@ import {
   errorMessage,
   Auth,
 } from '@sas/shared';
-import { CollectorApi, Source, SourceInput } from '../api';
+import { CollectorApi, Distribution, Source, SourceInput } from '../api';
 
 const HINTS: Partial<Record<EcosystemId, { url: string; help: string }>> = {
   npm: {
@@ -32,6 +32,10 @@ const HINTS: Partial<Record<EcosystemId, { url: string; help: string }>> = {
   composer: {
     url: 'https://repo.example.com',
     help: 'Dépôt de type « composer » : Satis, Private Packagist, Nexus, GitLab. Consulté avant Packagist, ou à sa place.',
+  },
+  deb: {
+    url: 'https://download.docker.com/linux/debian',
+    help: 'Dépôt apt tiers (Docker, PostgreSQL, nginx, dépôt interne) : adresse de la ligne « deb » du dépôt, avant la suite. Ses paquets s’ajoutent à la distribution choisie.',
   },
   docker: {
     url: 'harbor.example.com',
@@ -50,8 +54,9 @@ const HINTS: Partial<Record<EcosystemId, { url: string; help: string }>> = {
         <div>
           <h2>Dépôts sources</h2>
           <p class="subtle">
-            Les dépôts officiels (npmjs, PyPI, Packagist, Docker Hub) sont toujours utilisés, sauf
-            si un dépôt privé les remplace.
+            Les dépôts officiels (npmjs, PyPI, Packagist, Docker Hub, distributions Linux) sont
+            toujours utilisés, sauf si un dépôt privé les remplace. Les dépôts apt tiers s’ajoutent
+            à une distribution.
           </p>
         </div>
         @if (auth.can('admin')) {
@@ -84,11 +89,22 @@ const HINTS: Partial<Record<EcosystemId, { url: string; help: string }>> = {
                 @if (s.replacesDefault) {
                   <span class="badge badge-warn">remplace le dépôt officiel</span>
                 }
+                @if (s.distribution) {
+                  <span class="badge badge-accent">{{ distributionLabel(s.distribution) }}</span>
+                }
                 @if (!s.enabled) {
                   <span class="badge">désactivé</span>
                 }
-                <br /><span class="subtle mono">{{ s.url }}</span>
+                <br /><span class="subtle mono"
+                  >{{ s.url
+                  }}{{ s.suite ? ' ' + s.suite + ' ' + s.components.join(' ') : '' }}</span
+                >
                 <span class="subtle"> · {{ s.ecosystem | ecosystem }} · {{ authLabel(s) }}</span>
+                @if (s.keyFingerprint) {
+                  <br /><span class="subtle"
+                    >Clé <span class="mono">{{ shortFingerprint(s.keyFingerprint) }}</span></span
+                  >
+                }
               </span>
               @if (auth.can('admin')) {
                 <button
@@ -130,7 +146,7 @@ const HINTS: Partial<Record<EcosystemId, { url: string; help: string }>> = {
               name="ecosystem"
               [(ngModel)]="form.ecosystem"
               [disabled]="!!form.id"
-              (ngModelChange)="tested.set(null)"
+              (ngModelChange)="ecosystemChanged()"
             >
               @for (e of ecosystems; track e.id) {
                 <option [value]="e.id">{{ e.label }}</option>
@@ -163,6 +179,74 @@ const HINTS: Partial<Record<EcosystemId, { url: string; help: string }>> = {
           />
           <span class="hint">{{ hint().help }}</span>
         </div>
+        @if (form.ecosystem === 'deb') {
+          <div class="grid two">
+            <div class="field">
+              <label for="src-dist">Distribution</label>
+              <select
+                class="select"
+                id="src-dist"
+                name="distribution"
+                required
+                [(ngModel)]="form.distribution"
+                (ngModelChange)="tested.set(null)"
+              >
+                @for (d of distributionsOf(form.ecosystem); track d.id) {
+                  <option [value]="d.id">{{ d.label }}</option>
+                }
+              </select>
+            </div>
+            <div class="field">
+              <label for="src-suite">Suite</label>
+              <input
+                class="input mono"
+                id="src-suite"
+                name="suite"
+                required
+                [(ngModel)]="form.suite"
+                placeholder="bookworm"
+                (ngModelChange)="tested.set(null)"
+              />
+            </div>
+          </div>
+          <div class="field">
+            <label for="src-components">Composants</label>
+            <input
+              class="input mono"
+              id="src-components"
+              name="components"
+              required
+              [(ngModel)]="form.components"
+              placeholder="stable"
+              (ngModelChange)="tested.set(null)"
+            />
+            <span class="hint"
+              >Ligne « deb https://download.docker.com/linux/debian bookworm stable » : suite
+              bookworm, composant stable.</span
+            >
+          </div>
+          <div class="field">
+            <label for="src-key">Clé de signature du dépôt</label>
+            <textarea
+              class="input mono key"
+              id="src-key"
+              name="signingKey"
+              rows="5"
+              [(ngModel)]="form.signingKey"
+              [placeholder]="
+                fingerprint()
+                  ? 'Inchangée : ' + fingerprint()
+                  : '-----BEGIN PGP PUBLIC KEY BLOCK-----'
+              "
+              (ngModelChange)="tested.set(null)"
+            ></textarea>
+            <span class="hint"
+              >Clé publique OpenPGP publiée par l’éditeur (ASCII armor). L’index du dépôt n’est
+              accepté que signé par cette clé : comparez son empreinte à celle publiée par
+              l’éditeur.</span
+            >
+          </div>
+        }
         @if (form.ecosystem === 'npm') {
           <div class="field">
             <label for="src-scope">Portée</label>
@@ -176,15 +260,17 @@ const HINTS: Partial<Record<EcosystemId, { url: string; help: string }>> = {
             />
           </div>
         }
-        <label class="check"
-          ><input type="checkbox" name="replaces" [(ngModel)]="form.replacesDefault" />
-          <span
-            >Remplace le dépôt officiel<br /><span class="subtle"
-              >Pour un miroir d’entreprise qui relaie aussi les paquets publics (accès Internet
-              filtré).</span
-            ></span
-          >
-        </label>
+        @if (form.ecosystem !== 'deb') {
+          <label class="check"
+            ><input type="checkbox" name="replaces" [(ngModel)]="form.replacesDefault" />
+            <span
+              >Remplace le dépôt officiel<br /><span class="subtle"
+                >Pour un miroir d’entreprise qui relaie aussi les paquets publics (accès Internet
+                filtré).</span
+              ></span
+            >
+          </label>
+        }
 
         <div class="grid two">
           <div class="field">
@@ -293,6 +379,10 @@ const HINTS: Partial<Record<EcosystemId, { url: string; help: string }>> = {
     .two {
       grid-template-columns: 1fr 1fr;
     }
+    .key {
+      font-size: 12px;
+      resize: vertical;
+    }
     @media (max-width: 600px) {
       .two {
         grid-template-columns: 1fr;
@@ -305,7 +395,7 @@ export class SettingsSources implements OnInit {
   private readonly api = inject(CollectorApi);
   private readonly toasts = inject(Toasts);
   private readonly dialog = viewChild.required<Dialog>('dialog');
-  /** Dépôts privés : npm, Python, Composer, Docker (pas encore Debian, RPM, Ansible ni Terraform) */
+  /** Dépôts privés : npm, Python, Composer, Docker, apt tiers (pas encore RPM, Ansible ni Terraform) */
   protected readonly ecosystems = ECOSYSTEMS.filter((e) => e.id in HINTS);
   protected readonly items = signal<Source[]>([]);
   protected readonly error = signal('');
@@ -314,6 +404,9 @@ export class SettingsSources implements OnInit {
   protected readonly testing = signal(false);
   protected readonly tested = signal<{ ok: boolean; message: string } | null>(null);
   protected readonly hasSecret = signal(false);
+  /** Empreinte de la clé enregistrée (modification) */
+  protected readonly fingerprint = signal<string | null>(null);
+  protected readonly distributions = signal<Distribution[]>([]);
   protected form: SourceInput = SettingsSources.blank();
 
   private static blank(): SourceInput {
@@ -327,11 +420,40 @@ export class SettingsSources implements OnInit {
       secret: null,
       replacesDefault: false,
       enabled: true,
+      distribution: null,
+      suite: null,
+      components: null,
+      signingKey: null,
     };
   }
 
   ngOnInit(): void {
     void this.load();
+    void this.api.ecosystems().then(
+      (c) => this.distributions.set(c.distributions),
+      () => undefined,
+    );
+  }
+
+  protected ecosystemChanged(): void {
+    this.tested.set(null);
+    const choices = this.distributionsOf(this.form.ecosystem);
+    if (choices.length && !choices.some((d) => d.id === this.form.distribution)) {
+      this.form.distribution = choices[0].id;
+    }
+  }
+
+  protected distributionsOf(ecosystem: EcosystemId): Distribution[] {
+    return this.distributions().filter((d) => d.ecosystem === ecosystem);
+  }
+
+  protected distributionLabel(id: string): string {
+    return this.distributions().find((d) => d.id === id)?.label ?? id;
+  }
+
+  /** Les 16 derniers caractères, par groupes de 4, comme gpg --list-keys */
+  protected shortFingerprint(fingerprint: string): string {
+    return fingerprint.slice(-16).replace(/(.{4})(?!$)/g, '$1 ');
   }
 
   protected hint(): { url: string; help: string } {
@@ -359,9 +481,14 @@ export class SettingsSources implements OnInit {
           secret: null,
           replacesDefault: source.replacesDefault,
           enabled: source.enabled,
+          distribution: source.distribution,
+          suite: source.suite,
+          components: source.components.join(' '),
+          signingKey: null,
         }
       : SettingsSources.blank();
     this.hasSecret.set(!!source?.hasSecret);
+    this.fingerprint.set(source?.keyFingerprint ?? null);
     this.formError.set('');
     this.tested.set(null);
     this.dialog().open();
@@ -405,8 +532,14 @@ export class SettingsSources implements OnInit {
 
   private payload(): SourceInput {
     const f = this.form;
+    const system = f.ecosystem === 'deb';
     return {
       ...f,
+      replacesDefault: system ? false : f.replacesDefault,
+      distribution: system
+        ? f.distribution || this.distributionsOf(f.ecosystem)[0]?.id || null
+        : null,
+      signingKey: system ? f.signingKey?.trim() || null : null,
       scope: f.ecosystem === 'npm' && !f.replacesDefault ? f.scope?.trim() || null : null,
       secret: f.secret?.trim() || null,
       username: f.username?.trim() || null,

@@ -1,0 +1,5 @@
+Suite: bookworm
+Components: stable
+Architectures: amd64
+SHA256:
+ d68374662ee13c09178065fd39522b1f5daf66b650ef91771a9d4a23c03f30fc 246 stable/binary-amd64/Packages

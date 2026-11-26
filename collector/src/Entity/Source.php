@@ -3,6 +3,7 @@
 namespace App\Entity;
 
 use App\Repository\SourceRepository;
+use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 use Sas\Bundle\Ecosystem;
 use Symfony\Bridge\Doctrine\Types\UuidType;
@@ -51,6 +52,26 @@ class Source
 
     #[ORM\Column]
     private bool $enabled = true;
+
+    /** Debian, RPM : distribution à laquelle s'ajoute ce dépôt (debian-12, rocky-9…) */
+    #[ORM\Column(length: 32, nullable: true)]
+    private ?string $distribution = null;
+
+    /** Debian : suite publiée par le dépôt (bookworm, bookworm-pgdg…) */
+    #[ORM\Column(length: 120, nullable: true)]
+    private ?string $suite = null;
+
+    /**
+     * Debian : composants à lire (main, stable…).
+     *
+     * @var list<string>|null
+     */
+    #[ORM\Column(type: Types::JSON, nullable: true)]
+    private ?array $components = null;
+
+    /** Debian, RPM : clé publique OpenPGP (ASCII armor) qui signe l'index ou les paquets du dépôt */
+    #[ORM\Column(type: Types::TEXT, nullable: true)]
+    private ?string $signingKey = null;
 
     #[ORM\Column]
     private \DateTimeImmutable $createdAt;
@@ -137,6 +158,40 @@ class Source
         } elseif (null !== $secret) {
             $this->secret = $secret;
         }
+    }
+
+    public function getDistribution(): ?string
+    {
+        return $this->distribution;
+    }
+
+    public function getSuite(): ?string
+    {
+        return $this->suite;
+    }
+
+    /** @return list<string> */
+    public function getComponents(): array
+    {
+        return $this->components ?? [];
+    }
+
+    public function getSigningKey(): ?string
+    {
+        return $this->signingKey;
+    }
+
+    /**
+     * Dépôt apt ou dnf tiers.
+     *
+     * @param list<string> $components
+     */
+    public function setSystem(string $distribution, ?string $suite, array $components, string $signingKey): void
+    {
+        $this->distribution = $distribution;
+        $this->suite = $suite;
+        $this->components = [] === $components ? null : $components;
+        $this->signingKey = $signingKey;
     }
 
     public function host(): string

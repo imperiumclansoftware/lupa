@@ -1,0 +1,15 @@
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA512
+
+Suite: bookworm
+Components: main
+Architectures: amd64
+SHA256:
+ 3ebb84ee0b3d1386fa86632681f3e726c2a47fc1475c29fe2189c6fa3f178fcc 228 main/binary-amd64/Packages
+-----BEGIN PGP SIGNATURE-----
+
+iIgEARYKADAWIQT5vTAXs4tkTI+e/y0poACjc5C78QUCawgjNxIcdGVzdEBsdXBh
+LmludmFsaWQACgkQKaAAo3OQu/H26AEAs5BPWhyZ+4iWOot+Y0EL3MeEIW/1Dvg/
+YPXSKxQIHCEBAIizzcFqEjBT3v42RAinByDe61VpsBWg3/GzVIBzOCcH
+=BNcU
+-----END PGP SIGNATURE-----

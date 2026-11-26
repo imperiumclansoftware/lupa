@@ -198,6 +198,34 @@ final class BlacklistAndSourcesTest extends WebTestCase
         self::assertResponseStatusCodeSame(422);
     }
 
+    /** Dépôt apt tiers : distribution, suite, composants et clé obligatoires ; empreinte affichée */
+    public function testThirdPartyAptSource(): void
+    {
+        $key = (string) file_get_contents(__DIR__.'/../fixtures/apt/key.asc');
+        $base = ['ecosystem' => 'deb', 'label' => 'Docker CE', 'url' => 'https://download.docker.com/linux/debian', 'distribution' => 'debian-12', 'suite' => 'bookworm', 'components' => 'stable', 'signingKey' => $key];
+
+        foreach ([
+            [['distribution' => 'rocky-9'] + $base, 'Choisissez la distribution'],
+            [['suite' => 'bookworm main'] + $base, 'Suite invalide'],
+            [['components' => ''] + $base, 'Composants invalides'],
+            [['signingKey' => 'pas une clé'] + $base, 'Clé de signature invalide'],
+        ] as [$input, $error]) {
+            $this->client->jsonRequest('POST', '/api/sources', $input);
+            self::assertResponseStatusCodeSame(422);
+            self::assertStringContainsString($error, (string) $this->json()['error']);
+        }
+
+        $this->client->jsonRequest('POST', '/api/sources', ['components' => 'stable  test stable', 'replacesDefault' => true] + $base);
+        self::assertResponseStatusCodeSame(201);
+        $source = $this->json();
+        self::assertSame(['debian-12', 'bookworm', ['stable', 'test'], 'F9BD3017B38B644C8F9EFF2D29A000A37390BBF1', false], [$source['distribution'], $source['suite'], $source['components'], $source['keyFingerprint'], $source['replacesDefault']]);
+
+        // Modification sans recoller la clé : la clé enregistrée est conservée
+        $this->client->jsonRequest('PUT', '/api/sources/'.$source['id'], ['signingKey' => null, 'label' => 'Docker'] + $base);
+        self::assertResponseIsSuccessful();
+        self::assertSame('F9BD3017B38B644C8F9EFF2D29A000A37390BBF1', $this->json()['keyFingerprint']);
+    }
+
     public function testSystemPackageVersions(): void
     {
         foreach (['deb' => '3.0.15-1~deb12u1', 'rpm' => '1:3.0.7-27.el9'] as $ecosystem => $version) {

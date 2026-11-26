@@ -50,6 +50,11 @@ les fichiers sont dans le volume `/data`.
   index Python supplémentaire, dépôt Composer prioritaire, identifiants par registre Docker ou miroir de
   Docker Hub. Identifiant et mot de passe ou jeton, vérifiés par le bouton **Tester** ; les secrets sont
   chiffrés dans la base et jamais réaffichés.
+- **Dépôts apt tiers :** Docker CE, PostgreSQL, nginx, dépôt interne… s'ajoutent à une distribution Debian
+  ou Ubuntu (Réglages › Dépôts sources › Debian) : adresse, suite et composants de la ligne `deb`, et clé
+  publique OpenPGP du dépôt. L'index n'est accepté que signé par cette clé (InRelease, ou Release et
+  Release.gpg) ; son empreinte est affichée pour la comparer à celle publiée par l'éditeur. Les paquets
+  rejoignent la distribution chez Romulus, avec le nom du dépôt d'origine.
 - **Paquets système Debian, Ubuntu et RPM :** Debian 11 (fin de vie), 12 et 13, Ubuntu 22.04 et 24.04 LTS,
   AlmaLinux 8, 9 et 10, Rocky Linux 8, 9 et 10, CentOS Stream 9 et 10, CentOS 7 et 8 (dépôts figés de
   vault.centos.org). On choisit des paquets (`nginx`, `postgresql`, motifs

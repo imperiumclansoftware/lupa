@@ -173,6 +173,12 @@ export interface Source {
   replacesDefault: boolean;
   enabled: boolean;
   createdAt: string;
+  /** Debian : dépôt tiers ajouté à une distribution */
+  distribution: string | null;
+  suite: string | null;
+  components: string[];
+  signingKey: string | null;
+  keyFingerprint: string | null;
 }
 
 export interface SourceInput {
@@ -187,6 +193,12 @@ export interface SourceInput {
   secret: string | null;
   replacesDefault: boolean;
   enabled: boolean;
+  distribution?: string | null;
+  suite?: string | null;
+  /** composants séparés par des espaces */
+  components?: string | null;
+  /** vide à la modification = clé inchangée */
+  signingKey?: string | null;
 }
 
 export interface SecurityItem extends Artifact {

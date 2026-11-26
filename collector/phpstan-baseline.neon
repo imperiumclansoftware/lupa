@@ -1873,18 +1873,6 @@ parameters:
 			path: src/Source/Sources.php
 
 		-
-			message: '#^Argument of an invalid type mixed supplied for foreach, only iterables are supported\.$#'
-			identifier: foreach.nonIterable
-			count: 1
-			path: src/System/DebIndex.php
-
-		-
-			message: '#^Binary operation "\." between mixed and '' '' results in an error\.$#'
-			identifier: binaryOp.invalid
-			count: 1
-			path: src/System/DebIndex.php
-
-		-
 			message: '#^Binary operation "\." between mixed and '','' results in an error\.$#'
 			identifier: binaryOp.invalid
 			count: 1
@@ -1894,30 +1882,6 @@ parameters:
 			message: '#^Binary operation "\." between non\-falsy\-string and mixed results in an error\.$#'
 			identifier: binaryOp.invalid
 			count: 1
-			path: src/System/DebIndex.php
-
-		-
-			message: '#^Cannot access offset ''keys'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 1
-			path: src/System/DebIndex.php
-
-		-
-			message: '#^Cannot access offset ''ports'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 1
-			path: src/System/DebIndex.php
-
-		-
-			message: '#^Cannot access offset ''suite'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 5
-			path: src/System/DebIndex.php
-
-		-
-			message: '#^Cannot access offset ''url'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 2
 			path: src/System/DebIndex.php
 
 		-
@@ -2053,32 +2017,8 @@ parameters:
 			path: src/System/DebIndex.php
 
 		-
-			message: '#^Parameter \#2 \$keys of method App\\System\\Signatures\:\:clearsigned\(\) expects list\<string\>, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: src/System/DebIndex.php
-
-		-
 			message: '#^Parameter \#2 \.\.\.\$values of function sprintf expects bool\|float\|int\|string\|null, mixed given\.$#'
 			identifier: argument.type
-			count: 3
-			path: src/System/DebIndex.php
-
-		-
-			message: '#^Parameter \#3 \$what of method App\\System\\Signatures\:\:clearsigned\(\) expects string, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: src/System/DebIndex.php
-
-		-
-			message: '#^Parameter \#3 \.\.\.\$values of function sprintf expects bool\|float\|int\|string\|null, mixed given\.$#'
-			identifier: argument.type
-			count: 2
-			path: src/System/DebIndex.php
-
-		-
-			message: '#^Property App\\System\\DebRepository\:\:\$sources \(list\<array\{base\: string, file\: string, suite\: string\}\>\) does not accept non\-empty\-list\<array\{base\: mixed, file\: string, suite\: mixed\}\>\.$#'
-			identifier: assign.propertyType
 			count: 1
 			path: src/System/DebIndex.php
 

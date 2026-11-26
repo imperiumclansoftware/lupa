@@ -1,0 +1,8 @@
+Package: base-files
+Version: 12.4
+Architecture: amd64
+Filename: pool/main/b/base-files/base-files_12.4_amd64.deb
+Size: 16
+SHA256: 90f12de55aec6d0c850dfaa31d6392849882d3a4f76a97be9820df42ef81ec11
+Description: base-files de test
+

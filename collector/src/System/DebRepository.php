@@ -19,7 +19,7 @@ final class DebRepository
     /** @var array<string, list<array{int, string|null}>> paquet virtuel => [fournisseur, version fournie] */
     private array $provides = [];
 
-    /** @param list<array{base: string, file: string, suite: string}> $sources */
+    /** @param list<array{base: string, file: string, suite: string, repository?: string|null}> $sources dépôt tiers : son nom */
     public function __construct(public array $sources = [])
     {
     }

@@ -9,7 +9,9 @@ use App\Source\SecretBox;
 use App\Source\Sources;
 use App\Source\SourceTester;
 use Doctrine\ORM\EntityManagerInterface;
+use Sas\Bundle\Distributions;
 use Sas\Bundle\Ecosystem;
+use Sas\Bundle\OpenPgpKey;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Attribute\MapRequestPayload;
@@ -100,6 +102,9 @@ final class SourceController
         $self ??= $source;
         $ecosystem = $source->getEcosystem();
         $url = trim($input->url);
+        if (\in_array($ecosystem, [Ecosystem::Deb, Ecosystem::Rpm], true) && null !== $error = $this->system($source, $input, $url)) {
+            return $error;
+        }
         // Docker : l'hôte du registre suffit (harbor.local:5000)
         if (Ecosystem::Docker === $ecosystem && !preg_match('#^https?://#i', $url)) {
             $url = 'https://'.$url;
@@ -117,7 +122,8 @@ final class SourceController
         if (null !== $scope && !preg_match('/^@[a-z0-9][a-z0-9._-]*$/', $scope = strtolower($scope))) {
             return 'Portée npm invalide (ex. @entreprise).';
         }
-        $replaces = $input->replacesDefault && !(Ecosystem::Npm === $ecosystem && null !== $scope);
+        // Debian, RPM : un dépôt tiers s'ajoute toujours aux dépôts officiels de sa distribution
+        $replaces = $input->replacesDefault && !(Ecosystem::Npm === $ecosystem && null !== $scope) && !\in_array($ecosystem, [Ecosystem::Deb, Ecosystem::Rpm], true);
         if (Ecosystem::Npm === $ecosystem && null === $scope && !$replaces) {
             return 'npm : indiquez la portée servie par ce dépôt (@entreprise), ou cochez « remplace le dépôt officiel » (Verdaccio, Nexus… qui relaient aussi npmjs).';
         }
@@ -147,6 +153,40 @@ final class SourceController
         $source->update($input->label, $url, $scope, $replaces, $input->enabled);
         $source->setAuth($input->authType, $input->username, '' === $secret ? null : $this->box->seal($secret));
         $this->active->reset();
+
+        return null;
+    }
+
+    /** Debian, RPM : distribution de rattachement, suite et composants (apt), clé de signature. */
+    private function system(Source $source, SourceInput $input, string $url): ?string
+    {
+        $ecosystem = $source->getEcosystem();
+        $distribution = (string) $input->distribution;
+        if (!\array_key_exists($distribution, Distributions::of($ecosystem))) {
+            return 'Choisissez la distribution à laquelle ajouter ce dépôt.';
+        }
+        $suite = null;
+        $components = [];
+        if (Ecosystem::Deb === $ecosystem) {
+            $suite = trim((string) $input->suite);
+            if (!preg_match('#^[A-Za-z0-9][A-Za-z0-9._/-]*$#', $suite)) {
+                return 'Suite invalide : celle de la ligne « deb » du dépôt (ex. bookworm, bookworm-pgdg, stable).';
+            }
+            $components = array_values(array_unique(preg_split('/[\s,]+/', trim((string) $input->components), -1, \PREG_SPLIT_NO_EMPTY) ?: []));
+            if ([] === $components || array_filter($components, static fn (string $c) => !preg_match('/^[A-Za-z0-9][A-Za-z0-9._-]*$/', $c))) {
+                return 'Composants invalides : ceux de la ligne « deb » du dépôt, séparés par des espaces (ex. main, stable).';
+            }
+        } elseif (preg_match('#\$(?!basearch\b|arch\b)\w+#', $url)) {
+            return 'Adresse dnf : seule la variable $basearch est remplacée (x86_64, aarch64) ; remplacez $releasever par le numéro de version.';
+        }
+        $key = trim((string) $input->signingKey);
+        if ('' === $key) {
+            $key = (string) $source->getSigningKey();
+        }
+        if (null === OpenPgpKey::fingerprint($key)) {
+            return 'Clé de signature invalide : collez la clé publique OpenPGP du dépôt (bloc « BEGIN PGP PUBLIC KEY BLOCK »).';
+        }
+        $source->setSystem($distribution, $suite, $components, $key);
 
         return null;
     }

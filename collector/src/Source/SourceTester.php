@@ -3,7 +3,9 @@
 namespace App\Source;
 
 use App\Entity\Source;
+use App\System\Signatures;
 use Sas\Bundle\Ecosystem;
+use Sas\Bundle\OpenPgpKey;
 use Symfony\Contracts\HttpClient\Exception\ExceptionInterface;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
 
@@ -13,6 +15,7 @@ final readonly class SourceTester
     public function __construct(
         private HttpClientInterface $http,
         private Sources $sources,
+        private Signatures $signatures,
     ) {
     }
 
@@ -22,6 +25,7 @@ final readonly class SourceTester
         try {
             return match ($source->getEcosystem()) {
                 Ecosystem::Docker => $this->docker($source),
+                Ecosystem::Deb => $this->deb($source),
                 default => $this->http($source),
             };
         } catch (ExceptionInterface $e) {
@@ -118,5 +122,54 @@ final readonly class SourceTester
         }
 
         return ['ok' => true, 'message' => $auth ? 'Connexion réussie, identifiants acceptés.' : 'Registre joignable (jeton anonyme).'];
+    }
+
+    /**
+     * Dépôt apt tiers : index (InRelease, ou Release et Release.gpg) signé par la clé saisie, composants présents.
+     *
+     * @return array{ok: bool, message: string}
+     */
+    private function deb(Source $source): array
+    {
+        $url = sprintf('%s/dists/%s', $source->getUrl(), $source->getSuite());
+        $key = (string) $source->getSigningKey();
+        $inRelease = $this->fetch($source, $url.'/InRelease', true);
+        if (null !== $inRelease) {
+            $release = $this->signatures->clearsignedWithKey($inRelease, $key, $source->getLabel());
+        } else {
+            $release = (string) $this->fetch($source, $url.'/Release');
+            $this->signatures->detachedWithKey($release, (string) $this->fetch($source, $url.'/Release.gpg'), $key, $source->getLabel());
+        }
+        $field = static fn (string $name) => preg_match('/^'.$name.':[ \t]*(.*)$/m', $release, $m) ? (preg_split('/\s+/', trim($m[1]), -1, \PREG_SPLIT_NO_EMPTY) ?: []) : [];
+        $components = $field('Components');
+        $missing = [] === $components ? [] : array_diff($source->getComponents(), $components);
+        if ([] !== $missing) {
+            return ['ok' => false, 'message' => sprintf('Index signé vérifié, mais composant(s) absent(s) : %s (disponibles : %s).', implode(', ', $missing), implode(', ', $components))];
+        }
+
+        return ['ok' => true, 'message' => sprintf(
+            'Index signé vérifié (clé %s). Composants : %s ; architectures : %s.',
+            substr((string) OpenPgpKey::fingerprint($key), -16),
+            implode(', ', $source->getComponents()),
+            implode(', ', $field('Architectures')) ?: 'non précisées',
+        )];
+    }
+
+    /** Fichier d'index du dépôt, avec ses identifiants ; null si absent (404) et facultatif. */
+    private function fetch(Source $source, string $url, bool $optional = false): ?string
+    {
+        $response = $this->http->request('GET', $url, $this->sources->authOptions($source) + ['timeout' => 15]);
+        $status = $response->getStatusCode();
+        if (404 === $status && $optional) {
+            return null;
+        }
+        if (\in_array($status, [401, 403], true)) {
+            throw new \RuntimeException(sprintf('HTTP %d : identifiants absents ou refusés par le dépôt.', $status));
+        }
+        if (200 !== $status) {
+            throw new \RuntimeException(sprintf('HTTP %d pour %s : vérifiez l\'adresse et la suite.', $status, $url));
+        }
+
+        return $response->getContent();
     }
 }

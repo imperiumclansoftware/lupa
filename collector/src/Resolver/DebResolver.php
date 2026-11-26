@@ -202,7 +202,7 @@ final readonly class DebResolver implements Resolver
                     'suite' => $source['suite'],
                     'description' => $p['d'],
                     'control' => $repository->stanza($id),
-                ]);
+                ] + (null !== ($source['repository'] ?? null) ? ['repository' => $source['repository']] : []));
             }
             $artifacts[] = $artifact;
             if (0 === $done % 50) {

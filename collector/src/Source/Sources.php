@@ -39,6 +39,16 @@ final class Sources implements ResetInterface
         $this->enabled = null;
     }
 
+    /**
+     * Dépôts apt ou dnf tiers ajoutés à une distribution.
+     *
+     * @return list<Source>
+     */
+    public function system(Ecosystem $ecosystem, string $distribution): array
+    {
+        return array_values(array_filter($this->enabled($ecosystem), static fn (Source $s) => $s->getDistribution() === $distribution && null !== $s->getSigningKey()));
+    }
+
     public function secret(Source $source): ?string
     {
         return null === $source->getSecret() ? null : $this->box->open($source->getSecret());
