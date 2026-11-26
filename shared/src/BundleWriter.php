@@ -34,7 +34,7 @@ final class BundleWriter
                 if (!$store->has($blob['sha256'])) {
                     throw new IntegrityException(sprintf('Fichier %s absent du stockage.', $blob['sha256']));
                 }
-                $tar->addFile('blobs/'.$blob['sha256'], $store->path($blob['sha256']));
+                $store->withFile($blob['sha256'], static fn (string $path) => $tar->addFile('blobs/'.$blob['sha256'], $path));
                 $done += $blob['size'];
                 if ($progress) {
                     $progress($done, $total);

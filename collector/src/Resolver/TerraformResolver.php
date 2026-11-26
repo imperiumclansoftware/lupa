@@ -295,7 +295,7 @@ final readonly class TerraformResolver implements Resolver
         $dir = Tool::tempDir('sas-tfmod');
         try {
             $source = $this->downloader->fetch($url);
-            copy($this->store->path($source['sha256']), $dir.'/in.tar.gz');
+            $this->store->withFile($source['sha256'], static fn (string $path) => copy($path, $dir.'/in.tar.gz'));
             mkdir($dir.'/x');
             Tool::run(['tar', '-xzf', $dir.'/in.tar.gz', '-C', $dir.'/x'], $dir, $context);
             $root = $dir.'/x';

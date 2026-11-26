@@ -145,17 +145,20 @@ final class VscodeGallery
         if ('' === $path || str_contains('/'.$path.'/', '/../')) {
             return null;
         }
-        $zip = new \ZipArchive();
-        if (true !== $zip->open($this->store->path($package->getBlobs()[0]), \ZipArchive::RDONLY)) {
-            return null;
-        }
-        try {
-            $content = $zip->getFromName($path);
 
-            return false === $content ? null : $content;
-        } finally {
-            $zip->close();
-        }
+        return $this->store->withFile($package->getBlobs()[0], static function (string $file) use ($path): ?string {
+            $zip = new \ZipArchive();
+            if (true !== $zip->open($file, \ZipArchive::RDONLY)) {
+                return null;
+            }
+            try {
+                $content = $zip->getFromName($path);
+
+                return false === $content ? null : $content;
+            } finally {
+                $zip->close();
+            }
+        });
     }
 
     public static function platform(Package $package): string

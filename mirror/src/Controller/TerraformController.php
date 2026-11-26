@@ -94,19 +94,20 @@ final class TerraformController
                 || ('' !== $platform && $platform !== ($m['os'] ?? '').'_'.($m['arch'] ?? ''))) {
                 continue;
             }
-            $entries[sprintf('%s/%s/%s/%s', $m['host'], $m['namespace'], $m['type'], $package->getFilename())] = $this->store->path($package->getBlobs()[0]);
+            $entries[sprintf('%s/%s/%s/%s', $m['host'], $m['namespace'], $m['type'], $package->getFilename())] = $package->getBlobs()[0];
         }
         if ([] === $entries) {
             return self::notFound();
         }
         ksort($entries);
-        $response = new StreamedResponse(static function () use ($entries): void {
+        $store = $this->store;
+        $response = new StreamedResponse(static function () use ($entries, $store): void {
             set_time_limit(0);
             $out = fopen('php://output', 'w');
-            foreach ($entries as $name => $path) {
-                $size = (int) filesize($path);
+            foreach ($entries as $name => $sha256) {
+                $size = $store->size($sha256);
                 fwrite($out, self::tarHeader($name, $size));
-                $in = fopen($path, 'r');
+                $in = $store->stream($sha256);
                 stream_copy_to_stream($in, $out);
                 fclose($in);
                 fwrite($out, str_repeat("\0", (512 - $size % 512) % 512));

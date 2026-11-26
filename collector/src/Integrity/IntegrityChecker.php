@@ -23,7 +23,6 @@ final readonly class IntegrityChecker
     public function __construct(
         private Connection $db,
         private BlobStore $store,
-        private string $storageDir,
     ) {
     }
 
@@ -86,30 +85,17 @@ final readonly class IntegrityChecker
         if (!$this->store->has($sha256)) {
             return self::MISSING;
         }
-        $path = $this->store->path($sha256);
-        if (null !== $expectedSize && filesize($path) !== $expectedSize) {
+        if (null !== $expectedSize && $this->store->size($sha256) !== $expectedSize) {
             return self::SIZE;
         }
 
-        return hash_equals($sha256, (string) hash_file('sha256', $path)) ? null : self::HASH;
+        return $this->store->withFile($sha256, static fn (string $path) => hash_equals($sha256, (string) hash_file('sha256', $path))) ? null : self::HASH;
     }
 
     /** Met de côté un fichier abîmé (conservé pour analyse) ; le stockage le considère alors comme absent. */
     public function isolate(string $sha256): ?string
     {
-        if (!$this->store->has($sha256)) {
-            return null;
-        }
-        $dir = $this->storageDir.'/corrupt';
-        if (!is_dir($dir) && !@mkdir($dir, 0o770, true) && !is_dir($dir)) {
-            throw new \RuntimeException(sprintf('Impossible de créer %s.', $dir));
-        }
-        $target = sprintf('%s/%s-%s', $dir, $sha256, date('Ymd-His'));
-        if (!rename($this->store->path($sha256), $target)) {
-            throw new \RuntimeException(sprintf('Impossible de mettre de côté le fichier %s.', $sha256));
-        }
-
-        return $target;
+        return $this->store->isolate($sha256);
     }
 
     public static function describe(string $problem): string

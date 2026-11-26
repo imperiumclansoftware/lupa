@@ -344,7 +344,8 @@ final readonly class RpmResolver implements Resolver
                 if (($source['verify'] ?? false) && null !== $this->signatures && null !== $this->store) {
                     // Index non signé (EPEL) : la signature du paquet avec la clé du dépôt est exigée
                     try {
-                        $this->signatures->verify($this->store->path($blob['sha256']), (string) ($source['key'] ?? ''), sprintf('%s-%s (%s)', $p['n'], $version, $source['name']));
+                        $signatures = $this->signatures;
+                        $this->store->withFile($blob['sha256'], static fn (string $path) => $signatures->verify($path, (string) ($source['key'] ?? ''), sprintf('%s-%s (%s)', $p['n'], $version, $source['name'])));
                     } catch (\RuntimeException $e) {
                         $this->store->delete($blob['sha256']);
                         throw $e;
