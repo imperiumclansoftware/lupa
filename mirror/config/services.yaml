@@ -29,5 +29,11 @@ services:
     App\:
         resource: '../src/'
 
+    # Stockage des paquets : disque ou bucket S3 (Réglages › Stockage)
     Sas\Bundle\BlobStore:
+        factory: ['@App\Storage\BlobStoreFactory', 'create']
         arguments: ['%env(STORAGE_DIR)%']
+    Sas\Bundle\StorageSettings:
+        arguments: { $tempDir: '%env(STORAGE_DIR)%/tmp' }
+    Sas\Bundle\SecretSealer: '@App\Security\SecretBox'
+    Sas\Bundle\BlobMigration: ~

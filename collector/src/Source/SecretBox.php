@@ -8,7 +8,7 @@ use App\Identity\CollectorIdentity;
  * Chiffre les secrets des dépôts privés (XSalsa20-Poly1305). La clé est dérivée de la clé de signature
  * du collecteur : sauvegarder l'identité suffit, et une base volée seule ne révèle aucun mot de passe.
  */
-final class SecretBox
+final class SecretBox implements \Sas\Bundle\SecretSealer
 {
     private ?string $key = null;
 

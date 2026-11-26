@@ -52,7 +52,7 @@ final readonly class Files
     }
 
     /** Lecture depuis le bucket, avec une plage d'octets unique si demandée (reprise de téléchargement). */
-    private function streamed(string $sha256, string $contentType): StreamedResponse
+    private function streamed(string $sha256, string $contentType): Response
     {
         $size = $this->store->size($sha256);
         $request = $this->requests->getCurrentRequest();
@@ -62,7 +62,7 @@ final readonly class Files
             $start = '' === $m[1] ? max(0, $size - (int) $m[2]) : (int) $m[1];
             $end = '' === $m[1] || '' === $m[2] ? $size - 1 : min((int) $m[2], $size - 1);
             if ($start > $end || $start >= $size) {
-                return new StreamedResponse(null, 416, ['Content-Range' => 'bytes */'.$size]);
+                return new Response('', 416, ['Content-Range' => 'bytes */'.$size]);
             }
             [$status, $offset, $length] = [206, $start, $end - $start + 1];
         }
