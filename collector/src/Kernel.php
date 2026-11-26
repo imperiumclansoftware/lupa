@@ -2,6 +2,7 @@
 
 namespace App;
 
+use Sas\Bundle\Distributions;
 use Symfony\Bundle\FrameworkBundle\Kernel\MicroKernelTrait;
 use Symfony\Component\DependencyInjection\Compiler\CompilerPassInterface;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
@@ -17,6 +18,20 @@ class Kernel extends BaseKernel implements CompilerPassInterface
     private function getAllowedEnvs(): array
     {
         return ['prod', 'dev', 'test'];
+    }
+
+    /** Distributions personnalisées branchées sur le catalogue partagé, le temps de vie du noyau */
+    public function boot(): void
+    {
+        parent::boot();
+        $container = $this->getContainer();
+        Distributions::extend(static fn (): array => $container->get(System\CustomDistributions::class)->all());
+    }
+
+    public function shutdown(): void
+    {
+        Distributions::extend(null);
+        parent::shutdown();
     }
 
     /** API d'édition de schéma de Doctrine ORM 3.6 (l'ancienne est retirée en ORM 4) */

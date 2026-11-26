@@ -87,11 +87,11 @@ final class SystemSearch
     private function repository(Ecosystem $ecosystem, ?string $distribution): DebRepository|RpmRepository
     {
         $distribution = $distribution && Distributions::find($distribution) ? $distribution : array_key_first(Distributions::of($ecosystem));
-        $dist = Distributions::find($distribution);
-        if ($dist['ecosystem'] !== $ecosystem) {
+        $dist = Distributions::find((string) $distribution);
+        if (null === $dist || $dist['ecosystem'] !== $ecosystem) {
             throw new \InvalidArgumentException('Distribution sans rapport avec cet écosystème.');
         }
-        $arch = array_key_first($dist['architectures']);
+        $arch = (string) array_key_first($dist['architectures']);
         $sections = array_keys(array_filter($dist['sections'], static fn (array $s) => $s['default']));
         $context = new JobContext($this->db, new NilUuid());
 

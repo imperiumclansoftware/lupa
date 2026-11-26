@@ -24,16 +24,13 @@ final readonly class DebIndex
     {
         $dist = Distributions::find($distribution) ?? throw new \InvalidArgumentException(sprintf('Distribution inconnue : %s.', $distribution));
         $repository = new DebRepository();
-        /** @var list<array{url: string, ports?: string, suite: string, keys: list<string>}> $suites */
-        $suites = $dist['suites'];
-        foreach ($suites as $suite) {
+        foreach ($dist['suites'] ?? [] as $suite) {
             // Ubuntu : arm64 et autres architectures hors x86 sur le miroir « ports »
             $base = \in_array($arch, ['amd64', 'i386'], true) ? $suite['url'] : ($suite['ports'] ?? $suite['url']);
-            $release = $this->signatures->clearsigned(
-                (string) $this->files->text(sprintf('%s/dists/%s/InRelease', $base, $suite['suite'])),
-                $suite['keys'],
-                $suite['suite'],
-            );
+            // Distribution personnalisée : sa propre clé (InRelease, ou Release et Release.gpg)
+            $release = isset($suite['key'])
+                ? $this->release($base, $suite['suite'], $suite['key'], $dist['label'])
+                : $this->signatures->clearsigned((string) $this->files->text(sprintf('%s/dists/%s/InRelease', $base, $suite['suite'])), $suite['keys'], $suite['suite']);
             $this->read($repository, $base, $suite['suite'], $release, $sections, $arch, $context);
         }
         // Dépôts tiers ajoutés à la distribution (Réglages) : leurs propres composants, leur propre clé

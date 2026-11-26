@@ -41,6 +41,39 @@ export interface IntegrityState {
   last: (Job & { report: IntegrityReport | null }) | null;
 }
 
+/** Distribution personnalisée (Réglages) */
+export interface CustomDistribution {
+  id: string;
+  slug: string;
+  ecosystem: 'deb' | 'rpm';
+  label: string;
+  release: string;
+  codename: string | null;
+  eol: boolean;
+  architectures: string[];
+  sections: string[];
+  /** une suite (« adresse suite ») ou un dépôt (« nom adresse ») par ligne */
+  sources: string;
+  keyFingerprint: string | null;
+  usedBy: { lists: number; sources: number };
+  createdAt: string;
+}
+
+export interface CustomDistributionInput {
+  id?: string;
+  ecosystem: 'deb' | 'rpm';
+  slug: string;
+  label: string;
+  release: string;
+  codename: string | null;
+  eol: boolean;
+  architectures: string;
+  sections: string | null;
+  sources: string;
+  /** vide à la modification = clé inchangée */
+  signingKey: string | null;
+}
+
 export interface Identity {
   id: string;
   name: string;
@@ -482,6 +515,37 @@ export class CollectorApi {
 
   deleteSource(id: string): Promise<unknown> {
     return firstValueFrom(this.http.delete(`/api/sources/${id}`));
+  }
+
+  /** Distributions proposées relues au prochain appel (après une distribution personnalisée modifiée) */
+  forgetEcosystems(): void {
+    this.choices = undefined;
+  }
+
+  customDistributions(): Promise<{ items: CustomDistribution[] }> {
+    return firstValueFrom(
+      this.http.get<{ items: CustomDistribution[] }>('/api/custom-distributions'),
+    );
+  }
+
+  saveCustomDistribution(input: CustomDistributionInput): Promise<CustomDistribution> {
+    return firstValueFrom(
+      input.id
+        ? this.http.put<CustomDistribution>(`/api/custom-distributions/${input.id}`, input)
+        : this.http.post<CustomDistribution>('/api/custom-distributions', input),
+    );
+  }
+
+  deleteCustomDistribution(id: string): Promise<unknown> {
+    return firstValueFrom(this.http.delete(`/api/custom-distributions/${id}`));
+  }
+
+  testCustomDistribution(
+    input: CustomDistributionInput,
+  ): Promise<{ ok: boolean; message: string }> {
+    return firstValueFrom(
+      this.http.post<{ ok: boolean; message: string }>('/api/custom-distributions/test', input),
+    );
   }
 
   testSource(input: SourceInput): Promise<{ ok: boolean; message: string }> {

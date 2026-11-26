@@ -31,7 +31,7 @@ parameters:
 			path: ../shared/src/Distributions.php
 
 		-
-			message: '#^Method Sas\\Bundle\\Distributions\:\:all\(\) should return array\<string, array\{ecosystem\: Sas\\Bundle\\Ecosystem, label\: string, codename\: string, release\: string, eol\: bool, architectures\: array\<string, string\>, sections\: array\<string, array\{label\: string, default\: bool\}\>, suites\?\: list\<array\{url\: string, ports\?\: string, suite\: string, keys\: list\<string\>\}\>, \.\.\.\}\> but returns array\{debian\-11\: array\{ecosystem\: Sas\\Bundle\\Ecosystem\:\:Deb, label\: non\-falsy\-string, codename\: string, release\: string, eol\: bool, architectures\: array\{amd64\: ''amd64 \(x86_64\)'', arm64\: ''arm64 \(aarch64\)''\}, sections\: array\<''contrib''\|''main''\|''non\-free''\|''non\-free\-firmware'', array\{label\: ''contrib''\|''non\-free''\|''non\-free\-firmware …'', default\: false\}\|array\{label\: ''main'', default\: true\}\>, suites\: array\{array\{url\: ''https\://deb\.debian…'', suite\: string, keys\: array\{non\-falsy\-string, non\-falsy\-string\}\}, array\{url\: ''https\://deb\.debian…'', suite\: non\-falsy\-string, keys\: array\{non\-falsy\-string, non\-falsy\-string\}\}, array\{url\: ''https\://security…'', suite\: non\-falsy\-string, keys\: array\{non\-falsy\-string\}\}\}\}, debian\-12\: array\{ecosystem\: Sas\\Bundle\\Ecosystem\:\:Deb, label\: non\-falsy\-string, codename\: string, release\: string, eol\: bool, architectures\: array\{amd64\: ''amd64 \(x86_64\)'', arm64\: ''arm64 \(aarch64\)''\}, sections\: array\<''contrib''\|''main''\|''non\-free''\|''non\-free\-firmware'', array\{label\: ''contrib''\|''non\-free''\|''non\-free\-firmware …'', default\: false\}\|array\{label\: ''main'', default\: true\}\>, suites\: array\{array\{url\: ''https\://deb\.debian…'', suite\: string, keys\: array\{non\-falsy\-string, non\-falsy\-string\}\}, array\{url\: ''https\://deb\.debian…'', suite\: non\-falsy\-string, keys\: array\{non\-falsy\-string, non\-falsy\-string\}\}, array\{url\: ''https\://security…'', suite\: non\-falsy\-string, keys\: array\{non\-falsy\-string\}\}\}\}, debian\-13\: array\{ecosystem\: Sas\\Bundle\\Ecosystem\:\:Deb, label\: non\-falsy\-string, codename\: string, release\: string, eol\: bool, architectures\: array\{amd64\: ''amd64 \(x86_64\)'', arm64\: ''arm64 \(aarch64\)''\}, sections\: array\<''contrib''\|''main''\|''non\-free''\|''non\-free\-firmware'', array\{label\: ''contrib''\|''non\-free''\|''non\-free\-firmware …'', default\: false\}\|array\{label\: ''main'', default\: true\}\>, suites\: array\{array\{url\: ''https\://deb\.debian…'', suite\: string, keys\: array\{non\-falsy\-string, non\-falsy\-string\}\}, array\{url\: ''https\://deb\.debian…'', suite\: non\-falsy\-string, keys\: array\{non\-falsy\-string, non\-falsy\-string\}\}, array\{url\: ''https\://security…'', suite\: non\-falsy\-string, keys\: array\{non\-falsy\-string\}\}\}\}, ubuntu\-2204\: array\{ecosystem\: Sas\\Bundle\\Ecosystem\:\:Deb, label\: non\-falsy\-string, codename\: string, release\: string, eol\: false, architectures\: array\{amd64\: ''amd64 \(x86_64\)'', arm64\: ''arm64 \(aarch64\)''\}, sections\: array\{main\: array\{label\: ''main'', default\: true\}, restricted\: array\{label\: ''restricted \(pilotes…'', default\: false\}, universe\: array\{label\: ''universe …'', default\: true\}, multiverse\: array\{label\: ''multiverse \(non…'', default\: false\}\}, suites\: array\{array\{url\: ''https\://archive…'', ports\: ''https\://ports…'', suite\: string, keys\: array\{''ubuntu\-archive\-2018''\}\}, array\{url\: ''https\://archive…'', ports\: ''https\://ports…'', suite\: non\-falsy\-string, keys\: array\{''ubuntu\-archive\-2018''\}\}, array\{url\: ''https\://security…'', ports\: ''https\://ports…'', suite\: non\-falsy\-string, keys\: array\{''ubuntu\-archive\-2018''\}\}\}\}, ubuntu\-2404\: array\{ecosystem\: Sas\\Bundle\\Ecosystem\:\:Deb, label\: non\-falsy\-string, codename\: string, release\: string, eol\: false, architectures\: array\{amd64\: ''amd64 \(x86_64\)'', arm64\: ''arm64 \(aarch64\)''\}, sections\: array\{main\: array\{label\: ''main'', default\: true\}, restricted\: array\{label\: ''restricted \(pilotes…'', default\: false\}, universe\: array\{label\: ''universe …'', default\: true\}, multiverse\: array\{label\: ''multiverse \(non…'', default\: false\}\}, suites\: array\{array\{url\: ''https\://archive…'', ports\: ''https\://ports…'', suite\: string, keys\: array\{''ubuntu\-archive\-2018''\}\}, array\{url\: ''https\://archive…'', ports\: ''https\://ports…'', suite\: non\-falsy\-string, keys\: array\{''ubuntu\-archive\-2018''\}\}, array\{url\: ''https\://security…'', ports\: ''https\://ports…'', suite\: non\-falsy\-string, keys\: array\{''ubuntu\-archive\-2018''\}\}\}\}, almalinux\-8\: array\{ecosystem\: Sas\\Bundle\\Ecosystem\:\:Rpm, label\: string, codename\: string, release\: string, eol\: bool, architectures\: array, sections\: array\<array\{label\: mixed, default\: mixed\}\>, repos\: array\<array\{url\: non\-falsy\-string, keys\: array\}\>, \.\.\.\}, almalinux\-9\: array\{ecosystem\: Sas\\Bundle\\Ecosystem\:\:Rpm, label\: string, codename\: string, release\: string, eol\: bool, architectures\: array, sections\: array\<array\{label\: mixed, default\: mixed\}\>, repos\: array\<array\{url\: non\-falsy\-string, keys\: array\}\>, \.\.\.\}, almalinux\-10\: array\{ecosystem\: Sas\\Bundle\\Ecosystem\:\:Rpm, label\: string, codename\: string, release\: string, eol\: bool, architectures\: array, sections\: array\<array\{label\: mixed, default\: mixed\}\>, repos\: array\<array\{url\: non\-falsy\-string, keys\: array\}\>, \.\.\.\}, \.\.\.\}\.$#'
+			message: '#^Method Sas\\Bundle\\Distributions\:\:builtIn\(\) should return array\<string, array\{ecosystem\: Sas\\Bundle\\Ecosystem, label\: string, codename\: string, release\: string, eol\: bool, architectures\: array\<string, string\>, sections\: array\<string, array\{label\: string, default\: bool\}\>, suites\?\: list\<array\{url\: string, ports\?\: string, suite\: string, keys\: list\<string\>, key\?\: string\}\>, \.\.\.\}\> but returns array\{debian\-11\: array\{ecosystem\: Sas\\Bundle\\Ecosystem\:\:Deb, label\: non\-falsy\-string, codename\: string, release\: string, eol\: bool, architectures\: array\{amd64\: ''amd64 \(x86_64\)'', arm64\: ''arm64 \(aarch64\)''\}, sections\: array\<''contrib''\|''main''\|''non\-free''\|''non\-free\-firmware'', array\{label\: ''contrib''\|''non\-free''\|''non\-free\-firmware …'', default\: false\}\|array\{label\: ''main'', default\: true\}\>, suites\: array\{array\{url\: ''https\://deb\.debian…'', suite\: string, keys\: array\{non\-falsy\-string, non\-falsy\-string\}\}, array\{url\: ''https\://deb\.debian…'', suite\: non\-falsy\-string, keys\: array\{non\-falsy\-string, non\-falsy\-string\}\}, array\{url\: ''https\://security…'', suite\: non\-falsy\-string, keys\: array\{non\-falsy\-string\}\}\}\}, debian\-12\: array\{ecosystem\: Sas\\Bundle\\Ecosystem\:\:Deb, label\: non\-falsy\-string, codename\: string, release\: string, eol\: bool, architectures\: array\{amd64\: ''amd64 \(x86_64\)'', arm64\: ''arm64 \(aarch64\)''\}, sections\: array\<''contrib''\|''main''\|''non\-free''\|''non\-free\-firmware'', array\{label\: ''contrib''\|''non\-free''\|''non\-free\-firmware …'', default\: false\}\|array\{label\: ''main'', default\: true\}\>, suites\: array\{array\{url\: ''https\://deb\.debian…'', suite\: string, keys\: array\{non\-falsy\-string, non\-falsy\-string\}\}, array\{url\: ''https\://deb\.debian…'', suite\: non\-falsy\-string, keys\: array\{non\-falsy\-string, non\-falsy\-string\}\}, array\{url\: ''https\://security…'', suite\: non\-falsy\-string, keys\: array\{non\-falsy\-string\}\}\}\}, debian\-13\: array\{ecosystem\: Sas\\Bundle\\Ecosystem\:\:Deb, label\: non\-falsy\-string, codename\: string, release\: string, eol\: bool, architectures\: array\{amd64\: ''amd64 \(x86_64\)'', arm64\: ''arm64 \(aarch64\)''\}, sections\: array\<''contrib''\|''main''\|''non\-free''\|''non\-free\-firmware'', array\{label\: ''contrib''\|''non\-free''\|''non\-free\-firmware …'', default\: false\}\|array\{label\: ''main'', default\: true\}\>, suites\: array\{array\{url\: ''https\://deb\.debian…'', suite\: string, keys\: array\{non\-falsy\-string, non\-falsy\-string\}\}, array\{url\: ''https\://deb\.debian…'', suite\: non\-falsy\-string, keys\: array\{non\-falsy\-string, non\-falsy\-string\}\}, array\{url\: ''https\://security…'', suite\: non\-falsy\-string, keys\: array\{non\-falsy\-string\}\}\}\}, ubuntu\-2204\: array\{ecosystem\: Sas\\Bundle\\Ecosystem\:\:Deb, label\: non\-falsy\-string, codename\: string, release\: string, eol\: false, architectures\: array\{amd64\: ''amd64 \(x86_64\)'', arm64\: ''arm64 \(aarch64\)''\}, sections\: array\{main\: array\{label\: ''main'', default\: true\}, restricted\: array\{label\: ''restricted \(pilotes…'', default\: false\}, universe\: array\{label\: ''universe …'', default\: true\}, multiverse\: array\{label\: ''multiverse \(non…'', default\: false\}\}, suites\: array\{array\{url\: ''https\://archive…'', ports\: ''https\://ports…'', suite\: string, keys\: array\{''ubuntu\-archive\-2018''\}\}, array\{url\: ''https\://archive…'', ports\: ''https\://ports…'', suite\: non\-falsy\-string, keys\: array\{''ubuntu\-archive\-2018''\}\}, array\{url\: ''https\://security…'', ports\: ''https\://ports…'', suite\: non\-falsy\-string, keys\: array\{''ubuntu\-archive\-2018''\}\}\}\}, ubuntu\-2404\: array\{ecosystem\: Sas\\Bundle\\Ecosystem\:\:Deb, label\: non\-falsy\-string, codename\: string, release\: string, eol\: false, architectures\: array\{amd64\: ''amd64 \(x86_64\)'', arm64\: ''arm64 \(aarch64\)''\}, sections\: array\{main\: array\{label\: ''main'', default\: true\}, restricted\: array\{label\: ''restricted \(pilotes…'', default\: false\}, universe\: array\{label\: ''universe …'', default\: true\}, multiverse\: array\{label\: ''multiverse \(non…'', default\: false\}\}, suites\: array\{array\{url\: ''https\://archive…'', ports\: ''https\://ports…'', suite\: string, keys\: array\{''ubuntu\-archive\-2018''\}\}, array\{url\: ''https\://archive…'', ports\: ''https\://ports…'', suite\: non\-falsy\-string, keys\: array\{''ubuntu\-archive\-2018''\}\}, array\{url\: ''https\://security…'', ports\: ''https\://ports…'', suite\: non\-falsy\-string, keys\: array\{''ubuntu\-archive\-2018''\}\}\}\}, almalinux\-8\: array\{ecosystem\: Sas\\Bundle\\Ecosystem\:\:Rpm, label\: string, codename\: string, release\: string, eol\: bool, architectures\: array, sections\: array\<array\{label\: mixed, default\: mixed\}\>, repos\: array\<array\{url\: non\-falsy\-string, keys\: array\}\>, \.\.\.\}, almalinux\-9\: array\{ecosystem\: Sas\\Bundle\\Ecosystem\:\:Rpm, label\: string, codename\: string, release\: string, eol\: bool, architectures\: array, sections\: array\<array\{label\: mixed, default\: mixed\}\>, repos\: array\<array\{url\: non\-falsy\-string, keys\: array\}\>, \.\.\.\}, almalinux\-10\: array\{ecosystem\: Sas\\Bundle\\Ecosystem\:\:Rpm, label\: string, codename\: string, release\: string, eol\: bool, architectures\: array, sections\: array\<array\{label\: mixed, default\: mixed\}\>, repos\: array\<array\{url\: non\-falsy\-string, keys\: array\}\>, \.\.\.\}, \.\.\.\}\.$#'
 			identifier: return.type
 			count: 1
 			path: ../shared/src/Distributions.php
@@ -391,12 +391,6 @@ parameters:
 			path: src/Controller/Presenter.php
 
 		-
-			message: '#^Parameter \#2 \.\.\.\$values of function sprintf expects bool\|float\|int\|string\|null, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: src/Controller/Presenter.php
-
-		-
 			message: '#^Parameter \#3 \.\.\.\$values of function sprintf expects bool\|float\|int\|string\|null, mixed given\.$#'
 			identifier: argument.type
 			count: 1
@@ -619,20 +613,8 @@ parameters:
 			path: src/Resolver/ComposerResolver.php
 
 		-
-			message: '#^Offset ''label'' might not exist on array\<string, mixed\>\|null\.$#'
-			identifier: offsetAccess.notFound
-			count: 1
-			path: src/Resolver/DebResolver.php
-
-		-
 			message: '#^Offset 1 might not exist on array\{\}\|array\{0\: non\-falsy\-string, 1\: non\-falsy\-string, 2\?\: non\-empty\-string\}\.$#'
 			identifier: offsetAccess.notFound
-			count: 1
-			path: src/Resolver/DebResolver.php
-
-		-
-			message: '#^Parameter \#2 \.\.\.\$values of function sprintf expects bool\|float\|int\|string\|null, mixed given\.$#'
-			identifier: argument.type
 			count: 1
 			path: src/Resolver/DebResolver.php
 
@@ -1207,12 +1189,6 @@ parameters:
 			path: src/Resolver/RpmResolver.php
 
 		-
-			message: '#^Offset ''label'' might not exist on array\<string, mixed\>\|null\.$#'
-			identifier: offsetAccess.notFound
-			count: 1
-			path: src/Resolver/RpmResolver.php
-
-		-
 			message: '#^Offset 3 might not exist on array\{\}\|array\{0\: non\-falsy\-string, 1\: '''', 2\: '''', 3\: non\-falsy\-string, 4\?\: non\-empty\-string\}\|array\{non\-falsy\-string, non\-empty\-string, non\-empty\-string\}\.$#'
 			identifier: offsetAccess.notFound
 			count: 1
@@ -1240,12 +1216,6 @@ parameters:
 			message: '#^Parameter \#2 \$node of method App\\Resolver\\RpmResolver\:\:evaluate\(\) expects array\|null, mixed given\.$#'
 			identifier: argument.type
 			count: 9
-			path: src/Resolver/RpmResolver.php
-
-		-
-			message: '#^Parameter \#2 \.\.\.\$values of function sprintf expects bool\|float\|int\|string\|null, mixed given\.$#'
-			identifier: argument.type
-			count: 1
 			path: src/Resolver/RpmResolver.php
 
 		-
@@ -1279,12 +1249,6 @@ parameters:
 			path: src/Resolver/RpmResolver.php
 
 		-
-			message: '#^Cannot access offset string on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 2
-			path: src/Resolver/SystemOptions.php
-
-		-
 			message: '#^Cannot cast mixed to string\.$#'
 			identifier: cast.string
 			count: 1
@@ -1297,25 +1261,7 @@ parameters:
 			path: src/Resolver/SystemOptions.php
 
 		-
-			message: '#^Parameter \#1 \$array of function array_filter expects array, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: src/Resolver/SystemOptions.php
-
-		-
 			message: '#^Parameter \#1 \$callback of function array_map expects \(callable\(mixed\)\: mixed\)\|null, ''strval'' given\.$#'
-			identifier: argument.type
-			count: 2
-			path: src/Resolver/SystemOptions.php
-
-		-
-			message: '#^Parameter \#2 \$callback of function array_filter expects \(callable\(mixed\)\: bool\)\|null, Closure\(array\)\: mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: src/Resolver/SystemOptions.php
-
-		-
-			message: '#^Parameter \#3 \.\.\.\$values of function sprintf expects bool\|float\|int\|string\|null, mixed given\.$#'
 			identifier: argument.type
 			count: 2
 			path: src/Resolver/SystemOptions.php
@@ -2017,12 +1963,6 @@ parameters:
 			path: src/System/DebIndex.php
 
 		-
-			message: '#^Parameter \#2 \.\.\.\$values of function sprintf expects bool\|float\|int\|string\|null, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: src/System/DebIndex.php
-
-		-
 			message: '#^Parameter \#1 \$field of static method App\\System\\DebRepository\:\:parseList\(\) expects string, mixed given\.$#'
 			identifier: argument.type
 			count: 1
@@ -2083,12 +2023,6 @@ parameters:
 			path: src/System/IndexFiles.php
 
 		-
-			message: '#^Binary operation "\." between mixed and '' '' results in an error\.$#'
-			identifier: binaryOp.invalid
-			count: 2
-			path: src/System/RpmIndex.php
-
-		-
 			message: '#^Cannot access offset ''epoch'' on mixed\.$#'
 			identifier: offsetAccess.nonOffsetAccessible
 			count: 1
@@ -2096,12 +2030,6 @@ parameters:
 
 		-
 			message: '#^Cannot access offset ''flags'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 1
-			path: src/System/RpmIndex.php
-
-		-
-			message: '#^Cannot access offset ''keys'' on mixed\.$#'
 			identifier: offsetAccess.nonOffsetAccessible
 			count: 1
 			path: src/System/RpmIndex.php
@@ -2125,19 +2053,7 @@ parameters:
 			path: src/System/RpmIndex.php
 
 		-
-			message: '#^Cannot access offset ''url'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 1
-			path: src/System/RpmIndex.php
-
-		-
 			message: '#^Cannot access offset ''version'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 1
-			path: src/System/RpmIndex.php
-
-		-
-			message: '#^Cannot access offset string on mixed\.$#'
 			identifier: offsetAccess.nonOffsetAccessible
 			count: 1
 			path: src/System/RpmIndex.php
@@ -2157,19 +2073,7 @@ parameters:
 		-
 			message: '#^Parameter \#2 \.\.\.\$values of function sprintf expects bool\|float\|int\|string\|null, mixed given\.$#'
 			identifier: argument.type
-			count: 4
-			path: src/System/RpmIndex.php
-
-		-
-			message: '#^Parameter \#3 \$keys of method App\\System\\Signatures\:\:detached\(\) expects list\<string\>, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: src/System/RpmIndex.php
-
-		-
-			message: '#^Parameter \#3 \$subject of function str_replace expects array\<string\>\|string, mixed given\.$#'
-			identifier: argument.type
-			count: 1
+			count: 3
 			path: src/System/RpmIndex.php
 
 		-
@@ -2275,12 +2179,6 @@ parameters:
 			path: src/System/Signatures.php
 
 		-
-			message: '#^Offset ''ecosystem'' might not exist on array\<string, mixed\>\|null\.$#'
-			identifier: offsetAccess.notFound
-			count: 1
-			path: src/System/SystemSearch.php
-
-		-
 			message: '#^Parameter \#1 \$a of static method Sas\\Bundle\\DebVersion\:\:compare\(\) expects string, mixed given\.$#'
 			identifier: argument.type
 			count: 1
@@ -2288,18 +2186,6 @@ parameters:
 
 		-
 			message: '#^Parameter \#1 \$a of static method Sas\\Bundle\\RpmVersion\:\:compare\(\) expects string, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: src/System/SystemSearch.php
-
-		-
-			message: '#^Parameter \#1 \$array of function array_filter expects array, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: src/System/SystemSearch.php
-
-		-
-			message: '#^Parameter \#1 \$array of function array_key_first expects array, mixed given\.$#'
 			identifier: argument.type
 			count: 1
 			path: src/System/SystemSearch.php
@@ -2317,24 +2203,6 @@ parameters:
 			path: src/System/SystemSearch.php
 
 		-
-			message: '#^Parameter \#1 \$id of static method Sas\\Bundle\\Distributions\:\:find\(\) expects string, string\|null given\.$#'
-			identifier: argument.type
-			count: 1
-			path: src/System/SystemSearch.php
-
-		-
-			message: '#^Parameter \#2 \$arch of method App\\System\\DebIndex\:\:load\(\) expects string, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: src/System/SystemSearch.php
-
-		-
-			message: '#^Parameter \#2 \$arch of method App\\System\\RpmIndex\:\:load\(\) expects string, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: src/System/SystemSearch.php
-
-		-
 			message: '#^Parameter \#2 \$b of static method Sas\\Bundle\\DebVersion\:\:compare\(\) expects string, mixed given\.$#'
 			identifier: argument.type
 			count: 1
@@ -2342,12 +2210,6 @@ parameters:
 
 		-
 			message: '#^Parameter \#2 \$b of static method Sas\\Bundle\\RpmVersion\:\:compare\(\) expects string, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: src/System/SystemSearch.php
-
-		-
-			message: '#^Parameter \#2 \$callback of function array_filter expects \(callable\(mixed\)\: bool\)\|null, Closure\(array\)\: mixed given\.$#'
 			identifier: argument.type
 			count: 1
 			path: src/System/SystemSearch.php

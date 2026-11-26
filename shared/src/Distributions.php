@@ -9,19 +9,74 @@ namespace Sas\Bundle;
  * Debian, Ubuntu : les suites (principale, -updates, -security) sont fusionnées en une seule chez Romulus.
  * Ubuntu publie arm64 ailleurs qu'amd64 (« ports » : ports.ubuntu.com).
  * RPM : les dépôts (BaseOS, AppStream…) sont fusionnés en un seul dépôt par distribution et architecture.
+ * Distribution personnalisée : clé fournie en ASCII armor (« key ») au lieu des clés livrées (« keys »).
+ *
+ * @phpstan-type Distribution array{
+ *   ecosystem: Ecosystem, label: string, codename: string, release: string, eol: bool,
+ *   architectures: array<string, string>, sections: array<string, array{label: string, default: bool}>,
+ *   suites?: list<array{url: string, ports?: string, suite: string, keys: list<string>, key?: string}>,
+ *   repos?: array<string, array{url: string, keys: list<string>, key?: string}>,
+ *   clientKey?: string, modules?: bool, custom?: bool,
+ * }
  */
 final class Distributions
 {
     /**
-     * @return array<string, array{
-     *   ecosystem: Ecosystem, label: string, codename: string, release: string, eol: bool,
-     *   architectures: array<string, string>, sections: array<string, array{label: string, default: bool}>,
-     *   suites?: list<array{url: string, ports?: string, suite: string, keys: list<string>}>,
-     *   repos?: array<string, array{url: string, keys: list<string>}>,
-     *   clientKey?: string, modules?: bool,
-     * }>
+     * Distributions ajoutées par l'application : Rémus (Réglages › Distributions personnalisées), Romulus
+     * (apprises des paquets importés). Branché au démarrage du noyau, retiré à son arrêt.
+     *
+     * @var (\Closure(): array<string, Distribution>)|null
+     */
+    private static ?\Closure $extra = null;
+
+    /** @param (\Closure(): array<string, Distribution>)|null $provider */
+    public static function extend(?\Closure $provider): void
+    {
+        self::$extra = $provider;
+    }
+
+    /**
+     * Distributions intégrées, puis personnalisées (un identifiant intégré n'est jamais remplacé).
+     *
+     * @return array<string, Distribution>
      */
     public static function all(): array
+    {
+        return self::builtIn() + (null !== self::$extra ? (self::$extra)() : []);
+    }
+
+    /**
+     * Description d'une distribution personnalisée, transmise à Romulus dans les métadonnées de ses paquets
+     * (« distributionInfo ») ; null pour une distribution intégrée, que Romulus connaît déjà.
+     *
+     * @param Distribution|null $dist
+     *
+     * @return array{ecosystem: string, label: string, codename: string, release: string, eol: bool, architectures: list<string>, sections: list<string>}|null
+     */
+    public static function info(?array $dist): ?array
+    {
+        if (null === $dist || !($dist['custom'] ?? false)) {
+            return null;
+        }
+
+        return [
+            'ecosystem' => $dist['ecosystem']->value,
+            'label' => $dist['label'],
+            'codename' => $dist['codename'],
+            'release' => $dist['release'],
+            'eol' => $dist['eol'],
+            'architectures' => array_map('strval', array_keys($dist['architectures'])),
+            'sections' => array_map('strval', array_keys($dist['sections'])),
+        ];
+    }
+
+    public static function isBuiltIn(string $id): bool
+    {
+        return isset(self::builtIn()[$id]);
+    }
+
+    /** @return array<string, Distribution> */
+    public static function builtIn(): array
     {
         $debianSections = [
             'main' => ['label' => 'main', 'default' => true],
@@ -144,13 +199,13 @@ final class Distributions
         ];
     }
 
-    /** @return array<string, mixed>|null */
+    /** @return Distribution|null */
     public static function find(string $id): ?array
     {
         return self::all()[$id] ?? null;
     }
 
-    /** @return array<string, array<string, mixed>> */
+    /** @return array<string, Distribution> */
     public static function of(Ecosystem $ecosystem): array
     {
         return array_filter(self::all(), static fn (array $d) => $d['ecosystem'] === $ecosystem);

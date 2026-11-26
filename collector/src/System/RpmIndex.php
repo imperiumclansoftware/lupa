@@ -36,12 +36,19 @@ final readonly class RpmIndex
         $modules = [];
         foreach ($sections as $section) {
             $repo = $dist['repos'][$section] ?? throw new \InvalidArgumentException(sprintf('Dépôt inconnu pour %s : %s.', $dist['label'], $section));
-            $base = str_replace('$arch', $arch, $repo['url']);
+            $base = str_replace(['$basearch', '$arch'], $arch, $repo['url']);
             $repomd = (string) $this->files->text($base.'/repodata/repomd.xml');
-            $this->signatures->detached($repomd, (string) $this->files->text($base.'/repodata/repomd.xml.asc'), $repo['keys'], $dist['label'].' '.$section);
+            $verify = false;
+            if (isset($repo['key'])) {
+                // Distribution personnalisée : sa propre clé ; index non signé = chaque paquet vérifié
+                $signature = $this->files->text($base.'/repodata/repomd.xml.asc', true);
+                null !== $signature ? $this->signatures->detachedWithKey($repomd, $signature, $repo['key'], $dist['label'].' '.$section) : $verify = true;
+            } else {
+                $this->signatures->detached($repomd, (string) $this->files->text($base.'/repodata/repomd.xml.asc'), $repo['keys'], $dist['label'].' '.$section);
+            }
             $data = self::repomd($repomd);
             $sqlite = $this->primary($base, $data, $context, $dist['label'].' '.$section.' '.$arch);
-            $sources[] = ['name' => $section, 'base' => $base, 'sqlite' => $sqlite];
+            $sources[] = ['name' => $section, 'base' => $base, 'sqlite' => $sqlite] + (isset($repo['key']) ? ['key' => $repo['key'], 'verify' => $verify] : []);
             if (($dist['modules'] ?? false) && isset($data['modules'])) {
                 $modules[] = $this->files->plain($base.'/'.$data['modules']['href'], $data['modules']['algo'], $data['modules']['digest'], $context, $section.' modules');
             }

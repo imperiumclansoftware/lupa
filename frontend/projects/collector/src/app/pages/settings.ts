@@ -3,11 +3,20 @@ import { FormsModule } from '@angular/forms';
 import { CopyButton, Icon, Toasts, errorMessage, Auth } from '@sas/shared';
 import { CollectorApi, Identity } from '../api';
 import { SettingsBlacklist } from './settings-blacklist';
+import { SettingsDistributions } from './settings-distributions';
 import { SettingsIntegrity } from './settings-integrity';
 import { SettingsSources } from './settings-sources';
 
 @Component({
-  imports: [FormsModule, CopyButton, Icon, SettingsBlacklist, SettingsSources, SettingsIntegrity],
+  imports: [
+    FormsModule,
+    CopyButton,
+    Icon,
+    SettingsBlacklist,
+    SettingsSources,
+    SettingsDistributions,
+    SettingsIntegrity,
+  ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="page">
@@ -55,6 +64,7 @@ import { SettingsSources } from './settings-sources';
 
         <sas-settings-blacklist />
         <sas-settings-sources />
+        <sas-settings-distributions />
         <sas-settings-integrity />
 
         <section class="card card-body stack">

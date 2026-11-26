@@ -56,7 +56,7 @@ final readonly class RpmResolver implements Resolver
     public function resolve(PackageList $list, JobContext $context): array
     {
         $distribution = SystemOptions::distribution($list);
-        $dist = Distributions::find($distribution);
+        $dist = Distributions::find($distribution) ?? throw new \InvalidArgumentException(sprintf('Distribution inconnue : %s.', $distribution));
         $artifacts = [];
         foreach (SystemOptions::architectures($list) as $arch) {
             $context->log(sprintf('%s, %s : lecture des index.', $dist['label'], $arch));
@@ -358,7 +358,9 @@ final readonly class RpmResolver implements Resolver
                     'description' => $p['d'],
                     'primary' => RpmIndex::xml($repository->pdo($p['src']), $p['key']),
                     // Dépôt tiers : clé publiée par Romulus pour la vérification sur les postes (gpgcheck)
-                ] + (isset($source['key']) ? ['signingKey' => $source['key']] : []));
+                ] + (isset($source['key']) ? ['signingKey' => $source['key']] : [])
+                  // Distribution personnalisée : décrite à Romulus, qui ne la connaît pas
+                  + (null !== ($info = Distributions::info(Distributions::find($distribution))) ? ['distributionInfo' => $info] : []));
             }
             $artifacts[] = $artifact;
             if (0 === $done % 50) {

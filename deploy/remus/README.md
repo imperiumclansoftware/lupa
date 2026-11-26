@@ -61,6 +61,12 @@ les fichiers sont dans le volume `/data`.
   signature valide de cette clé, sinon il est refusé et supprimé. Les index publiés sans base SQLite
   (`primary.xml` seul, comme Docker CE) sont pris en charge. Romulus fournit ensuite la clé aux postes
   (`gpgkey` de `romulus.repo`).
+- **Distributions personnalisées :** dérivée interne ou distribution absente du catalogue (Réglages ›
+  Distributions personnalisées) : identifiant, nom, version, nom de code (apt), architectures, suites ou
+  dépôts, et clé publique. Elle se choisit ensuite dans les listes comme une distribution intégrée ; ses
+  index sont vérifiés avec sa clé (dnf : chaque paquet, si l'index n'est pas signé). Romulus l'apprend par
+  les paquets importés, sans changement du format des bundles : un Romulus plus ancien importe ces paquets
+  sans les servir.
 - **Paquets système Debian, Ubuntu et RPM :** Debian 11 (fin de vie), 12 et 13, Ubuntu 22.04 et 24.04 LTS,
   AlmaLinux 8, 9 et 10, Rocky Linux 8, 9 et 10, CentOS Stream 9 et 10, CentOS 7 et 8 (dépôts figés de
   vault.centos.org). On choisit des paquets (`nginx`, `postgresql`, motifs

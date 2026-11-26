@@ -40,7 +40,8 @@ d'aucun service externe : la base SQLite et les paquets sont dans le volume `/da
   - recettes Symfony Flex (`/composer/flex`) ;
   - registre Docker OCI en lecture seule (`/v2/`), utilisable comme *registry mirror* de Docker Hub ;
   - dépôts **apt** Debian et Ubuntu (`/deb/<distribution>`), avec index signés par la clé de Romulus ;
-  - dépôts **dnf/yum** AlmaLinux, Rocky Linux et CentOS (`/rpm/<distribution>/<arch>`). Les paquets gardent la
+  - dépôts **dnf/yum** AlmaLinux, Rocky Linux et CentOS (`/rpm/<distribution>/<arch>`), ainsi que les
+    distributions personnalisées définies dans Rémus, apprises par les paquets importés. Les paquets gardent la
     signature de leur distribution ;
   - **Ansible Galaxy** (`/galaxy/`, API v3) pour ansible-galaxy ;
   - **extensions VS Code** (`/vscode/`, galerie au protocole d'Open VSX) pour VS Code, VSCodium et code-server ;

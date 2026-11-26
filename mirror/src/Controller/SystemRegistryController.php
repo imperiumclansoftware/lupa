@@ -119,7 +119,8 @@ final class SystemRegistryController
         // Clé de la distribution (déjà sur le poste), puis celles des dépôts tiers, publiées par Romulus
         $clientKey = \is_string($dist['clientKey'] ?? null) ? $dist['clientKey'] : '';
         $label = \is_string($dist['label'] ?? null) ? $dist['label'] : $distribution;
-        $gpgkey = implode("\n       ", ['file://'.$clientKey, ...array_map(static fn (string $f) => sprintf('%s/rpm/%s/keys/%s.asc', $base, $distribution, $f), $keys)]);
+        // Distribution personnalisée : pas de clé préinstallée, seulement celles publiées par Romulus
+        $gpgkey = implode("\n       ", [...('' !== $clientKey ? ['file://'.$clientKey] : []), ...array_map(static fn (string $f) => sprintf('%s/rpm/%s/keys/%s.asc', $base, $distribution, $f), $keys)]);
 
         // module_hotfixes : sans métadonnées de modules, dnf (EL8) ne doit pas filtrer les paquets modulaires
         return sprintf("[romulus-%1\$s]\nname=Romulus - %2\$s\nbaseurl=%3\$s/rpm/%1\$s/\$basearch/\nenabled=1\ngpgcheck=1\ngpgkey=%4\$s\nrepo_gpgcheck=0\nmodule_hotfixes=1\n", $distribution, $label, $base, $gpgkey);

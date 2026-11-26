@@ -202,7 +202,7 @@ de session est renouvelé et chaque requête d'écriture doit présenter le jeto
   <tr><td>Composer</td><td><code>shasum</code> quand Packagist le fournit</td></tr>
   <tr><td>Docker / OCI</td><td>Digest SHA-256 de chaque manifeste et couche</td></tr>
   <tr><td>Debian, Ubuntu, AlmaLinux, Rocky Linux, CentOS</td><td>Index acceptés seulement avec une signature valide (gpgv, clés livrées avec l'image) ; SHA-256 de chaque paquet</td></tr>
-  <tr><td>Dépôts apt et dnf tiers</td><td>Index vérifié avec la clé publique saisie par l'administrateur (empreinte affichée) ; dnf sans index signé : signature OpenPGP de chaque paquet exigée, paquet refusé et supprimé sinon ; SHA-256 de chaque paquet</td></tr>
+  <tr><td>Dépôts apt et dnf tiers, distributions personnalisées</td><td>Index vérifié avec la clé publique saisie par l'administrateur (empreinte affichée) ; dnf sans index signé : signature OpenPGP de chaque paquet exigée, paquet refusé et supprimé sinon ; SHA-256 de chaque paquet</td></tr>
   <tr><td>Terraform</td><td>SHA256SUMS signé, vérifié avec gpgv (clé HashiCorp livrée, sinon clé publiée par le registre)</td></tr>
   <tr><td>Ansible Galaxy</td><td>SHA-256 des collections ; rôles : archive GitHub en HTTPS, sans somme publiée</td></tr>
   <tr><td>VS Code</td><td>SHA-256 publié (propriété du Marketplace, fichier <code>.sha256</code> d'Open VSX) ; absent : HTTPS seul, signalé au journal</td></tr>

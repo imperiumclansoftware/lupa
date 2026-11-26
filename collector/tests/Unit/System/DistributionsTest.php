@@ -35,7 +35,7 @@ final class DistributionsTest extends TestCase
     {
         foreach (['ubuntu-2204', 'ubuntu-2404'] as $id) {
             $dist = Distributions::find($id) ?? self::fail($id);
-            foreach ($dist['suites'] as $suite) {
+            foreach ($dist['suites'] ?? [] as $suite) {
                 self::assertSame('https://ports.ubuntu.com/ubuntu-ports', $suite['ports'] ?? null);
             }
             self::assertArrayHasKey('universe', $dist['sections']);

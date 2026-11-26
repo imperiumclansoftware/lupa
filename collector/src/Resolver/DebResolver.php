@@ -51,7 +51,7 @@ final readonly class DebResolver implements Resolver
     public function resolve(PackageList $list, JobContext $context): array
     {
         $distribution = SystemOptions::distribution($list);
-        $dist = Distributions::find($distribution);
+        $dist = Distributions::find($distribution) ?? throw new \InvalidArgumentException(sprintf('Distribution inconnue : %s.', $distribution));
         $artifacts = [];
         foreach (SystemOptions::architectures($list) as $arch) {
             $context->log(sprintf('%s, %s : lecture des index.', $dist['label'], $arch));
@@ -202,7 +202,8 @@ final readonly class DebResolver implements Resolver
                     'suite' => $source['suite'],
                     'description' => $p['d'],
                     'control' => $repository->stanza($id),
-                ] + (null !== ($source['repository'] ?? null) ? ['repository' => $source['repository']] : []));
+                ] + (null !== ($source['repository'] ?? null) ? ['repository' => $source['repository']] : [])
+                  + (null !== ($info = Distributions::info(Distributions::find($distribution))) ? ['distributionInfo' => $info] : []));
             }
             $artifacts[] = $artifact;
             if (0 === $done % 50) {
