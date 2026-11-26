@@ -2,7 +2,7 @@
 
 **Romulus** est le miroir hors ligne de **Lupa**. Sur un réseau isolé d'Internet, il sert aux postes
 de travail des dépôts **npm**, **Python (PyPI)**, **Composer** (avec les recettes **Symfony Flex**), un
-registre **Docker**, des dépôts système **apt** (Debian) et **dnf/yum** (AlmaLinux, CentOS), un serveur
+registre **Docker**, des dépôts système **apt** (Debian, Ubuntu) et **dnf/yum** (AlmaLinux, Rocky Linux, CentOS), un serveur
 **Ansible Galaxy**, un miroir **Terraform** (providers, modules, binaire) et une **marketplace d'extensions VS Code**. Son contenu arrive par clé USB, sous forme de **bundles signés** produits par son
 jumeau [**Rémus**](https://hub.docker.com/r/iemperor/remus), le collecteur installé côté Internet.
 
@@ -39,8 +39,8 @@ d'aucun service externe : la base SQLite et les paquets sont dans le volume `/da
   - Composer 2 (`/composer`) ;
   - recettes Symfony Flex (`/composer/flex`) ;
   - registre Docker OCI en lecture seule (`/v2/`), utilisable comme *registry mirror* de Docker Hub ;
-  - dépôts **apt** Debian (`/deb/<distribution>`), avec index signés par la clé de Romulus ;
-  - dépôts **dnf/yum** AlmaLinux et CentOS (`/rpm/<distribution>/<arch>`). Les paquets gardent la
+  - dépôts **apt** Debian et Ubuntu (`/deb/<distribution>`), avec index signés par la clé de Romulus ;
+  - dépôts **dnf/yum** AlmaLinux, Rocky Linux et CentOS (`/rpm/<distribution>/<arch>`). Les paquets gardent la
     signature de leur distribution ;
   - **Ansible Galaxy** (`/galaxy/`, API v3) pour ansible-galaxy ;
   - **extensions VS Code** (`/vscode/`, galerie au protocole d'Open VSX) pour VS Code, VSCodium et code-server ;
@@ -325,7 +325,7 @@ sudo rm -f /etc/apt/sources.list.d/debian.sources /etc/apt/sources.list    # dé
 sudo apt update && sudo apt install nginx
 ```
 
-**AlmaLinux, CentOS (dnf, yum) :** les paquets gardent la signature de la distribution (`gpgcheck=1`, la clé
+**AlmaLinux, Rocky Linux, CentOS (dnf, yum) :** les paquets gardent la signature de la distribution (`gpgcheck=1`, la clé
 est déjà sur le poste).
 
 ```bash

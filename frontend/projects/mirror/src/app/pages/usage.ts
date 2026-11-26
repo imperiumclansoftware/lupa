@@ -261,7 +261,7 @@ export default class Usage {
           {
             title: 'Dépôt : /etc/apt/sources.list.d/romulus.sources',
             code: `Types: deb\nURIs: ${base}/deb/${d.id}\nSuites: ${d.codename}\nComponents: ${d.components.join(' ') || 'main'}\nSigned-By: /etc/apt/keyrings/romulus.gpg`,
-            hint: 'Désactivez les dépôts Internet (/etc/apt/sources.list.d/debian.sources, /etc/apt/sources.list) : sans réseau, apt update échouerait sur eux.',
+            hint: 'Désactivez les dépôts Internet (/etc/apt/sources.list.d/debian.sources ou ubuntu.sources, /etc/apt/sources.list) : sans réseau, apt update échouerait sur eux.',
           },
           {
             title: 'Installer',

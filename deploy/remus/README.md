@@ -1,7 +1,7 @@
 # Rémus
 
 **Rémus** est le collecteur de **Lupa**. Il permet d'installer des paquets **npm**, **Python (PyPI)**,
-**Composer**, des **images Docker**, des paquets système **Debian** et **RPM** (AlmaLinux, CentOS), des
+**Composer**, des **images Docker**, des paquets système **Debian**, **Ubuntu** et **RPM** (AlmaLinux, Rocky Linux, CentOS), des
 collections **Ansible Galaxy**, des providers et modules **Terraform** et des **extensions VS Code** sur un réseau isolé d'Internet. Installé sur une machine connectée,
 il télécharge les paquets et toutes leurs dépendances, puis prépare des **bundles signés** à copier sur
 une clé USB. De l'autre côté, son jumeau [**Romulus**](https://hub.docker.com/r/iemperor/romulus) importe
@@ -50,13 +50,14 @@ les fichiers sont dans le volume `/data`.
   index Python supplémentaire, dépôt Composer prioritaire, identifiants par registre Docker ou miroir de
   Docker Hub. Identifiant et mot de passe ou jeton, vérifiés par le bouton **Tester** ; les secrets sont
   chiffrés dans la base et jamais réaffichés.
-- **Paquets système Debian et RPM :** Debian 12 et 13, AlmaLinux 8, 9 et 10, CentOS Stream 9 et 10,
-  CentOS 7 et 8 (dépôts figés de vault.centos.org). On choisit des paquets (`nginx`, `postgresql`, motifs
+- **Paquets système Debian, Ubuntu et RPM :** Debian 11 (fin de vie), 12 et 13, Ubuntu 22.04 et 24.04 LTS,
+  AlmaLinux 8, 9 et 10, Rocky Linux 8, 9 et 10, CentOS Stream 9 et 10, CentOS 7 et 8 (dépôts figés de
+  vault.centos.org). On choisit des paquets (`nginx`, `postgresql`, motifs
   `python3-*`, versions exactes `curl=7.88.1-10+deb12u8`, streams de modules `@nodejs:20` sur EL8). Rémus
   ajoute leurs dépendances comme le feraient apt ou dnf sur un système vide.
   - Architectures : amd64 / x86_64 par défaut, arm64 / aarch64 en option.
-  - Sections Debian ou dépôts BaseOS, AppStream, CRB… au choix.
-  - Les index officiels ne sont acceptés qu'avec une signature valide des clés Debian, AlmaLinux ou CentOS
+  - Sections Debian (main, contrib…) ou Ubuntu (main, universe…), dépôts BaseOS, AppStream, CRB… au choix.
+  - Les index officiels ne sont acceptés qu'avec une signature valide des clés Debian, Ubuntu, AlmaLinux, Rocky Linux ou CentOS
     livrées avec l'image, et chaque paquet est vérifié par son sha256.
 - **Ansible Galaxy :** collections (`community.general >=8.0.0`, dépendances comprises, sha256 vérifié) et
   rôles (`role:geerlingguy.docker 7.4.1`). Un `requirements.yml` peut être importé.

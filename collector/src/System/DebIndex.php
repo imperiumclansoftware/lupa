@@ -22,7 +22,8 @@ final readonly class DebIndex
         $dist = Distributions::find($distribution) ?? throw new \InvalidArgumentException(sprintf('Distribution inconnue : %s.', $distribution));
         $repository = new DebRepository();
         foreach ($dist['suites'] as $suite) {
-            $base = $suite['url'];
+            // Ubuntu : arm64 et autres architectures hors x86 sur le miroir « ports »
+            $base = \in_array($arch, ['amd64', 'i386'], true) ? $suite['url'] : ($suite['ports'] ?? $suite['url']);
             $release = $this->signatures->clearsigned(
                 (string) $this->files->text(sprintf('%s/dists/%s/InRelease', $base, $suite['suite'])),
                 $suite['keys'],

@@ -9,7 +9,7 @@
 </p>
 
 Dépôts de paquets **hors ligne** pour un réseau isolé d'Internet : npm, Python (PyPI), Composer,
-images Docker, paquets système Debian (apt) et RPM (AlmaLinux, CentOS : dnf, yum), collections et rôles
+images Docker, paquets système Debian et Ubuntu (apt) et RPM (AlmaLinux, Rocky Linux, CentOS : dnf, yum), collections et rôles
 Ansible Galaxy, providers et modules Terraform, extensions VS Code. Deux applications web jumelles, reliées par une clé USB :
 
 - **Rémus**, le collecteur : il franchit la limite et rapporte les paquets d'Internet ;
@@ -48,11 +48,11 @@ Sources : [github.com/imperiumclansoftware/lupa](https://github.com/imperiumclan
 | Composer | archives des versions résolues (contrainte de version PHP en option) | dépôt `composer` `http://miroir/composer` (format p2) |
 | Symfony Flex | recettes des paquets collectés (officielles et contrib) | `SYMFONY_ENDPOINT=http://miroir/composer/flex` |
 | Docker | index multi-plateformes d'origine + plateformes choisies + attestations | `docker pull miroir/library/nginx:1.27` ou `registry-mirrors` |
-| Debian 12, 13 | paquets choisis et leurs dépendances (Depends, Pre-Depends, Recommends en option), amd64/arm64 | `deb [signed-by=…/romulus.gpg] http://miroir/deb/debian-12 bookworm main` |
+| Debian 11, 12, 13, Ubuntu 22.04, 24.04 LTS | paquets choisis et leurs dépendances (Depends, Pre-Depends, Recommends en option), amd64/arm64 | `deb [signed-by=…/romulus.gpg] http://miroir/deb/debian-12 bookworm main` |
 | Ansible Galaxy | collections (dépendances comprises, sha256 vérifié) et rôles ; requirements.yml accepté | `ansible-galaxy collection install -s http://miroir/galaxy/ …` |
 | Terraform | providers des plateformes choisies (SHA256SUMS signé vérifié), modules (GitHub), binaire terraform ; .terraform.lock.hcl accepté | `network_mirror` (HTTPS) ou `~/.terraform.d/plugins` ; modules par URL ou registre |
 | Extensions VS Code | Open VSX et/ou Visual Studio Marketplace, dépendances et packs, construction de chaque plateforme, sha256 vérifié ; .vscode/extensions.json accepté | galerie `extensionsGallery` (VS Code, VSCodium, code-server) ou `.vsix` |
-| AlmaLinux 8/9/10, CentOS Stream 9/10, CentOS 7/8 (vault) | paquets choisis et leurs dépendances (capacités, fichiers, dépendances booléennes, streams de modules EL8/EL9) | `baseurl=http://miroir/rpm/almalinux-9/$basearch/` (`/rpm/<distribution>/romulus.repo`) |
+| AlmaLinux 8/9/10, Rocky Linux 8/9/10, CentOS Stream 9/10, CentOS 7/8 (vault) | paquets choisis et leurs dépendances (capacités, fichiers, dépendances booléennes, streams de modules EL8/EL9) | `baseurl=http://miroir/rpm/almalinux-9/$basearch/` (`/rpm/<distribution>/romulus.repo`) |
 
 ## Recherche, motifs et sécurité
 
