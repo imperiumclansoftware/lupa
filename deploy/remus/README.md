@@ -105,7 +105,8 @@ les fichiers sont dans le volume `/data`.
 
 | Tag | Contenu |
 |---|---|
-| `1.4.0`, `latest` | Extensions VS Code, rôles, double authentification, identifiants UUID, Symfony 8.1.11 |
+| `1.5.0`, `latest` | Ubuntu, Debian 11, Rocky Linux ; dépôts apt et dnf tiers ; distributions personnalisées ; stockage S3 ; vérification d'intégrité ; réglages en onglets ; visites guidées ; Symfony 8.1.12 |
+| `1.4.0` | Extensions VS Code, rôles, double authentification, identifiants UUID, Symfony 8.1.11 |
 | `1.3.1` | Sécurité : PHP 8.4.27 (CVE-2026-109618 et CVE-2026-109619, critiques), FrankenPHP 1.13.2 |
 | `1.3.0` | Paquets Debian et RPM (AlmaLinux, CentOS), Ansible Galaxy, Terraform |
 
