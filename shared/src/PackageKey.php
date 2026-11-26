@@ -26,7 +26,8 @@ final class PackageKey
             Ecosystem::Docker => self::dockerName(strtolower($name)),
             // Provider Terraform sans hôte : registre public (hashicorp/aws = registry.terraform.io/hashicorp/aws)
             Ecosystem::Terraform => 1 === substr_count($name, '/') ? 'registry.terraform.io/'.strtolower($name) : strtolower($name),
-            default => strtolower($name),
+            // Pas de « default » : un nouvel écosystème doit choisir sa normalisation (PHPStan le signale)
+            Ecosystem::Npm, Ecosystem::Composer, Ecosystem::Deb, Ecosystem::Rpm, Ecosystem::Galaxy, Ecosystem::Vscode => strtolower($name),
         };
     }
 
@@ -39,7 +40,7 @@ final class PackageKey
             Ecosystem::Pypi => (string) preg_replace('/(\.0+)+$/', '', strtolower($version)),
             // Époque nulle implicite : « 0:1.2-3 » = « 1.2-3 »
             Ecosystem::Deb, Ecosystem::Rpm => (string) preg_replace('/^0+:/', '', $version),
-            default => $version,
+            Ecosystem::Npm, Ecosystem::Docker, Ecosystem::Galaxy, Ecosystem::Terraform, Ecosystem::Vscode => $version,
         };
     }
 

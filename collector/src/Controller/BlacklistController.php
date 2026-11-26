@@ -72,7 +72,8 @@ final class BlacklistController
             // Debian : [époque:]amont[-révision] ; RPM : [époque:]version-release (release obligatoire)
             Ecosystem::Deb => '/^(\d+:)?\d[A-Za-z0-9.+~-]*$/',
             Ecosystem::Rpm => '/^(\d+:)?[A-Za-z0-9._+~^]+-[A-Za-z0-9._+~^]+$/',
-            default => '/^v?\d+(\.\d+)*([-.+_]?[a-z0-9.+]+)?$/i',
+            // Pas de « default » : un nouvel écosystème doit définir ce qu'est une version précise
+            Ecosystem::Npm, Ecosystem::Pypi => '/^v?\d+(\.\d+)*([-.+_]?[a-z0-9.+]+)?$/i',
         };
         // « ~ » et « ^ » font partie des versions Debian et RPM (1.2~rc1) ; ailleurs ce sont des intervalles
         $ranges = \in_array($ecosystem, [Ecosystem::Deb, Ecosystem::Rpm], true) ? '/[<>=|,*\s]/' : '/(^|\.)[x*](\.|$)|[\^~<>=|,]/i';
@@ -82,7 +83,7 @@ final class BlacklistController
                 Ecosystem::Pypi => '4.2.1',
                 Ecosystem::Deb => '3.0.15-1~deb12u1',
                 Ecosystem::Rpm => '1:3.0.7-27.el9 (version-release complète)',
-                default => '1.2.3',
+                Ecosystem::Npm, Ecosystem::Composer, Ecosystem::Galaxy, Ecosystem::Terraform, Ecosystem::Vscode => '1.2.3',
             });
         }
 
