@@ -3,17 +3,22 @@ import { Pipe, PipeTransform } from '@angular/core';
 export type EcosystemId =
   'npm' | 'pypi' | 'composer' | 'docker' | 'deb' | 'rpm' | 'galaxy' | 'terraform' | 'vscode';
 
-export const ECOSYSTEMS: { id: EcosystemId; label: string; noun: string }[] = [
-  { id: 'npm', label: 'npm', noun: 'paquets npm' },
-  { id: 'pypi', label: 'Python', noun: 'fichiers Python' },
-  { id: 'composer', label: 'Composer', noun: 'paquets Composer' },
-  { id: 'docker', label: 'Docker', noun: 'images Docker' },
-  { id: 'deb', label: 'Debian', noun: 'paquets Debian' },
-  { id: 'rpm', label: 'RPM', noun: 'paquets RPM (AlmaLinux, CentOS)' },
-  { id: 'galaxy', label: 'Ansible', noun: 'collections et rôles Ansible' },
-  { id: 'terraform', label: 'Terraform', noun: 'providers et modules Terraform' },
-  { id: 'vscode', label: 'VS Code', noun: 'extensions VS Code' },
-];
+/** Un libellé par écosystème : TypeScript refuse un EcosystemId oublié (liste comparée à l'enum PHP par tests/ecosystems.test.ts) */
+const ECOSYSTEM_NAMES = {
+  npm: { label: 'npm', noun: 'paquets npm' },
+  pypi: { label: 'Python', noun: 'fichiers Python' },
+  composer: { label: 'Composer', noun: 'paquets Composer' },
+  docker: { label: 'Docker', noun: 'images Docker' },
+  deb: { label: 'Debian', noun: 'paquets Debian' },
+  rpm: { label: 'RPM', noun: 'paquets RPM (AlmaLinux, CentOS)' },
+  galaxy: { label: 'Ansible', noun: 'collections et rôles Ansible' },
+  terraform: { label: 'Terraform', noun: 'providers et modules Terraform' },
+  vscode: { label: 'VS Code', noun: 'extensions VS Code' },
+} satisfies Record<EcosystemId, { label: string; noun: string }>;
+
+export const ECOSYSTEMS: { id: EcosystemId; label: string; noun: string }[] = (
+  Object.keys(ECOSYSTEM_NAMES) as EcosystemId[]
+).map((id) => ({ id, ...ECOSYSTEM_NAMES[id] }));
 
 export function ecosystemLabel(id: string): string {
   return ECOSYSTEMS.find((e) => e.id === id)?.label ?? id;

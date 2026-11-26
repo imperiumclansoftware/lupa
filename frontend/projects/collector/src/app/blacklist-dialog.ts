@@ -120,7 +120,7 @@ export class BlacklistDialog {
         galaxy: '8.2.0',
         terraform: '5.31.0',
         vscode: '1.15.0',
-      } as Record<EcosystemId, string>
+      } satisfies Record<EcosystemId, string>
     )[this.input.ecosystem];
   }
 
@@ -136,7 +136,7 @@ export class BlacklistDialog {
         galaxy: 'community.general',
         terraform: 'hashicorp/aws',
         vscode: 'redhat.vscode-yaml',
-      } as Record<EcosystemId, string>
+      } satisfies Record<EcosystemId, string>
     )[this.input.ecosystem];
   }
 

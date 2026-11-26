@@ -109,17 +109,21 @@ interface Snippet {
 })
 export default class Usage {
   protected readonly m = mirrorBase();
-  protected readonly tabs: { id: EcosystemId; label: string }[] = [
-    { id: 'npm', label: 'npm' },
-    { id: 'pypi', label: 'pip / uv' },
-    { id: 'composer', label: 'Composer' },
-    { id: 'docker', label: 'Docker' },
-    { id: 'galaxy', label: 'Ansible Galaxy' },
-    { id: 'terraform', label: 'Terraform' },
-    { id: 'vscode', label: 'VS Code' },
-    { id: 'deb', label: 'Debian (apt)' },
-    { id: 'rpm', label: 'RPM (dnf, yum)' },
-  ];
+  // Un onglet par écosystème, dans cet ordre : TypeScript refuse un EcosystemId oublié
+  private static readonly TAB_LABELS = {
+    npm: 'npm',
+    pypi: 'pip / uv',
+    composer: 'Composer',
+    docker: 'Docker',
+    galaxy: 'Ansible Galaxy',
+    terraform: 'Terraform',
+    vscode: 'VS Code',
+    deb: 'Debian (apt)',
+    rpm: 'RPM (dnf, yum)',
+  } satisfies Record<EcosystemId, string>;
+  protected readonly tabs: { id: EcosystemId; label: string }[] = Object.entries(
+    Usage.TAB_LABELS,
+  ).map(([id, label]) => ({ id: id as EcosystemId, label }));
   protected readonly tab = signal<EcosystemId>('npm');
   private readonly api = inject(MirrorApi);
   protected readonly distributions = signal<SystemDistribution[]>([]);
