@@ -7,14 +7,7 @@ il télécharge les paquets et toutes leurs dépendances, puis prépare des **bu
 une clé USB. De l'autre côté, son jumeau [**Romulus**](https://hub.docker.com/r/iemperor/romulus) importe
 ces bundles et sert les dépôts aux postes du réseau isolé.
 
-```
- INTERNET                          CLÉ USB                       RÉSEAU ISOLÉ
-┌────────────────────────┐  export  ┌──────────────────┐  import  ┌─────────────────────────────┐
-│ Rémus (cette image)    │ ───────► │ bundle signé     │ ───────► │ Romulus                     │
-│ listes, dépendances,   │          │ sas-….tar        │          │ npm, PyPI, Composer, Docker │
-│ téléchargements vérif. │          │ (découpable)     │          │ pour les postes             │
-└────────────────────────┘          └──────────────────┘          └─────────────────────────────┘
-```
+![Lupa : Rémus collecte sur Internet et produit un bundle signé ; la clé USB le porte jusqu'au réseau isolé, où Romulus le vérifie et sert les dépôts aux postes](https://raw.githubusercontent.com/imperiumclansoftware/lupa/master/docs/lupa-schema-remus.png)
 
 L'image contient l'application complète, avec le front **Angular**, l'API **Symfony** et le worker des
 tâches de fond, servie par **FrankenPHP** sur le port 8080. Elle embarque `npm`, `pip` et `composer`,

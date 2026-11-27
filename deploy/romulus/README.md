@@ -6,14 +6,7 @@ registre **Docker**, des dépôts système **apt** (Debian, Ubuntu) et **dnf/yum
 **Ansible Galaxy**, un miroir **Terraform** (providers, modules, binaire) et une **marketplace d'extensions VS Code**. Son contenu arrive par clé USB, sous forme de **bundles signés** produits par son
 jumeau [**Rémus**](https://hub.docker.com/r/iemperor/remus), le collecteur installé côté Internet.
 
-```
- INTERNET                          CLÉ USB                       RÉSEAU ISOLÉ
-┌────────────────────────┐  export  ┌──────────────────┐  import  ┌─────────────────────────────┐
-│ Rémus                  │ ───────► │ bundle signé     │ ───────► │ Romulus (cette image)       │
-│ listes, dépendances,   │          │ sas-….tar        │          │ npm, PyPI, Composer, Docker │
-│ téléchargements vérif. │          │ (découpable)     │          │ pour les postes             │
-└────────────────────────┘          └──────────────────┘          └─────────────────────────────┘
-```
+![Lupa : Rémus collecte sur Internet et produit un bundle signé ; la clé USB le porte jusqu'au réseau isolé, où Romulus le vérifie et sert les dépôts aux postes](https://raw.githubusercontent.com/imperiumclansoftware/lupa/master/docs/lupa-schema-romulus.png)
 
 Les postes utilisent leurs outils habituels sans rien installer : `npm install`, `pip install`,
 `composer require`, `docker pull`. Il suffit de les faire pointer vers Romulus. Des commandes comme `ng new` ou

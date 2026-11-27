@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>Lupa — schéma de fonctionnement</title>
+<!-- Schéma des présentations Docker Hub : rendu par schema.cjs (?focus=remus|romulus) en docs/lupa-schema-*.png -->
+<style>
+  @font-face { font-family: 'Manrope'; src: url(assets/fonts/manrope-latin-wght-normal.woff2) format('woff2'); font-weight: 200 800; }
+  @font-face { font-family: 'Manrope'; src: url(assets/fonts/manrope-latin-ext-wght-normal.woff2) format('woff2'); font-weight: 200 800; unicode-range: U+0100-024F, U+1E00-1EFF; }
+  @font-face { font-family: 'Cinzel'; src: url(assets/fonts/cinzel-latin-wght-normal.woff2) format('woff2'); font-weight: 400 900; }
+  @font-face { font-family: 'Cinzel'; src: url(assets/fonts/cinzel-latin-ext-wght-normal.woff2) format('woff2'); font-weight: 400 900; unicode-range: U+0100-024F; }
+  @font-face { font-family: 'JetBrains Mono'; src: url(assets/fonts/jetbrains-mono-latin-wght-normal.woff2) format('woff2'); font-weight: 100 800; }
+  :root {
+    --bg: #0f0e0d; --surface: #1a1918; --border: #2e2c2a;
+    --text: #efece8; --text-2: #b3ada6; --text-3: #7d7770;
+    --remus: #e58a5c; --romulus: #6cbf96;
+  }
+  * { box-sizing: border-box; margin: 0; }
+  html, body { width: 1600px; height: 500px; }
+  body {
+    font-family: 'Manrope', sans-serif; color: var(--text); overflow: hidden;
+    background: radial-gradient(900px 520px at 8% -20%, #2a1810 0%, transparent 62%),
+                radial-gradient(900px 520px at 95% 125%, #102a1f 0%, transparent 62%), var(--bg);
+  }
+  .stage { position: relative; display: grid; grid-template-columns: 540px 340px 540px; gap: 34px; padding: 40px 56px 0; justify-content: center; height: 100%; }
+  .zone-label { font-size: 15px; font-weight: 700; letter-spacing: .22em; color: var(--text-3); margin: 0 0 16px 6px; }
+  .zone-label.usb { text-align: center; margin-left: 0; }
+  .card { position: relative; border-radius: 22px; padding: 26px 28px; background: var(--surface); box-shadow: inset 0 0 0 1px var(--border), 0 30px 60px -30px #000; height: 380px; }
+  .card.remus { box-shadow: inset 0 0 0 1px #4a2a1b, 0 30px 60px -30px #000; }
+  .card.romulus { box-shadow: inset 0 0 0 1px #1e4535, 0 30px 60px -30px #000; }
+  .focus .card.remus { box-shadow: inset 0 0 0 2px var(--remus), 0 0 60px -10px #e58a5c55, 0 30px 60px -30px #000; }
+  .focus-romulus .card.romulus { box-shadow: inset 0 0 0 2px var(--romulus), 0 0 60px -10px #6cbf9655, 0 30px 60px -30px #000; }
+  .focus-romulus .card.remus { box-shadow: inset 0 0 0 1px #4a2a1b, 0 30px 60px -30px #000; }
+  .badge { position: absolute; top: -15px; right: 24px; padding: 5px 14px; border-radius: 999px; font-size: 14px; font-weight: 800; color: #140b07; display: none; }
+  .focus-remus .remus .badge { display: block; background: var(--remus); }
+  .focus-romulus .romulus .badge { display: block; background: var(--romulus); }
+  .head { display: flex; align-items: center; gap: 18px; margin-bottom: 20px; }
+  .head h2 { font-family: 'Cinzel', serif; font-size: 40px; font-weight: 700; line-height: 1; }
+  .head p { font-size: 18px; color: var(--text-2); margin-top: 6px; }
+  .remus h2 { color: var(--remus); }
+  .romulus h2 { color: var(--romulus); }
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 20px; }
+  .chip { font-family: 'JetBrains Mono', monospace; font-size: 14.5px; padding: 6px 11px; border-radius: 9px; }
+  .remus .chip { background: #2e1a11; color: #f2b393; }
+  .romulus .chip { background: #12291f; color: #a6dcc0; }
+  ul { list-style: none; padding: 0; display: grid; gap: 11px; }
+  li { display: flex; gap: 11px; align-items: baseline; font-size: 17px; color: var(--text-2); line-height: 1.35; }
+  li::before { content: ''; flex: none; width: 8px; height: 8px; border-radius: 50%; transform: translateY(-2px); }
+  .remus li::before { background: var(--remus); }
+  .romulus li::before { background: var(--romulus); }
+  li b { color: var(--text); font-weight: 700; }
+  .sub { font-size: 13px; font-weight: 700; letter-spacing: .16em; color: var(--text-3); margin: 0 0 9px; }
+
+  /* Frontière : flèches, clé USB, bundle */
+  .middle { position: relative; height: 410px; }
+  .wall { position: absolute; top: 34px; bottom: 0; width: 0; border-left: 2px dashed #3d3a37; }
+  .wall.l { left: 0; } .wall.r { right: 0; }
+  .flow { position: absolute; top: 120px; left: 14px; right: 14px; display: flex; align-items: center; justify-content: space-between; }
+  .arrow { display: flex; flex-direction: column; align-items: center; gap: 6px; font-size: 14px; font-weight: 700; color: var(--text-3); letter-spacing: .08em; }
+  .usb { display: flex; flex-direction: column; align-items: center; gap: 14px; }
+  .bundle { padding: 12px 16px; border-radius: 14px; background: #f2e9df; color: #1b1a18; font-family: 'JetBrains Mono', monospace; font-size: 16px; font-weight: 600; text-align: center; line-height: 1.5; box-shadow: 0 18px 36px -14px #000; }
+  .seal { display: flex; gap: 8px; align-items: center; justify-content: center; padding: 7px 14px; border-radius: 999px; background: #15302a; color: var(--romulus); font-size: 14.5px; font-weight: 700; white-space: nowrap; }
+  .nonet { position: absolute; left: 0; right: 0; bottom: 6px; text-align: center; font-size: 14px; color: var(--text-3); line-height: 1.5; }
+</style>
+</head>
+<body>
+<div class="stage" id="stage">
+  <section>
+    <div class="zone-label">INTERNET</div>
+    <div class="card remus">
+      <span class="badge">cette image</span>
+      <div class="head"><svg width="72" height="72" viewBox="0 0 48 48" data-logo="remus" data-color="#e58a5c"></svg>
+        <div><h2>Rémus</h2><p>le collecteur</p></div></div>
+      <div class="sub">REGISTRES OFFICIELS ET PRIVÉS</div>
+      <div class="chips"><span class="chip">npm</span><span class="chip">PyPI</span><span class="chip">Packagist</span><span class="chip">Docker Hub · OCI</span><span class="chip">apt · dnf</span><span class="chip">Galaxy</span><span class="chip">Terraform</span><span class="chip">VS Code</span></div>
+      <ul>
+        <li><span>Listes, modèles, fichiers de verrouillage et <b>plages de versions</b></span></li>
+        <li><span><b>Toutes les dépendances</b>, résolues par les outils officiels</span></li>
+        <li><span>Sommes et signatures <b>vérifiées</b>, alertes OSV.dev, liste noire</span></li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="middle">
+    <div class="zone-label usb">CLÉ USB</div>
+    <div class="wall l"></div><div class="wall r"></div>
+    <div class="flow">
+      <div class="arrow"><svg width="52" height="26" viewBox="0 0 64 26"><path d="M2 13h56M46 3l12 10-12 10" fill="none" stroke="#e58a5c" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>export</div>
+      <div class="usb">
+        <svg width="54" height="54" viewBox="0 0 24 24" fill="none" stroke="#efece8" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="7" y="9" width="10" height="13" rx="2"/><path d="M9 9V3h6v6M11 5.5h0M13 5.5h0"/></svg>
+        <div class="bundle">bundle signé<br>sas-….tar</div>
+        <div class="seal"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 7"/></svg>Ed25519 · sha256</div>
+      </div>
+      <div class="arrow"><svg width="52" height="26" viewBox="0 0 64 26"><path d="M6 13h56M50 3l12 10-12 10" fill="none" stroke="#6cbf96" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>import</div>
+    </div>
+    <div class="nonet">aucune connexion réseau<br>entre les deux zones</div>
+  </section>
+
+  <section>
+    <div class="zone-label">RÉSEAU ISOLÉ</div>
+    <div class="card romulus">
+      <span class="badge">cette image</span>
+      <div class="head"><svg width="72" height="72" viewBox="0 0 48 48" data-logo="romulus" data-color="#6cbf96"></svg>
+        <div><h2>Romulus</h2><p>le miroir hors ligne</p></div></div>
+      <div class="sub">DÉPÔTS SERVIS AUX POSTES</div>
+      <div class="chips"><span class="chip">npm</span><span class="chip">PyPI</span><span class="chip">Composer</span><span class="chip">Docker</span><span class="chip">apt</span><span class="chip">dnf</span><span class="chip">Galaxy</span><span class="chip">Terraform</span><span class="chip">VS Code</span><span class="chip">Trivy</span></div>
+      <ul>
+        <li><span>N'importe que des bundles <b>signés</b> par un collecteur approuvé</span></li>
+        <li><span>Chaque fichier vérifié, versions interdites en <b>quarantaine</b></span></li>
+        <li><span>Les <b>outils habituels</b> : npm, pip, apt, docker… sans Internet</span></li>
+      </ul>
+    </div>
+  </section>
+</div>
+<script>
+  const LOGOS = {
+    remus: ['M19 40V28h10v12M19 28v-3h3v3M26 28v-3h3v3', 'M8 35Q24 -11 40 35', 'M40 35l1.1-5.9M40 35l-4.5-3.9', 'M6 40h36'],
+    romulus: ['M10 40V20h28v20', 'M10 20v-5h5v5M21.5 20v-5h5v5M33 20v-5h5v5', 'M19 40v-9a5 5 0 0 1 10 0v9', 'M6 40h36'],
+  };
+  for (const svg of document.querySelectorAll('svg[data-logo]')) {
+    svg.setAttribute('fill', 'none');
+    svg.setAttribute('stroke-linecap', 'round');
+    svg.setAttribute('stroke-linejoin', 'round');
+    svg.innerHTML = LOGOS[svg.dataset.logo].map((d) => `<path d="${d}" stroke="${svg.dataset.color}" stroke-width="2.4"/>`).join('');
+  }
+  const focus = new URLSearchParams(location.search).get('focus');
+  if (focus) document.body.classList.add('focus', 'focus-' + focus);
+</script>
+</body>
+</html>
