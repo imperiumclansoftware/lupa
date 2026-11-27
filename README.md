@@ -19,15 +19,9 @@ Images Docker : [`iemperor/remus`](https://hub.docker.com/r/iemperor/remus) et [
 Sources : [github.com/imperiumclansoftware/lupa](https://github.com/imperiumclansoftware/lupa), licence [MIT](LICENSE)
 (le nom technique interne reste `sas` : bundle partagé `sas/bundle`, préfixe des fichiers exportés).
 
-```
- INTERNET                               CLÉ USB                       RÉSEAU ISOLÉ
-┌─────────────────────────┐   export   ┌──────────────────┐  import  ┌──────────────────────────────┐
-│ Rémus (collecteur)      │ ─────────► │ sas-…-000007.tar │ ───────► │ Romulus (miroir)             │
-│ listes, lockfiles       │            │ manifeste signé  │          │ vérifie signature + sha256   │
-│ résolution des dépend.  │            │ + fichiers       │          │ sert npm, PyPI, Composer,    │
-│ téléchargement vérifié  │            │   (sha256)       │          │ Docker aux postes            │
-└─────────────────────────┘            └──────────────────┘          └──────────────────────────────┘
-```
+<p align="center">
+  <img src="docs/lupa-schema.png" width="860" alt="Lupa : Rémus collecte sur Internet et produit un bundle signé ; la clé USB le porte jusqu'au réseau isolé, où Romulus le vérifie et sert les dépôts aux postes">
+</p>
 
 - **Rémus, le collecteur** (`collector/`) : on décrit des **listes** de paquets (saisie libre ou fichier de
   verrouillage : `package-lock.json`, `requirements.txt`, `composer.lock`/`composer.json`), il résout

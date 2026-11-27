@@ -12,6 +12,6 @@ docker run --rm -v "$PWD/promo:/work" lupa-promo node render.cjs stills 10 20 30
 docker run --rm -v "$PWD/promo:/work" lupa-promo node render.cjs video
 ```
 
-Schéma des présentations Docker Hub : `promo/schema.html`, rendu par `node schema.cjs` (même image) en `docs/lupa-schema-remus.png` et `docs/lupa-schema-romulus.png`.
+Schéma de fonctionnement : `promo/schema.html`, rendu par `node schema.cjs` (même image) en `docs/lupa-schema.png` (README du dépôt), `docs/lupa-schema-remus.png` et `docs/lupa-schema-romulus.png` (présentations Docker Hub).
 
 Polices : Manrope, Cinzel et JetBrains Mono, sous licence SIL Open Font License (`assets/fonts/LICENSE-*.txt`).
