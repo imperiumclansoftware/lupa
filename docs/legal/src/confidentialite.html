@@ -13,8 +13,8 @@
   <p class="lead">Données personnelles traitées par Rémus et Romulus, finalités, destinataires, durées de
   conservation et droits des personnes.</p>
   <dl>
-    <dt>Version du document</dt><dd class="version">Version 1.0 — 19 novembre 2026</dd>
-    <dt>S'applique à</dt><dd>Lupa 1.4.0 et versions suivantes</dd>
+    <dt>Version du document</dt><dd class="version">Version 1.1 — 27 novembre 2026</dd>
+    <dt>S'applique à</dt><dd>Lupa 1.7.0 et versions suivantes</dd>
     <dt>Éditeur du logiciel</dt><dd>Imperium Clan Software</dd>
     <dt>Responsable du traitement</dt><dd>L'organisation qui installe et exploite Lupa</dd>
     <dt>Référence</dt><dd>Règlement (UE) 2016/679 (RGPD) et loi Informatique et Libertés</dd>
@@ -50,13 +50,14 @@ des utilisateurs et la <strong>traçabilité</strong> de leurs accès.</p></div>
 <h2 id="donnees">2. Données traitées</h2>
 <table>
   <tr><th style="width:24%">Catégorie</th><th style="width:38%">Données</th><th>Où</th></tr>
-  <tr><td>Compte</td><td>Identifiant, rôle (lecteur, opérateur, administrateur), empreinte Argon2id du mot de passe (jamais le mot de passe lui-même)</td><td>Base SQLite de Rémus ou de Romulus</td></tr>
+  <tr><td>Compte</td><td>Identifiant, rôle (lecteur, opérateur, administrateur), empreinte Argon2id du mot de passe (jamais le mot de passe lui-même), visites guidées déjà vues (pour ne pas les reproposer)</td><td>Base SQLite de Rémus ou de Romulus</td></tr>
   <tr><td>Double authentification (facultative)</td><td>Secret TOTP, empreintes SHA-256 des codes de secours non utilisés</td><td>Base SQLite</td></tr>
   <tr><td>Session</td><td>Identifiant de session aléatoire, jeton anti-CSRF</td><td>Cookies du navigateur, fichiers de session du serveur</td></tr>
   <tr><td>Journal d'audit</td><td>Date, identifiant, adresse IP, chemin demandé, événement (connexion réussie ou refusée, déconnexion, changement de mot de passe ou de rôle, double authentification, approbation d'un collecteur…)</td><td>Sortie standard du conteneur (format JSON), collectée selon la configuration de l'exploitant</td></tr>
   <tr><td>Journal d'accès HTTP</td><td>Date, adresse IP du client, méthode, adresse demandée, code de réponse, taille</td><td>Sortie standard du conteneur (serveur web intégré)</td></tr>
   <tr><td>Historique des tâches</td><td>Titre, étapes et messages des mises à jour, exports et imports ; il ne contient pas d'identifiant d'utilisateur</td><td>Base SQLite</td></tr>
   <tr><td>Dépôts privés (Rémus)</td><td>Identifiant et mot de passe ou jeton d'accès à un registre d'entreprise, saisis par un administrateur</td><td>Base SQLite, chiffrés (XSalsa20-Poly1305) ; jamais réaffichés</td></tr>
+  <tr><td>Stockage S3 (facultatif)</td><td>Adresse du service, compartiment, identifiant et clé secrète d'accès, saisis par un administrateur</td><td>Base SQLite, clé secrète chiffrée (XSalsa20-Poly1305) ; jamais réaffichée</td></tr>
 </table>
 <p>Aucune donnée sensible au sens de l'article 9 du RGPD n'est traitée. Les adresses e-mail ne sont pas
 demandées.</p>
@@ -127,8 +128,8 @@ serveurs de l'organisation. Seul Rémus, côté Internet, contacte des services 
 techniques : noms et versions de paquets, adresse IP du serveur, et, à la création d'un compte ou au changement de
 mot de passe, les 5 premiers caractères de l'empreinte SHA-1 du mot de passe (le mot de passe ne sort jamais).
 Les bundles transportés par clé USB ne contiennent ni compte ni journal, seulement des paquets, la liste noire et
-l'identité publique du collecteur. Romulus n'établit aucune connexion vers l'extérieur. L'éditeur du logiciel ne
-reçoit aucune donnée.</figcaption>
+l'identité publique du collecteur. Romulus n'établit aucune connexion hors de la zone isolée (son stockage S3
+éventuel s'y trouve). L'éditeur du logiciel ne reçoit aucune donnée.</figcaption>
 </figure>
 
 <h2 id="finalites">4. Finalités et bases légales</h2>
@@ -138,17 +139,23 @@ reçoit aucune donnée.</figcaption>
   <tr><td>Détecter les intrusions et retracer les actions sensibles</td><td>Journal d'audit, journal d'accès</td><td>Intérêt légitime : sécurité du système d'information</td></tr>
   <tr><td>Refuser les mots de passe connus des attaquants (Rémus)</td><td>5 caractères de l'empreinte SHA-1, au moment de la saisie</td><td>Intérêt légitime : sécurité des comptes</td></tr>
   <tr><td>Accéder aux registres privés de l'organisation (Rémus)</td><td>Identifiants des dépôts privés</td><td>Intérêt légitime de l'organisation</td></tr>
+  <tr><td>Ranger les fichiers des paquets dans un stockage S3 (facultatif)</td><td>Identifiants du stockage S3</td><td>Intérêt légitime de l'organisation</td></tr>
+  <tr><td>Ne pas reproposer une visite guidée déjà vue</td><td>Liste des visites vues, dans le compte</td><td>Intérêt légitime : confort d'utilisation</td></tr>
 </table>
 <p>Aucune donnée n'est utilisée à des fins de profilage, de publicité ou de décision automatisée.</p>
 
 <h2 id="tiers">5. Services tiers contactés par Rémus</h2>
 <ul>
-  <li><strong>Registres de paquets</strong> (npm, PyPI, Packagist, Docker Hub et autres registres OCI, Debian, Ubuntu,
-  AlmaLinux, Rocky Linux, CentOS, Ansible Galaxy, registre Terraform, GitHub, Open VSX, Visual Studio Marketplace, et les
-  dépôts privés configurés) : ils reçoivent l'adresse IP du serveur Rémus, son agent
+  <li><strong>Registres de paquets</strong> (npm, PyPI, Packagist, Docker Hub et autres registres OCI dont ghcr.io pour
+  les bases Trivy, Debian, Ubuntu, AlmaLinux, Rocky Linux, CentOS, Ansible Galaxy, registre Terraform, GitHub, Open VSX,
+  Visual Studio Marketplace, les dépôts apt et dnf tiers et distributions personnalisées déclarés par un administrateur,
+  et les dépôts privés configurés) : ils reçoivent l'adresse IP du serveur Rémus, son agent
   <code>Sas-Collecteur/1.0</code>, les noms des paquets demandés et, pour les dépôts privés ou Docker Hub, les
   identifiants fournis par l'exploitant.</li>
   <li><strong>OSV.dev</strong> (Google) : noms et versions des paquets npm, Python et Composer analysés.</li>
+  <li><strong>Stockage S3</strong> (facultatif, Rémus et Romulus) : service choisi par l'exploitant (AWS, MinIO,
+  Ceph, Garage…) ; il reçoit les fichiers des paquets et les identifiants d'accès fournis par l'exploitant, sans
+  donnée relative aux utilisateurs. Celui de Romulus se trouve dans la zone isolée.</li>
   <li><strong>Have I Been Pwned</strong> : lorsqu'un mot de passe est choisi sur Rémus, seuls les 5 premiers
   caractères hexadécimaux de son empreinte SHA-1 sont transmis (méthode dite des « k-anonymes ») ; le service
   renvoie les empreintes commençant ainsi et la comparaison a lieu sur le serveur. Romulus, hors ligne, ne fait pas
@@ -182,7 +189,7 @@ Lupa ne dépose aucun cookie de mesure d'audience ou de publicité et n'utilise 
 <h2 id="securite">8. Sécurité des données</h2>
 <p>Mots de passe hachés avec Argon2id, double authentification facultative, sessions protégées (HttpOnly,
 SameSite=Strict, jeton anti-CSRF), limitation des tentatives de connexion, rôles avec refus par défaut, secrets des
-dépôts privés chiffrés, journaux expurgés des mots de passe et jetons, conteneurs sans privilège. Le détail figure
+dépôts privés et du stockage S3 chiffrés, journaux expurgés des mots de passe et jetons, conteneurs sans privilège. Le détail figure
 dans la politique de sécurité ; ses limites (HTTP par défaut, base non chiffrée sur disque) y sont décrites avec
 les mesures à prendre par l'exploitant.</p>
 

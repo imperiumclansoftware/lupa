@@ -13,8 +13,8 @@
   <p class="lead">Pile logicielle, mécanismes de sécurité mis en œuvre dans le code, et failles ou risques
   résiduels classés par criticité, avec les risques encourus et les mesures recommandées.</p>
   <dl>
-    <dt>Version du document</dt><dd class="version">Version 1.0 — 19 novembre 2026</dd>
-    <dt>État du code</dt><dd>Lupa 1.4.0 (Symfony 8.1.11, PHP 8.4.27, Angular 22.2)</dd>
+    <dt>Version du document</dt><dd class="version">Version 1.1 — 27 novembre 2026</dd>
+    <dt>État du code</dt><dd>Lupa 1.7.0 (Symfony 8.1.12, PHP 8.4.27, Angular 22.2)</dd>
     <dt>Éditeur</dt><dd>Imperium Clan Software</dd>
     <dt>Public</dt><dd>Administrateurs, responsable de la sécurité, auditeurs</dd>
     <dt>Documents liés</dt><dd>Politique de sécurité ; décisions d'architecture (docs/adr du dépôt)</dd>
@@ -100,11 +100,12 @@ et sessions. Un worker exécute les tâches longues. Seule l'image de Rémus emb
 <table>
   <tr><th style="width:30%">Composant</th><th style="width:18%">Version</th><th>Rôle</th></tr>
   <tr><td>PHP / FrankenPHP (Caddy)</td><td>8.4.27 / 1.13.5</td><td>Exécution de l'application, serveur HTTP, en-têtes</td></tr>
-  <tr><td>Symfony (FrameworkBundle, SecurityBundle, Messenger, HttpClient, Lock, RateLimiter)</td><td>8.1.11</td><td>Cadre applicatif, authentification, tâches de fond, verrous, limitation</td></tr>
+  <tr><td>Symfony (FrameworkBundle, SecurityBundle, Messenger, HttpClient, Lock, RateLimiter)</td><td>8.1.12</td><td>Cadre applicatif, authentification, tâches de fond, verrous, limitation</td></tr>
   <tr><td>Doctrine ORM / DBAL / Migrations</td><td>3.8.0 / 4.6.0 / 4.0</td><td>Persistance SQLite, requêtes paramétrées, migrations de schéma</td></tr>
   <tr><td>scheb/2fa-bundle, -totp, -backup-code ; spomky-labs/otphp</td><td>8.7.0 ; 11.5.1</td><td>Double authentification TOTP et codes de secours</td></tr>
   <tr><td>libsodium (extension PHP)</td><td>intégrée à PHP</td><td>Argon2id, Ed25519, XSalsa20-Poly1305, BLAKE2b</td></tr>
   <tr><td>composer/semver ; bacon/bacon-qr-code ; Monolog</td><td>3.6 ; 3.1 ; 3.13</td><td>Contraintes de versions ; QR code ; journaux</td></tr>
+  <tr><td>async-aws/s3</td><td>3.5</td><td>Stockage S3 facultatif (envoi avec contrôle d'empreinte SHA-256)</td></tr>
   <tr><td>Angular, TypeScript, RxJS</td><td>22.2, 6.0, 7.8</td><td>Interface (mode zoneless, signaux)</td></tr>
   <tr><td>Outils de Rémus</td><td>Node 24 (npm), pip 26.3, Composer 2, gpgv</td><td>Résolution des dépendances, vérification GPG des dépôts</td></tr>
   <tr><td>Outillage qualité (CI)</td><td>PHPStan 2.3, PHPUnit 13.4, PHP-CS-Fixer 3.95, ESLint 10, Semgrep, gitleaks, Trivy</td><td>Analyse statique, tests, style, SAST, secrets, images</td></tr>
@@ -171,8 +172,8 @@ de session est renouvelé et chaque requête d'écriture doit présenter le jeto
   <li><strong>Refus par défaut</strong> : <code>access_control</code> exige un rôle sur toute l'API ; seules la
   connexion, la session et l'installation sont publiques.</li>
   <li><strong>Hiérarchie</strong> : lecteur &lt; opérateur &lt; administrateur. Toute écriture sur l'API exige au
-  moins le rôle opérateur ; les comptes, réglages, liste noire, dépôts sources, suppression de listes, clés de
-  confiance et l'approbation d'un collecteur exigent le rôle administrateur (<code>#[IsGranted]</code>).</li>
+  moins le rôle opérateur ; les comptes, réglages, liste noire, dépôts sources, distributions personnalisées, stockage S3,
+  suppression de listes, clés de confiance et l'approbation d'un collecteur exigent le rôle administrateur (<code>#[IsGranted]</code>).</li>
   <li><strong>Garde-fous</strong> : un administrateur ne modifie ni son propre rôle ni ne supprime son compte ; il
   reste toujours au moins un administrateur.</li>
   <li><strong>Tests</strong> : chaque action d'écriture est essayée avec les trois rôles dans les tests fonctionnels.</li>
@@ -200,7 +201,7 @@ de session est renouvelé et chaque requête d'écriture doit présenter le jeto
   <tr><td>npm</td><td>Empreinte <code>integrity</code> (SHA-512) publiée par le registre</td></tr>
   <tr><td>PyPI</td><td>SHA-256 publié ; roues binaires seulement (<code>--only-binary</code>), sources téléchargées sans être construites</td></tr>
   <tr><td>Composer</td><td><code>shasum</code> quand Packagist le fournit</td></tr>
-  <tr><td>Docker / OCI</td><td>Digest SHA-256 de chaque manifeste et couche</td></tr>
+  <tr><td>Docker / OCI</td><td>Digest SHA-256 de chaque manifeste et couche, pour les images comme pour les artefacts OCI (bases Trivy, contrôles de configuration)</td></tr>
   <tr><td>Debian, Ubuntu, AlmaLinux, Rocky Linux, CentOS</td><td>Index acceptés seulement avec une signature valide (gpgv, clés livrées avec l'image) ; SHA-256 de chaque paquet</td></tr>
   <tr><td>Stockage S3</td><td>Empreinte SHA-256 de chaque fichier vérifiée par le serveur S3 à l'envoi (x-amz-checksum-sha256) ; clé secrète chiffrée en base (libsodium), jamais renvoyée par l'API ; réglages réservés aux administrateurs ; migration basculée seulement sans erreur</td></tr>
   <tr><td>Dépôts apt et dnf tiers, distributions personnalisées</td><td>Index vérifié avec la clé publique saisie par l'administrateur (empreinte affichée) ; dnf sans index signé : signature OpenPGP de chaque paquet exigée, paquet refusé et supprimé sinon ; SHA-256 de chaque paquet</td></tr>
@@ -211,6 +212,11 @@ de session est renouvelé et chaque requête d'écriture doit présenter le jeto
 <p>Les outils tiers ne lancent aucun script d'installation : npm avec <code>--ignore-scripts</code>, Composer avec
 <code>--no-scripts --no-plugins</code>. Exception : les <strong>modèles de framework</strong> exécutent le générateur
 officiel (Angular CLI, Nest CLI), voir le risque R4.</p>
+<p><strong>Plages de versions</strong> (<code>[toutes]</code>) : chaque version est résolue séparément, avec les
+mêmes contrôles ; une version dont la résolution échoue est écartée et signalée dans le journal de la tâche, jamais
+collectée partiellement. <strong>Vérification d'intégrité</strong> (Rémus, Réglages › Intégrité) : chaque fichier
+du stockage est recontrôlé (présence, taille, SHA-256) ; un fichier abîmé est mis de côté et le paquet retéléchargé,
+empreinte vérifiée, avec un rapport par paquet.</p>
 
 <h3>5.2 À l'import (Romulus)</h3>
 <figure>
@@ -251,6 +257,7 @@ exactement ce que Rémus produit.</p>
   <tr><td>Clé de signature de Rémus</td><td>Ed25519, créée au premier démarrage, fichier <code>identity/secret.key</code> écrit avec un masque 077 dans le volume ; réinstallation possible avec <code>REMUS_SIGNING_KEY</code>.</td></tr>
   <tr><td>Clé de signature des dépôts apt de Romulus</td><td>OpenPGP Ed25519 générée par Romulus, fichier en mode 0600 ; les postes vérifient les index avec la clé publique.</td></tr>
   <tr><td>Identifiants des dépôts privés</td><td>Chiffrés avec <code>sodium_crypto_secretbox</code> (XSalsa20-Poly1305), clé dérivée par BLAKE2b de la clé de Rémus ; jamais renvoyés par l'API.</td></tr>
+  <tr><td>Identifiants du stockage S3</td><td>Clé secrète chiffrée de la même façon (clé dérivée de la clé de Rémus sur Rémus, du secret de l'application sur Romulus) ; jamais renvoyée par l'API ; réglages réservés aux administrateurs.</td></tr>
   <tr><td>Secret de l'application</td><td>Généré au premier démarrage et conservé dans le volume, ou fourni par fichier (Docker secrets).</td></tr>
   <tr><td>Secrets TOTP</td><td>En base, non chiffrés (voir R8).</td></tr>
   <tr><td>Dépôt de code</td><td>Aucun secret versionné (gitleaks bloquant en CI) ; fichiers <code>.env</code> limités aux valeurs par défaut.</td></tr>
@@ -268,7 +275,7 @@ exactement ce que Rémus produit.</p>
   <li><strong>Mises à jour</strong> : images Alpine mises à jour à la construction (<code>apk upgrade</code>) ;
   Dependabot hebdomadaire avec délai de sept jours pour les nouvelles versions.</li>
   <li><strong>Intégration continue</strong> (bloquante) : PHPStan au niveau maximal avec ligne de base, PHP-CS-Fixer,
-  PHPUnit (≈ 200 tests dont contrôle d'accès par rôle, contrat du bundle, rollback d'export), ESLint avec règles de
+  PHPUnit (≈ 250 tests dont contrôle d'accès par rôle, contrat du bundle, rollback d'export), ESLint avec règles de
   sécurité, Prettier, <code>composer audit</code>, <code>npm audit</code>, Semgrep (PHP, TypeScript, OWASP Top 10),
   gitleaks, Trivy sur les images (HIGH et CRITICAL corrigibles) ; actions GitHub épinglées par empreinte de commit.</li>
   <li><strong>Décisions</strong> : chaque écart assumé aux règles de sécurité est documenté dans un ADR (docs/adr).</li>
@@ -313,7 +320,7 @@ l'exploitant. La criticité combine l'impact et la probabilité dans un déploie
   <rect x="315" y="215" width="210" height="45" fill="#dfe3e6"/>
   <rect x="525" y="215" width="220" height="45" fill="#f2d48a"/>
   <g font-weight="bold" font-size="12">
-    <text x="210" y="57" text-anchor="middle" fill="#fff">R3</text>
+    <text x="210" y="57" text-anchor="middle" fill="#fff">R3 · R18</text>
     <text x="420" y="57" text-anchor="middle" fill="#fff">R1 · R2</text>
     <text x="420" y="122" text-anchor="middle">R4 · R5</text>
     <text x="210" y="122" text-anchor="middle">R6</text>
@@ -332,7 +339,8 @@ l'exploitant. La criticité combine l'impact et la probabilité dans un déploie
 ses conséquences (verticale) et sa probabilité dans un déploiement documenté (horizontale) ; la couleur de la case
 donne la criticité. Les deux risques les plus importants (R1, R2) ne tiennent pas à un défaut du code mais à la
 nature de la fonction (faire entrer des logiciels tiers) et à la configuration réseau par défaut ; R3, d'impact
-maximal, reste peu probable si le serveur Rémus est protégé. Les fiches suivantes détaillent chaque risque.</figcaption>
+maximal, reste peu probable si le serveur Rémus est protégé ; R18, de même gravité, ne concerne que les déploiements
+de Romulus avec un stockage S3. Les fiches suivantes détaillent chaque risque.</figcaption>
 </figure>
 
 <div class="risk"><h3>R1 — Paquet malveillant ou compromis collecté et servi <span class="lvl elevee">Élevée</span></h3>
@@ -341,14 +349,13 @@ maximal, reste peu probable si le serveur Rémus est protégé. Les fiches suiva
 mais pas qu'ils sont sains. Aucun antivirus ni analyse comportementale n'est appliqué ; les alertes OSV.dev ne
 couvrent que les vulnérabilités connues de npm, Python et Composer.</p>
 <p><strong>Scénario.</strong> Un attaquant publie une version piégée d'un paquet populaire (compte de mainteneur
-volé, typosquattage, dépendance confuse). Une liste en contrainte large la collecte ; elle est exportée et installée
+volé, typosquattage, dépendance confuse, dépôt tiers compromis). Une liste en contrainte large ou une plage <code>[toutes]</code> la collecte ; elle est exportée et installée
 par les postes du réseau isolé, où son code s'exécute (scripts d'installation npm, setup.py, conteneur Docker…).</p>
 <p><strong>Risques encourus.</strong> Exécution de code sur les postes ou serveurs du réseau isolé, vol de données,
 porte dérobée persistante : exactement ce que l'isolement devait empêcher.</p>
-<p><strong>En place.</strong> Sommes et signatures des registres, liste noire et quarantaine propagées par bundle,
-alertes OSV, historique des exports. <strong>Recommandé.</strong> Versions précises pour les projets sensibles,
+<p><strong>En place.</strong> Sommes et signatures des registres, liste noire et quarantaine propagées par bundle, alertes OSV, historique des exports ; bases Trivy collectables et servies par Romulus pour analyser images et projets sur le réseau isolé. <strong>Recommandé.</strong> Versions précises pour les projets sensibles,
 délai avant de collecter une version toute récente, revue de la page Sécurité avant export, analyse antivirale et
-scanner d'images (Trivy, Grype) sur les bundles à l'entrée de la zone isolée.</p></div>
+analyse Trivy des images et projets sur le réseau isolé, avec les bases tenues à jour à chaque transport ; vérification de l'empreinte de la clé de tout dépôt tiers déclaré.</p></div>
 
 <div class="risk"><h3>R2 — Interfaces et registres servis en HTTP par défaut <span class="lvl elevee">Élevée</span></h3>
 <p class="meta">Impact critique · probabilité moyenne · configuration (ADR 0002)</p>
@@ -412,14 +419,12 @@ ou clé TOTP matérielle), mots de passe longs et uniques.</p></div>
 <p><strong>Description.</strong> Les alertes ne concernent ni Docker, ni Debian/RPM, ni Ansible, Terraform ou VS Code ;
 un paquet déjà exporté garde sur Romulus les alertes connues au moment de son export.
 <strong>Risques encourus.</strong> Fausse impression de sûreté ; une faille publiée après l'export n'apparaît pas
-sur Romulus. <strong>Recommandé.</strong> Export complet périodique ; consulter Rémus, à jour, avant de décider ;
-scanner dédié pour les images et paquets système. Une transmission incrémentale des alertes est à l'étude.</p></div>
+sur Romulus. <strong>Recommandé.</strong> Export complet périodique ; consulter Rémus, à jour, avant de décider ; pour les images et paquets système, Trivy hors ligne sur le réseau isolé, ses bases collectées par Rémus (liste prédéfinie) et servies par Romulus. Une transmission incrémentale des alertes est à l'étude.</p></div>
 
 <div class="risk"><h3>R8 — Données au repos non chiffrées <span class="lvl faible">Faible</span></h3>
 <p class="meta">Impact important · probabilité faible</p>
-<p>Base SQLite (dont les secrets TOTP), clés et fichiers sont en clair dans le volume, protégés par les droits du
-système. Quiconque lit le disque ou une sauvegarde obtient ces éléments (pas les mots de passe, hachés).
-<strong>Recommandé.</strong> Chiffrement du disque et des sauvegardes.</p></div>
+<p>Base SQLite (dont les secrets TOTP), clés et fichiers sont en clair dans le volume (ou, pour les fichiers, dans le compartiment S3), protégés par les droits du système ou du service S3. Quiconque lit le disque ou une sauvegarde obtient ces éléments (pas les mots de passe, hachés).
+<strong>Recommandé.</strong> Chiffrement du disque, des sauvegardes et, côté serveur, du compartiment S3.</p></div>
 
 <div class="risk"><h3>R9 — Journaux non conservés par l'application <span class="lvl faible">Faible</span></h3>
 <p class="meta">Impact limité · probabilité moyenne</p>
@@ -476,16 +481,35 @@ l'éditeur signale comme une installation modifiée et qu'une mise à jour annul
 vers la galerie publique, inaccessible depuis le réseau isolé. <strong>Recommandé.</strong> Préférer VSCodium ou
 code-server, configurés par variables d'environnement, ou automatiser la modification.</p></div>
 
+<div class="risk"><h3>R18 — Fichiers servis depuis un stockage S3 sans nouvelle vérification <span class="lvl elevee">Élevée</span></h3>
+<p class="meta">Impact critique · probabilité faible · seulement si le stockage S3 est activé sur Romulus</p>
+<p><strong>Description.</strong> Romulus vérifie l'empreinte de chaque fichier à l'import, puis le sert tel qu'il
+le relit dans son stockage, sans recalculer l'empreinte. Sur disque, le fichier est protégé par les droits du
+volume ; dans un compartiment S3, il l'est par les identifiants et les politiques d'accès du service.</p>
+<p><strong>Scénario.</strong> Une personne ou un service qui dispose d'un accès en écriture au compartiment (identifiants
+S3 réutilisés, politique trop large, console d'administration du stockage compromise) remplace un fichier par une
+version piégée ; Romulus la sert aux postes.</p>
+<p><strong>Risques encourus.</strong> Installation de logiciels modifiés dans le réseau isolé, sans passer par la
+signature des bundles. npm, pip, apt, RPM et Docker détectent l'écart, car Romulus leur annonce l'empreinte
+enregistrée dans sa base ; Composer (sans somme annoncée), les autres registres et les fichiers téléchargés
+directement peuvent ne pas le détecter.</p>
+<p><strong>En place.</strong> Empreinte vérifiée par le serveur S3 à l'envoi ; identifiants chiffrés et réservés aux
+administrateurs ; noms des objets égaux à leur empreinte SHA-256. <strong>Recommandé.</strong> Compartiment dédié
+dans la zone isolée, identifiants propres à Romulus, seul autorisé à écrire ; versionnage ou verrouillage des objets
+si le service le permet ; journaux d'accès du stockage surveillés ; en cas de doute, compartiment neuf et réimport
+d'un export complet (politique de sécurité, section 6). Une vérification d'empreinte à la lecture est à l'étude.</p></div>
+
 <h2 id="synthese">9. Synthèse des recommandations</h2>
 <table>
   <tr><th style="width:8%">Priorité</th><th>Mesure</th><th style="width:18%">Risques</th></tr>
   <tr><td>1</td><td>HTTPS devant Rémus et Romulus (PKI interne), <code>PUBLIC_URL</code>, <code>TRUSTED_PROXIES</code></td><td>R2</td></tr>
-  <tr><td>2</td><td>Analyse antivirale et scanner d'images des bundles à l'entrée de la zone isolée ; versions précises pour les projets sensibles</td><td>R1, R7</td></tr>
+  <tr><td>2</td><td>Analyse antivirale des bundles à l'entrée de la zone isolée ; analyse Trivy hors ligne avec les bases collectées par Rémus ; versions précises pour les projets sensibles</td><td>R1, R7</td></tr>
   <tr><td>3</td><td>Serveur Rémus dédié et durci ; sauvegarde chiffrée de la clé ; procédure de révocation testée</td><td>R3, R4</td></tr>
   <tr><td>4</td><td>Double authentification pour tous les administrateurs</td><td>R6</td></tr>
   <tr><td>5</td><td>Filtrage réseau de l'accès à Romulus</td><td>R5, R2</td></tr>
   <tr><td>6</td><td>Collecte et conservation des journaux, alertes</td><td>R9</td></tr>
   <tr><td>7</td><td>Chiffrement des disques et des sauvegardes</td><td>R8</td></tr>
+  <tr><td>8</td><td>Stockage S3 : compartiment dédié, écriture réservée à l'application, versionnage, journaux d'accès</td><td>R18, R8</td></tr>
 </table>
 
 </body>

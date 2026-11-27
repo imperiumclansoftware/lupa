@@ -13,8 +13,8 @@
   <p class="lead">Règles d'usage du logiciel Lupa, de son collecteur Rémus et de son miroir hors ligne Romulus,
   et partage des responsabilités entre l'éditeur, l'organisation qui l'exploite et ses utilisateurs.</p>
   <dl>
-    <dt>Version du document</dt><dd class="version">Version 1.0 — 19 novembre 2026</dd>
-    <dt>S'applique à</dt><dd>Lupa 1.4.0 et versions suivantes</dd>
+    <dt>Version du document</dt><dd class="version">Version 1.1 — 27 novembre 2026</dd>
+    <dt>S'applique à</dt><dd>Lupa 1.7.0 et versions suivantes</dd>
     <dt>Éditeur</dt><dd>Imperium Clan Software</dd>
     <dt>Code source</dt><dd>github.com/imperiumclansoftware/lupa (licence MIT)</dd>
     <dt>Contact</dt><dd>Tickets du dépôt GitHub ; failles de sécurité : « Security advisories » du dépôt</dd>
@@ -131,6 +131,10 @@ utilisateurs s'en servent dans les limites de leur rôle.</figcaption>
   Rémus ;</li>
   <li>décide des paquets collectés et s'assure que leur usage respecte leurs licences et les conditions des
   registres dont ils proviennent (section 6) ;</li>
+  <li>ne déclare un dépôt apt ou dnf tiers, ou une distribution personnalisée, qu'après avoir vérifié l'empreinte
+  de sa clé publique auprès de son éditeur ;</li>
+  <li>s'il utilise un stockage S3, en réserve l'écriture à l'application qui l'utilise, et place celui de Romulus
+  dans la zone isolée ;</li>
   <li>place Rémus et Romulus derrière un accès HTTPS dès que le réseau n'est pas entièrement maîtrisé ;</li>
   <li>informe ses utilisateurs du traitement de leurs données (politique de confidentialité) et applique la
   politique de sécurité.</li>
@@ -154,21 +158,26 @@ utilisateurs s'en servent dans les limites de leur rôle.</figcaption>
 ces licences ni ces conditions, et ne confère aucun droit sur ces contenus.</p>
 <table>
   <tr><th style="width:32%">Source</th><th>Points d'attention</th></tr>
-  <tr><td>npm, PyPI, Packagist, Ansible Galaxy, Open VSX</td><td>Chaque paquet conserve sa licence (MIT, Apache, GPL…). Les registres peuvent limiter le débit des téléchargements.</td></tr>
+  <tr><td>npm, PyPI, Packagist, Ansible Galaxy, Open VSX</td><td>Chaque paquet conserve sa licence (MIT, Apache, GPL…). Les registres peuvent limiter le débit des téléchargements, que les plages de versions <code>[toutes]</code> multiplient.</td></tr>
   <tr><td>Docker Hub et registres OCI</td><td>Limites de débit des comptes anonymes ; certaines images ont des conditions propres (images commerciales, couches « non redistribuables » de Windows, ignorées par Rémus).</td></tr>
   <tr><td>Debian, Ubuntu, AlmaLinux, Rocky Linux, CentOS</td><td>Paquets libres sous leurs licences respectives ; les index ne sont acceptés qu'avec une signature valide de la distribution.</td></tr>
+  <tr><td>Dépôts apt et dnf tiers, distributions personnalisées</td><td>Paquets sous les licences et conditions de leurs éditeurs (Docker CE, PostgreSQL, EPEL…) ; la confiance repose sur la clé publique déclarée par l'administrateur.</td></tr>
+  <tr><td>Bases Trivy (Aqua Security)</td><td>Bases de vulnérabilités et contrôles de configuration, collectés comme artefacts OCI sur ghcr.io. Trivy est sous licence Apache 2.0 ; les données proviennent de sources tierces (NVD, avis des éditeurs et des distributions…) qui ont leurs propres conditions.</td></tr>
   <tr><td>Registre Terraform, HashiCorp</td><td>Les providers ont leur propre licence ; le binaire <code>terraform</code> des versions récentes est publié sous Business Source License, qui encadre certains usages commerciaux.</td></tr>
   <tr><td>Visual Studio Marketplace (Microsoft)</td><td>Ses conditions réservent l'usage des extensions aux produits Visual Studio de Microsoft. L'exploitant qui active cette source s'assure que son usage les respecte (par exemple, VS Code de Microsoft sur les postes). Open VSX, source par défaut, n'a pas cette restriction.</td></tr>
   <tr><td>OSV.dev, Have I Been Pwned</td><td>Services publics consultés par Rémus pour les alertes de sécurité et les mots de passe divulgués (voir la politique de confidentialité).</td></tr>
+  <tr><td>Stockage S3 (AWS, MinIO, Ceph, Garage…)</td><td>Facultatif : conditions, tarification et localisation des données du fournisseur choisi par l'exploitant.</td></tr>
 </table>
 
 <h2 id="securite">7. Sécurité des paquets collectés</h2>
 <p>Lupa garantit que les fichiers servis par Romulus sont <strong>identiques</strong> à ceux que Rémus a
-téléchargés et vérifiés (sommes de contrôle des registres, signature des bundles). Il ne garantit pas que ces
+téléchargés et vérifiés (sommes de contrôle des registres, signature des bundles), à condition, avec un stockage
+S3, que seul Romulus puisse écrire dans son compartiment. Il ne garantit pas que ces
 paquets sont <strong>sûrs</strong> :</p>
 <ul>
   <li>les alertes de vulnérabilités (OSV.dev) sont indicatives, limitées à npm, Python et Composer, et figées pour
-  un paquet au moment de son export ;</li>
+  un paquet au moment de son export ; pour les images et les paquets système, l'exploitant peut collecter les bases
+  Trivy et analyser sur le réseau isolé, avec des bases aussi récentes que le dernier transport ;</li>
   <li>aucun antivirus ni analyse de code malveillant n'est appliqué aux paquets ;</li>
   <li>une version compromise publiée par son auteur ou par un attaquant est collectée comme les autres si elle
   est demandée.</li>

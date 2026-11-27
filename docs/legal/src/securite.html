@@ -14,11 +14,11 @@
   déploiement de Lupa. Les mécanismes techniques et les risques résiduels sont détaillés dans la politique de
   sécurité détaillée.</p>
   <dl>
-    <dt>Version du document</dt><dd class="version">Version 1.0 — 19 novembre 2026</dd>
-    <dt>S'applique à</dt><dd>Lupa 1.4.0 et versions suivantes</dd>
+    <dt>Version du document</dt><dd class="version">Version 1.1 — 27 novembre 2026</dd>
+    <dt>S'applique à</dt><dd>Lupa 1.7.0 et versions suivantes</dd>
     <dt>Éditeur</dt><dd>Imperium Clan Software</dd>
     <dt>Public</dt><dd>Administrateurs de Rémus et de Romulus, responsable de la sécurité de l'organisation</dd>
-    <dt>Révision</dt><dd>Annuelle, et à chaque version majeure de Lupa</dd>
+    <dt>Révision</dt><dd>Annuelle, et à chaque version de Lupa</dd>
   </dl>
 </section>
 
@@ -45,11 +45,11 @@ qui relèvent des politiques générales de l'organisation.</p>
 <h2 id="principes">2. Principes</h2>
 <table>
   <tr><th style="width:30%">Principe</th><th>Application dans Lupa</th></tr>
-  <tr><td><strong>Séparation des zones</strong></td><td>Aucune connexion réseau entre Rémus et Romulus ; le seul lien est un support amovible. Romulus n'a aucun accès sortant.</td></tr>
+  <tr><td><strong>Séparation des zones</strong></td><td>Aucune connexion réseau entre Rémus et Romulus ; le seul lien est un support amovible. Romulus n'a aucun accès sortant hors de la zone isolée (son stockage S3 éventuel s'y trouve).</td></tr>
   <tr><td><strong>Confiance par la cryptographie</strong></td><td>Romulus n'accepte que des bundles signés (Ed25519) par un collecteur approuvé, dont l'empreinte a été comparée à l'œil ; chaque fichier est vérifié par son empreinte SHA-256.</td></tr>
-  <tr><td><strong>Vérifier à la source</strong></td><td>Rémus contrôle chaque téléchargement avec la somme ou la signature publiée par le registre (npm, PyPI, Debian, RPM, Terraform, Open VSX, Marketplace…).</td></tr>
+  <tr><td><strong>Vérifier à la source</strong></td><td>Rémus contrôle chaque téléchargement avec la somme ou la signature publiée par le registre (npm, PyPI, Debian, RPM, Terraform, Open VSX, Marketplace…) ; les dépôts apt et dnf tiers, avec la clé publique déclarée par un administrateur.</td></tr>
   <tr><td><strong>Refus par défaut et moindre privilège</strong></td><td>Toute action exige un compte ; trois rôles (lecteur, opérateur, administrateur) ; conteneurs sans privilège, système de fichiers en lecture seule.</td></tr>
-  <tr><td><strong>Défense en profondeur</strong></td><td>Plusieurs barrières indépendantes : signature, empreintes, liste noire et quarantaine, contrôles d'accès, en-têtes de sécurité du navigateur.</td></tr>
+  <tr><td><strong>Défense en profondeur</strong></td><td>Plusieurs barrières indépendantes : signature, empreintes, liste noire et quarantaine, vérification d'intégrité du stockage de Rémus, contrôles d'accès, en-têtes de sécurité du navigateur.</td></tr>
   <tr><td><strong>Traçabilité</strong></td><td>Journal d'audit (connexions, refus, comptes, approbations de collecteur) ; historique des exports et des imports avec leurs numéros de séquence.</td></tr>
 </table>
 
@@ -114,8 +114,8 @@ collecteurs</strong> sur Romulus.</figcaption>
 <table>
   <tr><th style="width:22%">Rôle</th><th style="width:38%">Droits dans Lupa</th><th>Responsabilités</th></tr>
   <tr><td>Lecteur</td><td>Consulte listes, paquets, alertes, historique</td><td>Signale tout paquet ou comportement suspect</td></tr>
-  <tr><td>Opérateur</td><td>En plus : listes, mises à jour, analyses, exports (Rémus) ; imports de collecteurs déjà approuvés (Romulus)</td><td>Transporte les bundles selon la procédure ; vérifie le résultat des imports</td></tr>
-  <tr><td>Administrateur</td><td>En plus : comptes, réglages, liste noire, dépôts sources, clés de confiance, approbation d'un nouveau collecteur</td><td>Applique cette politique ; revoit comptes et journaux ; active la double authentification sur son compte</td></tr>
+  <tr><td>Opérateur</td><td>En plus : listes, mises à jour, analyses, vérification d'intégrité, exports (Rémus) ; imports de collecteurs déjà approuvés (Romulus)</td><td>Transporte les bundles selon la procédure ; vérifie le résultat des imports</td></tr>
+  <tr><td>Administrateur</td><td>En plus : comptes, réglages, liste noire, dépôts sources (privés, apt et dnf tiers), distributions personnalisées, stockage S3, clés de confiance, approbation d'un nouveau collecteur</td><td>Applique cette politique ; revoit comptes et journaux ; active la double authentification sur son compte</td></tr>
   <tr><td>Exploitant (hors application)</td><td>Accès aux serveurs, volumes et sauvegardes</td><td>Mises à jour, HTTPS, sauvegarde de la clé de signature, collecte et conservation des journaux</td></tr>
 </table>
 <div class="note"><p>Séparer les rôles réduit l'impact d'un compte compromis : un opérateur ne peut ni approuver un
@@ -140,6 +140,9 @@ distincts ; une même personne peut être opératrice sur Rémus et lectrice sur
   <li>Avant d'approuver un collecteur, l'administrateur de Romulus compare l'empreinte affichée à l'import avec
   celle de Rémus (Réglages › Signature des bundles), par un canal indépendant de la clé USB.</li>
   <li>Un collecteur retiré du service est retiré des clés de confiance de Romulus.</li>
+  <li>Avant de déclarer un dépôt apt ou dnf tiers, ou une distribution personnalisée, l'administrateur compare
+  l'empreinte de sa clé publique (affichée par Rémus) avec celle que publie l'éditeur du dépôt, par un canal
+  indépendant.</li>
 </ul>
 <h3>5.3 Transport</h3>
 <ul>
@@ -152,11 +155,14 @@ distincts ; une même personne peut être opératrice sur Rémus et lectrice sur
 </ul>
 <h3>5.4 Contenu</h3>
 <ul>
-  <li>Ne collecter que ce dont les équipes ont besoin ; préférer des versions précises pour les projets critiques.</li>
+  <li>Ne collecter que ce dont les équipes ont besoin ; préférer des versions précises pour les projets critiques.
+  Réserver les plages <code>[toutes]</code> aux besoins réels : elles multiplient les versions collectées.</li>
   <li>Consulter la page Sécurité de Rémus avant chaque export ; interdire (liste noire) les versions critiques ou
   suspectes, puis exporter pour propager la quarantaine.</li>
   <li>Garder à l'esprit que les alertes ne couvrent que npm, Python et Composer, et qu'aucun antivirus n'analyse
-  les paquets.</li>
+  les paquets. Pour les images Docker et les paquets système, collecter les bases Trivy (liste prédéfinie de Rémus)
+  et analyser images et projets avec Trivy sur le réseau isolé ; mettre la liste à jour avant chaque export pour
+  que les bases restent récentes.</li>
 </ul>
 <h3>5.5 Exploitation technique</h3>
 <ul>
@@ -166,7 +172,12 @@ distincts ; une même personne peut être opératrice sur Rémus et lectrice sur
   <code>TRUSTED_PROXIES</code> renseignés ; à défaut, limiter l'accès réseau aux postes autorisés.</li>
   <li>Collecter les journaux (sortie standard des conteneurs) vers la solution centrale de l'organisation et les
   conserver au moins six mois ; alerter sur les refus répétés et les approbations de collecteur.</li>
-  <li>Sauvegarder les volumes avant chaque mise à jour.</li>
+  <li>Sauvegarder les volumes, et le compartiment S3 le cas échéant, avant chaque mise à jour.</li>
+  <li>Stockage S3 : compartiment dédié à chaque application, identifiants propres, écriture réservée à
+  l'application (Romulus sert les fichiers sans les revérifier), versionnage des objets si le service le permet ;
+  celui de Romulus dans la zone isolée.</li>
+  <li>Lancer la vérification d'intégrité de Rémus (Réglages › Intégrité) régulièrement et après tout incident de
+  stockage : les fichiers abîmés sont retéléchargés et vérifiés.</li>
 </ul>
 
 <h2 id="incidents">6. Gestion des incidents</h2>
@@ -201,6 +212,7 @@ ci-dessous précisent les actions propres à Lupa.</figcaption>
   <tr><td>Compte compromis ou soupçonné</td><td>Un administrateur change le mot de passe du compte et réinitialise sa double authentification, ou supprime le compte ; examiner le journal d'audit (adresses, actions) depuis la date présumée.</td></tr>
   <tr><td>Serveur Rémus compromis</td><td>Considérer la clé de signature comme connue de l'attaquant. Sur Romulus, retirer la clé de ce collecteur des clés de confiance : plus aucun bundle signé avec elle n'est accepté. Réinstaller Rémus sur un système sain avec une <strong>nouvelle</strong> clé, faire un export complet, l'approuver sur Romulus après comparaison de l'empreinte, et vérifier les bundles importés depuis la date présumée de compromission.</td></tr>
   <tr><td>Serveur Romulus compromis</td><td>Isoler le serveur, réinstaller, restaurer la configuration, réimporter un export complet ; vérifier les paquets installés par les postes depuis la date présumée.</td></tr>
+  <tr><td>Stockage S3 de Romulus modifié ou soupçonné</td><td>Révoquer ses identifiants ; arrêter Romulus ou couper l'accès des postes ; repartir d'un compartiment neuf et réimporter un export complet (chaque fichier est recopié et vérifié) ; vérifier les paquets installés par les postes depuis la date présumée.</td></tr>
   <tr><td>Perte d'un support de transport</td><td>Le contenu est signé et ne peut pas être modifié sans détection ; il peut toutefois contenir des paquets internes. Évaluer la sensibilité des listes exportées et en informer le responsable de la sécurité.</td></tr>
 </table>
 
