@@ -35,6 +35,7 @@ les fichiers sont dans le volume `/data`.
   `bitnami/*-exporter`, redéveloppés à chaque mise à jour.
 - **Plages de versions** (npm, Python, Composer) : `react@>=16 <19 [toutes]` collecte toutes les versions
   stables de la plage avec leurs dépendances ; une version non résoluble est ignorée et signalée.
+- **Bases Trivy :** liste prédéfinie, bases servies par Romulus à Trivy hors ligne.
 - **Alertes de sécurité :** chaque paquet npm, Python et Composer est vérifié dans la base **OSV.dev** (avis
   GitHub, PyPA, npm, Packagist) après chaque mise à jour, ou à la demande. Gravité « critique » ou
   « avertissement », versions corrigées, page **Sécurité** dédiée. Les alertes voyagent dans les bundles :
@@ -84,8 +85,8 @@ les fichiers sont dans le volume `/data`.
 
 | Tag | Contenu |
 |---|---|
-| `1.6.0`, `latest` | Plages de versions `[toutes]` (npm, Python, Composer) |
-| `1.5.0` | Ubuntu, Debian 11, Rocky Linux ; dépôts tiers ; distributions personnalisées ; S3 ; intégrité ; visites guidées |
+| `1.7.0`, `latest` | Bases Trivy hors ligne ; documents de sécurité à jour |
+| `1.6.0` | Plages de versions `[toutes]` |
 
 Versions précédentes : [releases GitHub](https://github.com/imperiumclansoftware/lupa/releases).
 
@@ -103,7 +104,7 @@ docker run -d --name remus --restart unless-stopped \
   -p 127.0.0.1:8080:8080 \
   -v remus-data:/data \
   -v "$PWD/exports:/exports" \
-  iemperor/remus:1.6.0
+  iemperor/remus:1.7.0
 docker logs remus 2>&1 | grep "Code d'installation"
 ```
 
@@ -187,7 +188,7 @@ Toutes les valeurs ont un défaut : ce fichier ne sert qu'à les changer.
 
 ```bash
 # Version de l'image
-REMUS_IMAGE=iemperor/remus:1.6.0
+REMUS_IMAGE=iemperor/remus:1.7.0
 
 # UID des conteneurs : 0 en Docker rootless, votre UID (id -u) sinon ; ./configure.sh le détecte
 SAS_UID=0
