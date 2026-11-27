@@ -72,6 +72,12 @@ Sources : [github.com/imperiumclansoftware/lupa](https://github.com/imperiumclan
   le journal et le résumé de la tâche, avec la raison, et retentée à la mise à jour suivante. Un échec sur
   une ligne ordinaire fait toujours échouer la liste. Dans le formulaire : contrainte « Plage (toutes les
   versions) ».
+- **Bases Trivy** : liste prédéfinie Docker « Trivy (bases de vulnérabilités) » (`aquasec/trivy`,
+  `ghcr.io/aquasecurity/trivy-db:2`, `trivy-java-db:1`, `trivy-checks:1`). Ce sont des artefacts OCI
+  (`DockerResolver::isArtifact`), collectés et servis par le registre de Romulus comme des images ; le tag
+  est republié plusieurs fois par jour, chaque mise à jour de la liste rapporte la base la plus récente.
+  Sur le réseau isolé : `TRIVY_DB_REPOSITORY=miroir/ghcr.io/aquasecurity/trivy-db:2` (et `_JAVA_DB_`,
+  `_CHECKS_BUNDLE_`), `TRIVY_INSECURE=true` en HTTP ; commandes complètes dans Romulus › Utilisation › Docker.
 - **Paquets système** (`collector/src/System/`, `DebResolver`, `RpmResolver`) : Rémus lit les index
   officiels après en avoir vérifié la signature avec gpgv et les clés livrées (`collector/resources/keys`,
   aucune clé téléchargée) : `InRelease` Debian, `repomd.xml.asc` RPM. Il résout ensuite lui-même les

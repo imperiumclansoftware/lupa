@@ -88,7 +88,7 @@ const HELP: Record<
   },
   docker: {
     placeholder: 'nginx:1.27\npostgres:17-alpine\nghcr.io/owner/app:1.0',
-    hint: 'Une image par ligne. Sans registre, Docker Hub est utilisé ; sans étiquette, « latest ».',
+    hint: 'Une image par ligne. Sans registre, Docker Hub est utilisé ; sans étiquette, « latest ». Les artefacts OCI (bases Trivy, charts Helm…) se collectent de la même façon : voir la liste prédéfinie « Trivy ».',
     lockfile: '',
     accept: '',
   },

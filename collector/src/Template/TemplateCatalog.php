@@ -186,6 +186,11 @@ final class TemplateCatalog
                 'description' => 'Bases de données et caches.',
                 'specs' => "postgres:17-alpine\nmariadb:11\nredis:7-alpine\nmongo:8",
             ],
+            [
+                'id' => 'docker-trivy', 'ecosystem' => 'docker', 'kind' => 'preset', 'label' => 'Trivy (bases de vulnérabilités)',
+                'description' => 'Le scanner et ses bases : vulnérabilités, Java (environ 1 Go) et contrôles de configuration. Mises à jour à chaque mise à jour de la liste.',
+                'specs' => "aquasec/trivy:latest\nghcr.io/aquasecurity/trivy-db:2\nghcr.io/aquasecurity/trivy-java-db:1\nghcr.io/aquasecurity/trivy-checks:1",
+            ],
         ];
     }
 

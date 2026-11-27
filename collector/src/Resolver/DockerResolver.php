@@ -151,6 +151,11 @@ final readonly class DockerResolver implements Resolver
                     array_push($blobs, ...$this->layers($image, $child['document'], 'attestation', $context));
                 }
             }
+        } elseif (self::isArtifact($top['document'])) {
+            // Artefact OCI (bases Trivy, bundles OPA, charts Helm…) : pas de plateforme, servi tel quel
+            $manifests[] = ['digest' => $top['digest'], 'mediaType' => $top['mediaType'], 'platform' => 'artefact'];
+            array_push($blobs, ...$this->layers($image, $top['document'], 'artefact', $context));
+            $context->log(sprintf('%s : artefact OCI (%s), sans plateforme.', $image, self::artifactType($top['document'])));
         } else {
             $config = $this->registry->blob($image, $top['document']['config']['digest']);
             $configDoc = json_decode($this->store->read($config['sha256']), true) ?: [];
@@ -199,6 +204,34 @@ final readonly class DockerResolver implements Resolver
         }
 
         return $blobs;
+    }
+
+    /**
+     * Artefact OCI plutôt qu'image : type d'artefact déclaré, ou configuration qui n'est pas celle d'une image
+     * (ex. bases Trivy : artifactType application/vnd.aquasec.trivy.config.v1+json, configuration vide).
+     *
+     * @param array<string, mixed> $manifest
+     */
+    public static function isArtifact(array $manifest): bool
+    {
+        $type = self::artifactType($manifest);
+
+        return null !== $type && !\in_array($type, ['application/vnd.oci.image.config.v1+json', 'application/vnd.docker.container.image.v1+json'], true);
+    }
+
+    /**
+     * Type déclaré de l'artefact, sinon type de sa configuration.
+     *
+     * @param array<string, mixed> $manifest
+     */
+    private static function artifactType(array $manifest): ?string
+    {
+        if (\is_string($manifest['artifactType'] ?? null) && '' !== $manifest['artifactType']) {
+            return $manifest['artifactType'];
+        }
+        $config = $manifest['config'] ?? null;
+
+        return \is_array($config) && \is_string($config['mediaType'] ?? null) ? $config['mediaType'] : null;
     }
 
     /** @param array<string, mixed> $platform */

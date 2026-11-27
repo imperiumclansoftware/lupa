@@ -385,6 +385,11 @@ export default class Usage {
             title: 'Podman, containerd, Kubernetes : /etc/containers/registries.conf',
             code: `[[registry]]\nprefix = "docker.io"\nlocation = "docker.io"\n\n[[registry.mirror]]\nlocation = "${host}"${http ? '\ninsecure = true' : ''}`,
           },
+          {
+            title: 'Trivy : bases de vulnérabilités hors ligne',
+            code: `export TRIVY_DB_REPOSITORY=${host}/ghcr.io/aquasecurity/trivy-db:2\nexport TRIVY_JAVA_DB_REPOSITORY=${host}/ghcr.io/aquasecurity/trivy-java-db:1\nexport TRIVY_CHECKS_BUNDLE_REPOSITORY=${host}/ghcr.io/aquasecurity/trivy-checks:1${http ? '\nexport TRIVY_INSECURE=true' : ''}\n\ntrivy image ${host}/library/nginx:1.27\ntrivy fs .`,
+            hint: `Collectez dans Rémus la liste prédéfinie « Trivy (bases de vulnérabilités) ». Les bases sont republiées plusieurs fois par jour : chaque mise à jour de la liste, puis export et import, apporte la plus récente à Trivy. Entre deux imports, --skip-db-update évite de retélécharger la même base.${http ? ' TRIVY_INSECURE autorise le miroir en HTTP.' : ''}`,
+          },
         ];
     }
   });
