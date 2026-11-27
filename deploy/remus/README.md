@@ -33,6 +33,8 @@ les fichiers sont dans le volume `/data`.
 - **Motifs de noms :** `*` et `?` pour collecter une famille de paquets, avec aperçu avant d'enregistrer :
   `@syncfusion/ej2-*angular*@^29`, `symfony/*-bundle:^7.3`, `django-rest-*>=3`, `node:24-alpine*`,
   `bitnami/*-exporter`, redéveloppés à chaque mise à jour.
+- **Plages de versions** (npm, Python, Composer) : `react@>=16 <19 [toutes]` collecte toutes les versions
+  stables de la plage avec leurs dépendances ; une version non résoluble est ignorée et signalée.
 - **Alertes de sécurité :** chaque paquet npm, Python et Composer est vérifié dans la base **OSV.dev** (avis
   GitHub, PyPA, npm, Packagist) après chaque mise à jour, ou à la demande. Gravité « critique » ou
   « avertissement », versions corrigées, page **Sécurité** dédiée. Les alertes voyagent dans les bundles :
@@ -43,8 +45,8 @@ les fichiers sont dans le volume `/data`.
 - **Dépôts privés :** Verdaccio, Nexus, Artifactory, GitLab, Harbor, devpi, Satis… s'ajoutent aux dépôts
   officiels (Réglages › Dépôts sources) ou les remplacent (miroir d'entreprise) : portée npm (`@entreprise`),
   index Python supplémentaire, dépôt Composer prioritaire, identifiants par registre Docker ou miroir de
-  Docker Hub. Identifiant et mot de passe ou jeton, vérifiés par le bouton **Tester** ; les secrets sont
-  chiffrés dans la base et jamais réaffichés.
+  Docker Hub. Identifiant et mot de passe ou jeton, vérifiés par **Tester**, chiffrés en base et jamais
+  réaffichés.
 - **Dépôts apt et dnf tiers :** Docker CE, PostgreSQL, EPEL, dépôt interne… rattachés à une distribution
   (Réglages › Dépôts sources) avec la clé publique du dépôt, dont l'empreinte est affichée. Index accepté
   seulement signé par cette clé ; dnf sans index signé (EPEL) : chaque paquet doit l'être. Romulus fournit la
@@ -52,8 +54,8 @@ les fichiers sont dans le volume `/data`.
 - **Distributions personnalisées :** dérivée interne ou distribution absente du catalogue (Réglages ›
   Distributions) : dépôts, architectures, clé. Romulus l'apprend par les paquets importés (1.5.0 requis).
 - **Stockage S3 :** AWS, MinIO, Ceph, Garage (Réglages › Stockage) : clé chiffrée en base, **Tester**,
-  **Migrer vers S3** (empreinte de chaque fichier vérifiée par le serveur, bascule seulement sans erreur,
-  reprise possible) et retour au disque. Fichiers de 5 Gio au plus.
+  **Migrer vers S3** (empreintes vérifiées, bascule seulement sans erreur, reprise possible)
+  et retour au disque. Fichiers de 5 Gio au plus.
 - **Paquets système :** Debian 11 (fin de vie), 12 et 13, Ubuntu 22.04 et 24.04 LTS, AlmaLinux et Rocky Linux
   8, 9 et 10, CentOS Stream 9 et 10, CentOS 7 et 8 (vault). Paquets (`nginx`, motifs `python3-*`, versions
   `curl=7.88.1-10+deb12u8`, streams `@nodejs:20` sur EL8) et leurs dépendances, comme apt ou dnf sur un
@@ -82,8 +84,8 @@ les fichiers sont dans le volume `/data`.
 
 | Tag | Contenu |
 |---|---|
-| `1.5.0`, `latest` | Ubuntu, Debian 11, Rocky Linux ; dépôts apt et dnf tiers ; distributions personnalisées ; stockage S3 ; vérification d'intégrité ; réglages en onglets ; visites guidées ; Symfony 8.1.12 |
-| `1.4.0` | Extensions VS Code, rôles, double authentification, identifiants UUID, Symfony 8.1.11 |
+| `1.6.0`, `latest` | Plages de versions `[toutes]` (npm, Python, Composer) |
+| `1.5.0` | Ubuntu, Debian 11, Rocky Linux ; dépôts tiers ; distributions personnalisées ; S3 ; intégrité ; visites guidées |
 
 Versions précédentes : [releases GitHub](https://github.com/imperiumclansoftware/lupa/releases).
 
@@ -101,7 +103,7 @@ docker run -d --name remus --restart unless-stopped \
   -p 127.0.0.1:8080:8080 \
   -v remus-data:/data \
   -v "$PWD/exports:/exports" \
-  iemperor/remus:1.3.1
+  iemperor/remus:1.6.0
 docker logs remus 2>&1 | grep "Code d'installation"
 ```
 
@@ -185,7 +187,7 @@ Toutes les valeurs ont un défaut : ce fichier ne sert qu'à les changer.
 
 ```bash
 # Version de l'image
-REMUS_IMAGE=iemperor/remus:1.5.0
+REMUS_IMAGE=iemperor/remus:1.6.0
 
 # UID des conteneurs : 0 en Docker rootless, votre UID (id -u) sinon ; ./configure.sh le détecte
 SAS_UID=0

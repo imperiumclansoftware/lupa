@@ -69,8 +69,8 @@ d'aucun service externe : la base SQLite et les paquets sont dans le volume `/da
 
 | Tag | Contenu |
 |---|---|
-| `1.5.0`, `latest` | Ubuntu, Debian 11, Rocky Linux ; dépôts apt et dnf tiers et distributions personnalisées de Rémus ; stockage S3 ; réglages en onglets ; visites guidées ; Symfony 8.1.12 |
-| `1.4.0` | Marketplace VS Code, rôles, double authentification, identifiants UUID, Symfony 8.1.11 (17 avis de sécurité) ; `TRUSTED_PROXIES` derrière un proxy HTTPS |
+| `1.6.0`, `latest` | Aligné sur Rémus 1.6.0 (plages de versions `[toutes]`) ; sans changement côté Romulus : les versions supplémentaires importées sont servies comme les autres |
+| `1.5.0` | Ubuntu, Debian 11, Rocky Linux ; dépôts apt et dnf tiers et distributions personnalisées de Rémus ; stockage S3 ; réglages en onglets ; visites guidées ; Symfony 8.1.12 |
 
 Versions précédentes : [releases GitHub](https://github.com/imperiumclansoftware/lupa/releases).
 
@@ -95,19 +95,19 @@ Le serveur n'a pas Internet : l'image voyage elle aussi par clé USB.
 `configure.sh`, ce guide et des sommes de contrôle :
 
 ```bash
-tar -xf romulus-1.5.0.tar && cd romulus-1.5.0
+tar -xf romulus-1.6.0.tar && cd romulus-1.6.0
 sha256sum -c SHA256SUMS                  # la copie sur la clé n'a rien abîmé
-docker load -i romulus-1.5.0.tar.gz
+docker load -i romulus-1.6.0.tar.gz
 ./configure.sh                           # crée .env ; à relire
 ```
 
 **Ou depuis Docker Hub**, sur une machine connectée :
 
 ```bash
-docker pull iemperor/romulus:1.5.0
-docker save iemperor/romulus:1.5.0 | gzip > romulus-1.5.0.tar.gz
+docker pull iemperor/romulus:1.6.0
+docker save iemperor/romulus:1.6.0 | gzip > romulus-1.6.0.tar.gz
 # … clé USB …
-docker load -i romulus-1.5.0.tar.gz      # sur le serveur isolé
+docker load -i romulus-1.6.0.tar.gz      # sur le serveur isolé
 ```
 
 ### 2. Créer `compose.yaml`
@@ -163,7 +163,7 @@ volumes:
 ### 3. Le fichier `.env` (facultatif)
 
 ```bash
-ROMULUS_IMAGE=iemperor/romulus:1.5.0
+ROMULUS_IMAGE=iemperor/romulus:1.6.0
 
 # UID des conteneurs : 0 en Docker rootless, votre UID (id -u) sinon ; ./configure.sh le détecte
 SAS_UID=0
@@ -437,9 +437,9 @@ aucune clé secrète : il ne fait que vérifier les signatures.
 Copiez le nouveau package **dans le même dossier** que le précédent. Votre `.env` est conservé.
 
 ```bash
-tar -xf romulus-1.5.0.tar --strip-components=1
+tar -xf romulus-1.6.0.tar --strip-components=1
 sha256sum -c SHA256SUMS
-docker load -i romulus-1.5.0.tar.gz
+docker load -i romulus-1.6.0.tar.gz
 ./configure.sh          # ajoute les nouvelles variables et passe à la nouvelle image ; vos réglages ne changent pas
 docker compose up -d    # migrations appliquées au démarrage ; secrets, paquets et collecteurs approuvés conservés
 ```
