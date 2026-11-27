@@ -14,12 +14,15 @@ use Sas\Bundle\Ecosystem;
  *   django-rest-*>=3                →  django-rest-framework>=3, …
  *   node:24-*alpine                 →  node:24-alpine, node:24-alpine3.23…   (étiquettes)
  *   bitnami/*-exporter:latest       →  bitnami/node-exporter:latest, …       (dépôts Docker Hub)
+ *
+ * Développe aussi les plages « [toutes] » (VersionRange) : react@>=16 <19 [toutes] → une ligne par version.
  */
 final class PatternExpander
 {
     public function __construct(
         private PackageSearch $search,
         private VersionFilter $versions,
+        private VersionRange $ranges,
     ) {
     }
 
@@ -46,13 +49,17 @@ final class PatternExpander
     }
 
     /**
-     * Lignes obtenues, et paquets écartés faute de version respectant la contrainte ; null si la ligne n'est pas un motif.
+     * Lignes obtenues, et paquets écartés faute de version respectant la contrainte ;
+     * null si la ligne n'est ni un motif ni une plage « [toutes] ».
      *
      * @return array{lines: list<string>, skipped: list<string>}|null
      */
     public function expandLine(Ecosystem $ecosystem, string $line): ?array
     {
         $line = trim($line);
+        if (VersionRange::isRange($line)) {
+            return $this->ranges->expandLine($ecosystem, $line);
+        }
         if (!Glob::isPattern($line)) {
             return null;
         }
@@ -95,6 +102,12 @@ final class PatternExpander
         $this->skipped = $filtered['skipped'];
 
         return $filtered['keep'];
+    }
+
+    /** Ligne à développer avant la résolution : motif ou plage « [toutes] » */
+    public static function needsExpansion(string $line): bool
+    {
+        return Glob::isPattern($line) || VersionRange::isRange($line);
     }
 
     /** @return list<string> */

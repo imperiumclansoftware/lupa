@@ -31,6 +31,39 @@ import {
   specLines,
 } from '../spec-lines';
 
+/**
+ * Plage « [toutes] » : toutes les versions stables entre deux bornes, chacune avec ses dépendances.
+ * Exemples affichés sous le champ Paquets (npm, Python, Composer seulement).
+ */
+const RANGE_HELP: Partial<
+  Record<EcosystemId, { example: string; examples: { line: string; meaning: string }[] }>
+> = {
+  npm: {
+    example: 'react@>=16 <19 [toutes]',
+    examples: [
+      { line: 'react@>=16 <19 [toutes]', meaning: 'toutes les versions 16.x, 17.x et 18.x' },
+      { line: '@angular/core@18.2.0 - 18.2.14 [toutes]', meaning: 'de 18.2.0 à 18.2.14 incluses' },
+      { line: 'lodash@4.17.x [toutes]', meaning: 'tous les correctifs de la 4.17' },
+    ],
+  },
+  pypi: {
+    example: 'django>=4,<6 [toutes]',
+    examples: [
+      { line: 'django>=4,<6 [toutes]', meaning: 'toutes les versions 4.x et 5.x' },
+      { line: 'numpy>=1.26,<=2.1.3 [toutes]', meaning: 'de 1.26.0 à 2.1.3 incluses' },
+      { line: 'requests~=2.32.0 [toutes]', meaning: 'tous les correctifs de la 2.32' },
+    ],
+  },
+  composer: {
+    example: 'symfony/console:>=6.4 <8 [toutes]',
+    examples: [
+      { line: 'symfony/console:>=6.4 <8 [toutes]', meaning: 'de 6.4 à la dernière 7.x' },
+      { line: 'monolog/monolog:^3 [toutes]', meaning: 'toutes les versions 3.x' },
+      { line: 'doctrine/orm:3.2.* [toutes]', meaning: 'tous les correctifs de la 3.2' },
+    ],
+  },
+};
+
 const HELP: Record<
   EcosystemId,
   { placeholder: string; hint: string; lockfile: string; accept: string }
@@ -259,6 +292,53 @@ const HELP: Record<
             autocapitalize="off"
           ></textarea>
           <span class="hint">{{ help().hint }}</span>
+          @if (rangeHelp(); as r) {
+            <details class="range-help">
+              <summary>Récupérer toutes les versions d’une plage</summary>
+              <p>
+                Une contrainte seule ne retient <strong>qu’une version</strong> : la plus récente
+                qui la respecte. Ajoutez <code>[toutes]</code> en fin de ligne pour collecter
+                <strong>toutes les versions stables</strong> de la plage, chacune avec ses propres
+                dépendances.
+              </p>
+              <table class="range-examples">
+                <tbody>
+                  @for (e of r.examples; track e.line) {
+                    <tr>
+                      <td>
+                        <code>{{ e.line }}</code>
+                      </td>
+                      <td class="subtle">{{ e.meaning }}</td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+              <ul>
+                <li>
+                  La plage est relue à chaque mise à jour : les nouvelles versions publiées dans la
+                  plage sont ajoutées automatiquement.
+                </li>
+                <li>
+                  Les préversions (alpha, beta, rc) sont exclues ; 300 versions au plus par plage.
+                </li>
+                <li>
+                  Chaque version est résolue séparément : une grande plage prend plus de temps.
+                </li>
+                <li>
+                  Une version impossible à résoudre est ignorée et signalée dans le journal de la
+                  mise à jour ; les autres sont collectées.
+                </li>
+                <li>
+                  Plus simple : recherchez le paquet ci-dessus et choisissez la contrainte « Plage
+                  (toutes les versions) », puis les bornes.
+                </li>
+              </ul>
+              <button type="button" class="btn btn-sm" (click)="addFromPicker([r.example])">
+                <sas-icon name="plus" [size]="15" />Ajouter l’exemple
+                <code>{{ r.example }}</code>
+              </button>
+            </details>
+          }
           @if (duplicateKeys().length) {
             <div class="alert alert-warn duplicates" role="status">
               <sas-icon name="alert" />
@@ -675,6 +755,44 @@ const HELP: Record<
     .hint.warn {
       color: var(--warn);
     }
+    .range-help {
+      font-size: 0.86rem;
+      color: var(--text-2);
+      padding: 10px 12px;
+      border-radius: 10px;
+      background: var(--surface-2);
+      box-shadow: inset 0 0 0 1px var(--border);
+    }
+    .range-help summary {
+      cursor: pointer;
+      color: var(--text);
+      font-weight: 600;
+    }
+    .range-help p,
+    .range-help ul {
+      margin: 8px 0;
+    }
+    .range-help ul {
+      padding-left: 18px;
+      display: grid;
+      gap: 2px;
+    }
+    .range-help code {
+      font-family: var(--mono);
+      font-size: 0.82rem;
+      overflow-wrap: anywhere;
+    }
+    .range-examples {
+      border-collapse: collapse;
+      width: 100%;
+    }
+    .range-examples td {
+      padding: 3px 12px 3px 0;
+      vertical-align: top;
+    }
+    .range-help .btn code {
+      margin-left: 4px;
+    }
     .target {
       display: grid;
       grid-template-columns: 150px 1fr auto;
@@ -787,6 +905,7 @@ export default class ListForm implements OnInit {
   protected readonly choices = signal<EcosystemChoices | null>(null);
   protected readonly ecosystem = signal<EcosystemId>('npm');
   protected readonly help = computed(() => HELP[this.ecosystem()]);
+  protected readonly rangeHelp = computed(() => RANGE_HELP[this.ecosystem()] ?? null);
   protected readonly error = signal('');
   protected readonly busy = signal(false);
   protected readonly dragOver = signal(false);

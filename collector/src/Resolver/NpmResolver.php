@@ -140,12 +140,36 @@ final readonly class NpmResolver implements Resolver
      */
     private function resolveSpecs(array $specs, PackageList $list, JobContext $context): array
     {
-        $dependencies = [];
-        foreach ($specs as $line) {
-            [$name, $range] = self::parseSpec($line);
-            $dependencies[$name] = $range;
+        // Plusieurs versions d'un même paquet (plage « [toutes] ») : une résolution par passe ;
+        // une version de plage dont la résolution échoue est ignorée (SpecRounds::resolve)
+        $results = SpecRounds::resolve(
+            $specs,
+            static fn (string $line) => self::parseSpec($line)[0],
+            function (array $lines, string $pass) use ($list, $context): array {
+                if ('' !== $pass) {
+                    $context->report(sprintf('Résolution des dépendances par npm (%s)', $pass));
+                }
+
+                return $this->resolveRound(array_column(array_map(self::parseSpec(...), $lines), 1, 0), $list, $context);
+            },
+            $list,
+            $context,
+        );
+        $entries = [];
+        foreach ($results as $result) {
+            $entries += $result;
         }
 
+        return $entries;
+    }
+
+    /**
+     * @param array<string, string> $dependencies nom => version demandée
+     *
+     * @return array<string, array{name: string, version: string, resolved: string|null, integrity: string|null}>
+     */
+    private function resolveRound(array $dependencies, PackageList $list, JobContext $context): array
+    {
         $dir = Tool::tempDir('sas-npm');
         try {
             file_put_contents($dir.'/package.json', json_encode([

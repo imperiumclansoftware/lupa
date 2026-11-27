@@ -62,6 +62,16 @@ Sources : [github.com/imperiumclansoftware/lupa](https://github.com/imperiumclan
   développés au moment de la mise à jour (`PatternExpander`). Les paquets sans version compatible sont
   écartés avec les règles exactes de chaque écosystème (`VersionFilter` : semver de npm, composer/semver,
   packaging de pip).
+- **Plages de versions** `[toutes]` (npm, Python, Composer) : `react@>=16 <19 [toutes]`,
+  `django>=4,<6 [toutes]`, `symfony/console:>=6.4 <8 [toutes]` collectent **toutes** les versions stables
+  de la plage, chacune avec ses dépendances (sans marqueur, une contrainte ne retient qu'une version).
+  La ligne est redéveloppée à chaque mise à jour (`VersionRange`, 300 versions au plus) ; npm, Composer et
+  pip ne gardant qu'une version par paquet et par résolution, chaque version est résolue dans sa propre
+  passe (`SpecRounds`). Une version de la plage dont la résolution échoue (dépendance introuvable, pas de
+  wheel pour une cible Python…) est **ignorée** au lieu de faire échouer la liste : elle est signalée dans
+  le journal et le résumé de la tâche, avec la raison, et retentée à la mise à jour suivante. Un échec sur
+  une ligne ordinaire fait toujours échouer la liste. Dans le formulaire : contrainte « Plage (toutes les
+  versions) ».
 - **Paquets système** (`collector/src/System/`, `DebResolver`, `RpmResolver`) : Rémus lit les index
   officiels après en avoir vérifié la signature avec gpgv et les clés livrées (`collector/resources/keys`,
   aucune clé téléchargée) : `InRelease` Debian, `repomd.xml.asc` RPM. Il résout ensuite lui-même les

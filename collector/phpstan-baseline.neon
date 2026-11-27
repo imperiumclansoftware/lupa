@@ -547,12 +547,6 @@ parameters:
 			path: src/Resolver/ComposerResolver.php
 
 		-
-			message: '#^Parameter \#1 \$require of method App\\Resolver\\ComposerResolver\:\:resolveRequirements\(\) expects array\<string, string\>, array\<string, mixed\> given\.$#'
-			identifier: argument.type
-			count: 1
-			path: src/Resolver/ComposerResolver.php
-
-		-
 			message: '#^Parameter \#1 \$string of function strtolower expects string, mixed given\.$#'
 			identifier: argument.type
 			count: 1

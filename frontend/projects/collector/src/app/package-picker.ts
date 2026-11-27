@@ -13,7 +13,17 @@ import { FormsModule } from '@angular/forms';
 import { EcosystemId, Icon, errorMessage } from '@sas/shared';
 import { CollectorApi, SearchResult } from './api';
 
-type Mode = 'exact' | 'compatible' | 'minimum' | 'latest';
+type Mode = 'exact' | 'compatible' | 'minimum' | 'latest' | 'range';
+
+/** Marqueur d'une plage dont toutes les versions sont collectées (VersionRange côté Rémus). */
+export const RANGE_MARKER = '[toutes]';
+
+/** Plage « toutes les versions de… à… » (bornes incluses) : npm, Python, Composer. */
+const RANGE: Partial<Record<EcosystemId, (name: string, from: string, to: string) => string>> = {
+  npm: (n, a, b) => `${n}@>=${a} <=${b} ${RANGE_MARKER}`,
+  pypi: (n, a, b) => `${n}>=${a},<=${b} ${RANGE_MARKER}`,
+  composer: (n, a, b) => `${n}:>=${a.replace(/^v/, '')} <=${b.replace(/^v/, '')} ${RANGE_MARKER}`,
+};
 
 /** Formes proposées selon l'écosystème, de la plus stricte à la plus souple. */
 const MODES: Record<
@@ -167,22 +177,51 @@ const MODES: Record<
             <p class="muted desc">{{ s.description }}</p>
           }
           <div class="choose">
-            <div class="field">
-              <label for="pkg-version">{{
-                ecosystem() === 'docker' ? 'Étiquette' : 'Version'
-              }}</label>
-              <select
-                id="pkg-version"
-                class="select"
-                [ngModel]="version()"
-                (ngModelChange)="version.set($event)"
-                [disabled]="!versions().length"
-              >
-                @for (v of versions(); track v) {
-                  <option [value]="v">{{ v }}{{ v === latest() ? ' (dernière)' : '' }}</option>
-                }
-              </select>
-            </div>
+            @if (mode() === 'range') {
+              <div class="field">
+                <label for="pkg-from">De la version</label>
+                <select
+                  id="pkg-from"
+                  class="select"
+                  [ngModel]="from()"
+                  (ngModelChange)="setBound('from', $event)"
+                  [disabled]="!versions().length"
+                >
+                  @for (v of versions(); track v) {
+                    <option [value]="v">{{ v }}</option>
+                  }
+                </select>
+                <label for="pkg-to">à la version</label>
+                <select
+                  id="pkg-to"
+                  class="select"
+                  [ngModel]="version()"
+                  (ngModelChange)="setBound('to', $event)"
+                  [disabled]="!versions().length"
+                >
+                  @for (v of versions(); track v) {
+                    <option [value]="v">{{ v }}{{ v === latest() ? ' (dernière)' : '' }}</option>
+                  }
+                </select>
+              </div>
+            } @else {
+              <div class="field">
+                <label for="pkg-version">{{
+                  ecosystem() === 'docker' ? 'Étiquette' : 'Version'
+                }}</label>
+                <select
+                  id="pkg-version"
+                  class="select"
+                  [ngModel]="version()"
+                  (ngModelChange)="version.set($event)"
+                  [disabled]="!versions().length"
+                >
+                  @for (v of versions(); track v) {
+                    <option [value]="v">{{ v }}{{ v === latest() ? ' (dernière)' : '' }}</option>
+                  }
+                </select>
+              </div>
+            }
             @if (modes().length > 1) {
               <div class="field">
                 <span class="label">Contrainte</span>
@@ -193,7 +232,7 @@ const MODES: Record<
                         type="radio"
                         name="pkg-mode"
                         [checked]="mode() === m.id"
-                        (change)="mode.set(m.id)"
+                        (change)="setMode(m.id)"
                       />{{ m.label }}</label
                     >
                   }
@@ -201,6 +240,22 @@ const MODES: Record<
               </div>
             }
           </div>
+          @if (mode() === 'range') {
+            <p class="hint">
+              Chaque version stable de la plage est collectée avec ses propres dépendances (une
+              résolution par version) ; les nouvelles versions de la plage sont ajoutées à chaque
+              mise à jour. Une version impossible à résoudre est ignorée et signalée dans le
+              journal.
+              @if (rangeCount() !== null) {
+                <strong>{{ rangeCount() }} version{{ rangeCount()! > 1 ? 's' : '' }}</strong>
+                aujourd’hui.
+              } @else {
+                <button type="button" class="link" (click)="countRange()" [disabled]="busy()">
+                  Compter les versions
+                </button>
+              }
+            </p>
+          }
           <div class="row add">
             <code class="grow">{{ line() }}</code>
             <button
@@ -340,6 +395,15 @@ const MODES: Record<
       background: var(--surface);
       overflow-wrap: anywhere;
     }
+    .link {
+      border: none;
+      padding: 0;
+      background: none;
+      color: var(--accent);
+      font: inherit;
+      text-decoration: underline;
+      cursor: pointer;
+    }
     .skipped {
       font-size: 0.82rem;
       color: var(--text-2);
@@ -383,14 +447,38 @@ export class PackagePicker {
   protected readonly version = signal('');
   protected readonly mode = signal<Mode>('compatible');
   protected readonly preview = signal<string[] | null>(null);
+  /** Plage : borne basse (la borne haute est « version ») et nombre de versions obtenu par l'aperçu */
+  protected readonly from = signal('');
+  protected readonly rangeCount = signal<number | null>(null);
   protected readonly skipped = signal<string[]>([]);
   protected readonly busy = signal(false);
   protected readonly error = signal('');
 
   protected readonly isPattern = computed(() => /[*?]/.test(this.query()));
-  protected readonly modes = computed(() => MODES[this.ecosystem()]);
+  protected readonly modes = computed(() => {
+    const modes = MODES[this.ecosystem()];
+    return RANGE[this.ecosystem()]
+      ? [
+          ...modes.filter((m) => m.id !== 'latest'),
+          { id: 'range' as const, label: 'Plage (toutes les versions)', build: () => '' },
+          ...modes.filter((m) => m.id === 'latest'),
+        ]
+      : modes;
+  });
   protected readonly line = computed(() => {
     const s = this.selected();
+    const range = RANGE[this.ecosystem()];
+    if (s && range && this.mode() === 'range') {
+      if (!this.from() || !this.version()) return '';
+      // Liste des versions de la plus récente à la plus ancienne : borne basse = la plus loin
+      const [a, b] = [
+        this.versions().indexOf(this.from()),
+        this.versions().indexOf(this.version()),
+      ];
+      return a >= b
+        ? range(s.name, this.from(), this.version())
+        : range(s.name, this.version(), this.from());
+    }
     const mode = this.modes().find((m) => m.id === this.mode()) ?? this.modes()[0];
     return s && (this.version() || mode.id === 'latest') ? mode.build(s.name, this.version()) : '';
   });
@@ -468,6 +556,32 @@ export class PackagePicker {
       this.versions.set(data.versions);
       this.latest.set(data.latest);
       this.version.set(data.latest ?? data.versions[0] ?? '');
+      this.from.set(this.version());
+      this.rangeCount.set(null);
+    } catch (e) {
+      this.error.set(errorMessage(e));
+    } finally {
+      this.busy.set(false);
+    }
+  }
+
+  protected setMode(mode: Mode): void {
+    this.mode.set(mode);
+    this.rangeCount.set(null);
+  }
+
+  protected setBound(bound: 'from' | 'to', value: string): void {
+    (bound === 'from' ? this.from : this.version).set(value);
+    this.rangeCount.set(null);
+  }
+
+  /** Aperçu de la plage : nombre de versions stables qu'elle couvre aujourd'hui */
+  protected async countRange(): Promise<void> {
+    this.busy.set(true);
+    this.error.set('');
+    try {
+      const result = await this.api.expand(this.ecosystem(), this.line(), this.distribution());
+      this.rangeCount.set(result.lines.length);
     } catch (e) {
       this.error.set(errorMessage(e));
     } finally {

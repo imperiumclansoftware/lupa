@@ -80,13 +80,10 @@ final readonly class ComposerResolver implements Resolver
     {
         $includeDev = (bool) ($list->getOptions()['includeDev'] ?? false);
         $packages = [];
+        // Lignes saisies (plusieurs versions d'un même paquet possibles), puis exigences d'un composer.json importé
+        $specs = $list->getSpecLines();
         $require = [];
         $stability = 'stable';
-
-        foreach ($list->getSpecLines() as $line) {
-            [$name, $constraint] = self::parseSpec($line);
-            $require[$name] = $constraint;
-        }
 
         if (null !== $list->getLockfile()) {
             $file = $this->parseLockfile($list->getLockfile());
@@ -116,17 +113,33 @@ final readonly class ComposerResolver implements Resolver
                     $packages[$package['name'].'@'.$package['version']] = $package;
                 }
             }
-            foreach ($generated['specs'] as $line) {
-                [$name, $constraint] = self::parseSpec($line);
-                $require[$name] = $constraint;
-            }
+            array_push($specs, ...$generated['specs']);
             $context->log(sprintf('Projet généré : %d paquets.', \count($packages)));
         }
 
-        if ([] !== $require) {
-            $context->report('Résolution des dépendances par Composer');
-            foreach ($this->resolveRequirements($require, $stability, $list, $context) as $package) {
-                $packages[$package['name'].'@'.$package['version']] = $package;
+        // Exigences d'un composer.json importé : lignes ordinaires (leur échec fait échouer la liste)
+        foreach ($require as $name => $constraint) {
+            $specs[] = $name.':'.(\is_string($constraint) ? $constraint : '*');
+        }
+
+        // Plusieurs versions d'un même paquet (plage « [toutes] ») : une résolution par passe ;
+        // une version de plage dont la résolution échoue est ignorée (SpecRounds::resolve)
+        if ([] !== $specs) {
+            $results = SpecRounds::resolve(
+                array_values(array_unique($specs)),
+                static fn (string $line) => self::parseSpec($line)[0],
+                function (array $lines, string $pass) use ($stability, $list, $context): array {
+                    $context->report('Résolution des dépendances par Composer'.('' !== $pass ? ' ('.$pass.')' : ''));
+
+                    return $this->resolveRequirements(array_column(array_map(self::parseSpec(...), $lines), 1, 0), $stability, $list, $context);
+                },
+                $list,
+                $context,
+            );
+            foreach ($results as $result) {
+                foreach ($result as $package) {
+                    $packages[$package['name'].'@'.$package['version']] = $package;
+                }
             }
         }
 

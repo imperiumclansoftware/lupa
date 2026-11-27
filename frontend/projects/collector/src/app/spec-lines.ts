@@ -18,10 +18,14 @@ export function specLines(text: string): string[] {
  *  - Python : nom normalisé (PEP 503), sans version ni extras : « Django>=5 » et « django » → « django » ;
  *  - Docker : référence complète normalisée : « nginx » et « docker.io/library/nginx:latest » → « nginx:latest » ;
  *  - npm, Composer, Debian, RPM : nom du paquet, en minuscules ;
- *  - VS Code : identifiant éditeur.nom, sans version : « ms-python.python@2024.2.0 » → « ms-python.python ».
+ *  - VS Code : identifiant éditeur.nom, sans version : « ms-python.python@2024.2.0 » → « ms-python.python » ;
+ *  - plage « [toutes] » : clé du paquet suivie du marqueur (« react@>=16 <19 [toutes] » → « react [toutes] »).
  */
 export function lineKey(line: string, ecosystem: EcosystemId): string {
   const value = line.trim().replace(/\s+#.*$/, '');
+  // Plage « [toutes] » : distincte d'une contrainte simple sur le même paquet (react@^19 en plus de 16 à 18)
+  const range = /\s*\[toutes\]$/i;
+  if (range.test(value)) return `${lineKey(value.replace(range, ''), ecosystem)} [toutes]`;
   switch (ecosystem) {
     case 'pypi':
       return value

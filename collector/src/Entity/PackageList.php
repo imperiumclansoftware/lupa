@@ -52,6 +52,12 @@ class PackageList
     /** @var list<string>|null lignes après développement des motifs (le temps d'une résolution, non enregistré) */
     private ?array $expandedSpecs = null;
 
+    /** @var array<string, true> versions issues d'une plage « [toutes] » : ignorées si leur résolution échoue */
+    private array $rangeVersions = [];
+
+    /** @var array<string, string> versions de plage ignorées pendant la résolution => raison */
+    private array $skippedVersions = [];
+
     /** @var Collection<int, Artifact> */
     #[ORM\ManyToMany(targetEntity: Artifact::class, inversedBy: 'lists')]
     #[ORM\JoinTable(name: 'package_list_artifact')]
@@ -92,10 +98,32 @@ class PackageList
         return $this->specs;
     }
 
-    /** @param list<string> $lines */
-    public function useExpandedSpecs(array $lines): void
+    /**
+     * @param list<string> $lines         lignes développées
+     * @param list<string> $rangeVersions celles qui viennent d'une plage « [toutes] »
+     */
+    public function useExpandedSpecs(array $lines, array $rangeVersions = []): void
     {
         $this->expandedSpecs = $lines;
+        $this->rangeVersions = array_fill_keys($rangeVersions, true);
+        $this->skippedVersions = [];
+    }
+
+    /** Version issue d'une plage « [toutes] » : un échec de sa résolution ne fait pas échouer la liste */
+    public function isRangeVersion(string $line): bool
+    {
+        return isset($this->rangeVersions[$line]);
+    }
+
+    public function skipVersion(string $line, string $reason): void
+    {
+        $this->skippedVersions[$line] = $reason;
+    }
+
+    /** @return array<string, string> versions de plage ignorées pendant la dernière résolution => raison */
+    public function getSkippedVersions(): array
+    {
+        return $this->skippedVersions;
     }
 
     /** @return list<string> lignes non vides, sans les commentaires (motifs développés pendant une résolution) */

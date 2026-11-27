@@ -45,19 +45,104 @@ final readonly class VersionFilter
     }
 
     /**
+     * Versions stables d'un paquet qui respectent la contrainte, dans l'ordre croissant (plage « [toutes] »).
+     * Préversions exclues, comme le font npm, Composer et pip par défaut.
+     *
+     * @param list<string> $versions versions publiées
+     *
+     * @return list<string>
+     */
+    public function matching(Ecosystem $ecosystem, array $versions, string $constraint): array
+    {
+        $versions = array_values(array_unique($versions));
+
+        return match ($ecosystem) {
+            Ecosystem::Npm => $this->npmMatching($versions, $constraint),
+            Ecosystem::Composer => self::composerMatching($versions, $constraint),
+            Ecosystem::Pypi => $this->pypiMatching($versions, $constraint),
+            default => throw new \LogicException('Sans objet pour cet écosystème.'),
+        };
+    }
+
+    /**
+     * @param list<string> $versions
+     *
+     * @return list<string>
+     */
+    private function npmMatching(array $versions, string $range): array
+    {
+        $semver = $this->npmSemver() ?? throw new \RuntimeException('npm est introuvable : impossible d\'évaluer la plage de versions.');
+        $script = 'const semver = require(process.argv[1]); let input = "";'
+            .'process.stdin.on("data", d => input += d).on("end", () => { const { range, packages } = JSON.parse(input);'
+            .'if (semver.validRange(range) === null) { console.error("plage semver invalide : " + range); process.exit(1); }'
+            .'console.log(JSON.stringify(semver.sort(packages.v.filter(v => semver.valid(v) && semver.satisfies(v, range))))); });';
+
+        return $this->run(['node', '-e', $script, $semver], ['range' => $range, 'packages' => ['v' => $versions]]);
+    }
+
+    /**
+     * @param list<string> $versions
+     *
+     * @return list<string>
+     */
+    private static function composerMatching(array $versions, string $constraint): array
+    {
+        $stable = array_values(array_filter($versions, static function (string $v): bool {
+            try {
+                return 'stable' === VersionParser::parseStability($v) && !str_starts_with($v, 'dev-');
+            } catch (\UnexpectedValueException) {
+                return false;
+            }
+        }));
+        try {
+            return Semver::sort(Semver::satisfiedBy($stable, $constraint));
+        } catch (\UnexpectedValueException) {
+            throw new \InvalidArgumentException(sprintf('Contrainte de version invalide : « %s ».', $constraint));
+        }
+    }
+
+    /**
+     * @param list<string> $versions
+     *
+     * @return list<string>
+     */
+    private function pypiMatching(array $versions, string $specifier): array
+    {
+        $python = \dirname($this->pip).'/python';
+        if (!is_file($python)) {
+            throw new \RuntimeException('pip est introuvable : impossible d\'évaluer la plage de versions.');
+        }
+        $script = 'import json, sys'."\n"
+            .'from pip._vendor.packaging.specifiers import SpecifierSet'."\n"
+            .'from pip._vendor.packaging.version import InvalidVersion, Version'."\n"
+            .'data = json.load(sys.stdin); spec = SpecifierSet(data["spec"]); ok = {}'."\n"
+            .'for v in data["packages"]["v"]:'."\n"
+            .'    try: ok[Version(v)] = v'."\n"
+            .'    except InvalidVersion: pass'."\n"
+            .'print(json.dumps([ok[v] for v in sorted(spec.filter(ok.keys()))]))';
+
+        return $this->run([$python, '-c', $script], ['spec' => $specifier, 'packages' => ['v' => $versions]]);
+    }
+
+    private function npmSemver(): ?string
+    {
+        foreach (self::NPM_SEMVER as $path) {
+            if (is_file($path.'/package.json')) {
+                return $path;
+            }
+        }
+
+        return null;
+    }
+
+    /**
      * @param array<string, list<string>> $versions
      *
      * @return list<string>
      */
     private function npm(array $versions, string $range): array
     {
-        $semver = null;
-        foreach (self::NPM_SEMVER as $path) {
-            if (is_file($path.'/package.json')) {
-                $semver = $path;
-                break;
-            }
-        }
+        $semver = $this->npmSemver();
         if (null === $semver) {
             return array_keys($versions); // npm absent : pas de filtrage, npm signalera l'erreur
         }

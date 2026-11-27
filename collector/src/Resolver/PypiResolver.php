@@ -76,35 +76,35 @@ final readonly class PypiResolver implements Resolver
         $dir = Tool::tempDir('sas-pip');
         $files = [];
         try {
-            file_put_contents($dir.'/requirements.txt', implode("\n", $requirements)."\n");
             $targets = self::targets($list);
             foreach ($targets as $i => $target) {
                 $label = sprintf('Python %s, %s', $target['python'], PypiPlatforms::labels()[$target['platform']]);
                 $context->report('Résolution des dépendances : '.$label, (int) ($i * 30 / \count($targets)));
-                $report = $dir.'/report-'.$i.'.json';
-                $command = [
-                    $this->pip, 'install', '--dry-run', '--ignore-installed', '--quiet', '--no-input',
-                    '--report', $report, '--target', $dir.'/target',
-                    ...$this->sources->pipIndexOptions($this->index),
-                    '--only-binary=:all:', '--implementation', 'cp', '--python-version', $target['python'],
-                ];
-                foreach (PypiPlatforms::tags($target['platform']) as $tag) {
-                    array_push($command, '--platform', $tag);
-                }
-                array_push($command, '-r', $dir.'/requirements.txt');
-                try {
-                    Tool::run($command, $dir, $context, ['PIP_DISABLE_PIP_VERSION_CHECK' => '1']);
-                } catch (\RuntimeException $e) {
-                    throw new \RuntimeException(sprintf("%s\n\nCible : %s. Si un paquet n'existe qu'en sources (sans wheel), il ne peut pas être résolu pour une autre plateforme ; essayez une autre version ou retirez cette cible.", $e->getMessage(), $label), previous: $e);
-                }
 
+                // Plusieurs versions d'un même paquet (plage « [toutes] ») : une résolution par passe ;
+                // une version de plage sans résolution possible pour cette cible est ignorée (SpecRounds::resolve)
+                $results = SpecRounds::resolve(
+                    $requirements,
+                    static fn (string $line) => self::normalize((string) preg_replace('/[\s\[<>=!~;@(].*$/s', '', $line)),
+                    function (array $lines, string $pass) use ($dir, $target, $label, $context): array {
+                        if ('' !== $pass) {
+                            $context->report(sprintf('Résolution des dépendances : %s (%s)', $label, $pass));
+                        }
+
+                        return $this->pipReport($lines, $dir, $target, $label, $context);
+                    },
+                    $list,
+                    $context,
+                    $label,
+                );
                 $count = 0;
-                foreach (json_decode((string) file_get_contents($report), true)['install'] ?? [] as $item) {
-                    $file = self::fileFromReport($item);
-                    $files[$file['filename']] ??= $file;
-                    ++$count;
+                foreach ($results as $result) {
+                    foreach ($result as $file) {
+                        $files[$file['filename']] ??= $file;
+                        ++$count;
+                    }
                 }
-                $context->log(sprintf('%s : %d paquets.', $label, $count));
+                $context->log(sprintf('%s : %d fichiers.', $label, $count));
             }
         } finally {
             Tool::removeDir($dir);
@@ -143,6 +143,43 @@ final readonly class PypiResolver implements Resolver
         $context->log(sprintf('%d fichiers.', \count($artifacts)));
 
         return $artifacts;
+    }
+
+    /**
+     * Rapport de pip pour un groupe d'exigences et une cible, sans rien installer.
+     *
+     * @param list<string>                            $lines
+     * @param array{python: string, platform: string} $target
+     *
+     * @return list<array{name: string, displayName: string, version: string, filename: string, url: string, sha256: string, requiresPython: string|null}> fichiers à télécharger
+     */
+    private function pipReport(array $lines, string $dir, array $target, string $label, JobContext $context): array
+    {
+        file_put_contents($dir.'/requirements.txt', implode("\n", $lines)."\n");
+        $report = $dir.'/report.json';
+        @unlink($report);
+        $command = [
+            $this->pip, 'install', '--dry-run', '--ignore-installed', '--quiet', '--no-input',
+            '--report', $report, '--target', $dir.'/target',
+            ...$this->sources->pipIndexOptions($this->index),
+            '--only-binary=:all:', '--implementation', 'cp', '--python-version', $target['python'],
+        ];
+        foreach (PypiPlatforms::tags($target['platform']) as $tag) {
+            array_push($command, '--platform', $tag);
+        }
+        array_push($command, '-r', $dir.'/requirements.txt');
+        try {
+            Tool::run($command, $dir, $context, ['PIP_DISABLE_PIP_VERSION_CHECK' => '1']);
+        } catch (\RuntimeException $e) {
+            throw new \RuntimeException(sprintf("%s\n\nCible : %s. Si un paquet n'existe qu'en sources (sans wheel), il ne peut pas être résolu pour une autre plateforme ; essayez une autre version ou retirez cette cible.", $e->getMessage(), $label), previous: $e);
+        }
+
+        $files = [];
+        foreach (json_decode((string) file_get_contents($report), true)['install'] ?? [] as $item) {
+            $files[] = self::fileFromReport($item);
+        }
+
+        return $files;
     }
 
     /** @return list<string> */

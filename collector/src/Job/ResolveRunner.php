@@ -8,8 +8,8 @@ use App\Entity\Artifact;
 use App\Entity\Job;
 use App\Entity\PackageList;
 use App\Resolver\Resolver;
-use App\Search\Glob;
 use App\Search\PatternExpander;
+use App\Search\VersionRange;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\DependencyInjection\Attribute\AutowireIterator;
 
@@ -57,7 +57,13 @@ final readonly class ResolveRunner implements JobRunner
             $context->log(sprintf('Liste noire : %d version(s) non téléchargée(s) : %s.', \count($blocked), implode(', ', $blocked)));
         }
 
+        $skipped = $list->getSkippedVersions();
+        if ($skipped) {
+            $context->log(sprintf('Plages [toutes] : %d version(s) ignorée(s), résolution impossible : %s.', \count($skipped), implode(', ', array_keys($skipped))));
+        }
+
         return sprintf('%d paquet(s), %s ; %d à exporter', \count($artifacts), Bytes::format($size), $pending)
+            .($skipped ? sprintf(' ; %d version(s) ignorée(s) (erreur de résolution, voir le journal)', \count($skipped)) : '')
             .($blocked ? sprintf(' ; %d bloqué(s) par la liste noire', \count($blocked)) : '').$security;
     }
 
@@ -84,19 +90,28 @@ final readonly class ResolveRunner implements JobRunner
 
         $context->log(sprintf('Liste « %s » (%s).', $list->getName(), $list->getEcosystem()->label()));
 
-        // Motifs (« * », « ? ») : remplacés par les paquets correspondants du registre
+        // Motifs (« * », « ? ») : remplacés par les paquets correspondants du registre ;
+        // plages « [toutes] » : par toutes les versions publiées qui respectent la contrainte
         $lines = $list->getSpecLines();
-        if (array_filter($lines, Glob::isPattern(...)) && !\in_array($list->getEcosystem(), [\Sas\Bundle\Ecosystem::Deb, \Sas\Bundle\Ecosystem::Rpm], true)) {
-            $context->report('Recherche des paquets correspondant aux motifs');
+        $isSystem = \in_array($list->getEcosystem(), [\Sas\Bundle\Ecosystem::Deb, \Sas\Bundle\Ecosystem::Rpm], true);
+        if (array_filter($lines, $isSystem ? VersionRange::isRange(...) : PatternExpander::needsExpansion(...))) {
+            $context->report('Recherche des paquets et des versions correspondant aux motifs et aux plages');
             $expanded = $this->expander->expand($list->getEcosystem(), $lines);
             foreach ($expanded['patterns'] as $pattern => $result) {
                 $matches = $result['lines'];
-                $context->log(sprintf('Motif « %s » : %d correspondance(s) : %s', $pattern, \count($matches), implode(', ', \array_slice($matches, 0, 30)).(\count($matches) > 30 ? '…' : '')));
+                $context->log(sprintf('%s « %s » : %d correspondance(s) : %s', VersionRange::isRange($pattern) ? 'Plage' : 'Motif', $pattern, \count($matches), implode(', ', \array_slice($matches, 0, 30)).(\count($matches) > 30 ? '…' : '')));
                 if ($result['skipped']) {
                     $context->log(sprintf('Motif « %s » : %d paquet(s) écarté(s), sans version respectant la contrainte : %s', $pattern, \count($result['skipped']), implode(', ', $result['skipped'])));
                 }
             }
-            $list->useExpandedSpecs($expanded['lines']);
+            // Versions issues d'une plage : ignorées (et signalées) si leur résolution échoue
+            $rangeVersions = [];
+            foreach ($expanded['patterns'] as $pattern => $result) {
+                if (VersionRange::isRange($pattern)) {
+                    array_push($rangeVersions, ...$result['lines']);
+                }
+            }
+            $list->useExpandedSpecs($expanded['lines'], $rangeVersions);
         }
         $this->blacklist->takeBlocked();
         $artifacts = [];

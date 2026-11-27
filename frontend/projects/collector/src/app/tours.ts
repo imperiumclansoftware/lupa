@@ -72,7 +72,7 @@ export const COLLECTOR_TOURS: Tour[] = [
       {
         target: 'saisie',
         title: 'Paquets',
-        text: 'Un paquet par ligne, avec une contrainte de version facultative. La recherche aide à trouver noms et versions ; les dépendances sont ajoutées automatiquement.',
+        text: 'Un paquet par ligne, avec une contrainte de version facultative. La recherche aide à trouver noms et versions ; les dépendances sont ajoutées automatiquement. Pour toutes les versions d’une plage (npm, Python, Composer), terminez la ligne par [toutes] : react@>=16 <19 [toutes].',
       },
       {
         target: 'options',

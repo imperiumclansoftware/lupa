@@ -96,3 +96,15 @@ test('extensions VS Code : identifiant sans version ni casse', () => {
     'redhat.vscode-yaml\ndbaeumer.vscode-eslint',
   );
 });
+
+test('plage [toutes] : distincte d’une contrainte simple sur le même paquet', () => {
+  assert.equal(lineKey('react@>=16 <19 [toutes]', 'npm'), 'react [toutes]');
+  assert.equal(lineKey('Django>=4,<6 [toutes]', 'pypi'), 'django [toutes]');
+  assert.equal(
+    lineKey('symfony/console:>=6.4 <8 [toutes]', 'composer'),
+    'symfony/console [toutes]',
+  );
+  const text = addLines('react@^19', ['react@>=16 <=18.3.1 [toutes]'], 'npm');
+  assert.equal(text, 'react@^19\nreact@>=16 <=18.3.1 [toutes]');
+  assert.equal(addLines(text, ['react@>=17 <=18.3.1 [toutes]'], 'npm'), text);
+});
